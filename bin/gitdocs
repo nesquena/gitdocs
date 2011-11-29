@@ -12,6 +12,13 @@ pids = dirs.map do |dir|
     end
   end
 end
+
+pids.each do |pid|
+  Process.waitpid(pid)
+end
+
 at_exit do
-  Process.pids
+  pids.each do |pid|
+    Process.kill("INT", pid) rescue nil
+  end
 end
