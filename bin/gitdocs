@@ -2,4 +2,16 @@
 
 require 'gitdocs'
 
-Gitdocs.new(File.expand_path(Dir.pwd, File.dirname(__FILE__))).run
+dirs = ARGV
+dirs << File.expand_path(Dir.pwd, File.dirname(__FILE__)) if dirs.empty?
+
+pids = dirs.map do |dir|
+  fork do
+    Dir.chdir(dir) do
+      Gitdocs.new.run
+    end
+  end
+end
+at_exit do
+  
+end
