@@ -80,7 +80,7 @@ class Gitdocs
 
   def info(title, msg)
     if @use_growl
-      Growl.notify_ok(msg, :title => title)
+      Growl.notify_ok(msg, :title => title, :icon => @icon)
     else
       puts("#{title}: #{msg}")
     end
