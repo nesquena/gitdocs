@@ -1,0 +1,5 @@
+#!/usr/local/env ruby
+
+require 'gitdocs'
+
+Gitdocs.new(Dir.pwd).run

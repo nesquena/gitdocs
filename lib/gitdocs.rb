@@ -23,7 +23,7 @@ class Gitdocs
       end
     end.abort_on_exception = true
     listener = FSEvent.new
-    listener.watch Dir.pwd do |directories|
+    listener.watch(@root) do |directories|
       mutex.synchronize do
         system("git commit -a -m'Auto-commit from gitdocs'") or raise # TODO better commit message needed
         sleep 60
