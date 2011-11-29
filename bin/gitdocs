@@ -2,4 +2,4 @@
 
 require 'gitdocs'
 
-Gitdocs.new(Dir.pwd).run
+Gitdocs.new(File.expand_path(Dir.pwd, File.dirname(__FILE__))).run
