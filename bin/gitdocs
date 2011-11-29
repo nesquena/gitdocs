@@ -8,10 +8,10 @@ dirs << File.expand_path(Dir.pwd, File.dirname(__FILE__)) if dirs.empty?
 pids = dirs.map do |dir|
   fork do
     Dir.chdir(dir) do
-      Gitdocs.new.run
+      Gitdocs.new(Dir.pwd).run
     end
   end
 end
 at_exit do
-  
+  Process.pids
 end
