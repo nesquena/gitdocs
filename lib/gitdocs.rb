@@ -19,7 +19,7 @@ class Gitdocs
     Thread.new do
       loop do
         mutex.synchronize do
-          out, status = sh_with_code("git pull")
+          out, status = sh_with_code("git fetch --all && git merge origin/master")
           if status.success?
             changes = get_latest_changes
             unless changes.empty?
@@ -47,8 +47,9 @@ class Gitdocs
   end
 
   def push_changes
-    out, code = sh_with_code("git ls-files -o --exclude-per-directory=.gitignore | git update-index --add --stdin")
-    if system("git commit -a -m'Auto-commit from gitdocs'")
+    out, status = sh_with_code("git ls-files -o --exclude-per-directory=.gitignore | git update-index --add --stdin")
+    unless sh("git status -s").strip.empty?
+      sh "git commit -a -m'Auto-commit from gitdocs'" # TODO make this message nicer
       out, code = sh_with_code("git push")
       changes = get_latest_changes
       info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
