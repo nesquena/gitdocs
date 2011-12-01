@@ -66,7 +66,10 @@ gitdocs serve
 
 and then visit `http://localhost:8888` for access to all your docs in the browser.
 
-## Known Issues
+## Planned Features
 
-- Currently, gitdocs only works on Mac OS X because we rely on fsevent. We plan to make this platform independent soon.
-- We don't handle conflicts, but we will alert you that a conflict has occurred
+ - A web UI for uploading, and editing text files (in addition to viewing)
+ - Local-area peer-to-peer sync.
+ - Click-to-share instant access granting.
+ - Better conflict-resolution behavior (maintains both versions of a file)
+ - Support for linux and windows (coming soon)
