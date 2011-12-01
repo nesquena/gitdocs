@@ -16,7 +16,7 @@ Why should you use gitdocs for your file and doc sharing needs?
  * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
  * **Portable** - access your files anywhere you can use git (with upcoming cross-platform support)
 
-Thankfully, if you are interested in giving this a try the installation shouldn't take long.
+Thankfully giving this a try is quick and easy.
 
 ## Installation
 
