@@ -134,7 +134,7 @@ module Gitdocs
     def sh_with_code(cmd)
       cmd << " 2>&1"
       outbuf = ''
-      outbuf = `cd #{@root} && #{cmd}`
+      outbuf = `cd "#{@root}" && #{cmd}`
       [outbuf, $?]
     end
   end
