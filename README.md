@@ -4,6 +4,8 @@ Collaborate on files and docs through a shared git repository. gitdocs will auto
 This allows any git repo to be used as a collaborative task list or wiki for a team.
 You can also start a web front-end allowing the repo to be accessed through a browser.
 
+**Note:** Right now, gitdocs only supports Mac OSX using fsevent. Linux and windows support are coming very soon, so check back here again.
+
 ## Installation
 
 Install the gem:
