@@ -23,7 +23,8 @@ module Gitdocs
             if status.success?
               changes = get_latest_changes
               unless changes.empty?
-                info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been updated")
+                author_list = changes.inject(Hash.new{|h, k| h[k] = 0}) {|h, c| h[c['author']] += 1; h}.to_a.sort{|a,b| b[1] <=> a[1]}.map{|(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})"}.join("\n")
+                info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "In `#{@root}':\n#{author_list}")
               end
               push_changes
             elsif out[/CONFLICT/]
@@ -77,8 +78,6 @@ module Gitdocs
           # ignorable
         elsif out[/\[rejected\]/]
           warn("There was a conflict in #{@root}, retrying", "")
-          #error("CONFLICT Could not push changes in #{@root}", out)
-          #exit
         else
           error("BAD Could not push changes in #{@root}", out)
           exit
