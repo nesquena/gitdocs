@@ -11,7 +11,8 @@ module Gitdocs
     def start
       if !self.running? && !options[:debug]
         self.runner(:daemonize => true, :pid_path => self.pid_path).execute { Gitdocs.run }
-        say "Started gitdocs", :green
+        until_true(5) { self.running? }
+        self.running? ? say("Started gitdocs", :green) : say("Failed to start gitdocs", :red)
       elsif !self.running? && options[:debug]
         say "Running in debug mode", :yellow
         Gitdocs.run(nil, true)
@@ -107,6 +108,17 @@ module Gitdocs
 
       def pid_path
         "/tmp/gitdocs.pid"
+      end
+
+      # Runs until the block condition is met or the retry_count is exceeded
+      # until_true(10) { ...return_condition... }
+      def until_true(retry_count, &block)
+        count = 0
+        while count < retry_count && block.call != true
+          count += 1
+          sleep(1)
+        end
+        count < retry_count
       end
     end
 

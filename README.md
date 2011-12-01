@@ -36,6 +36,12 @@ You need to startup gitdocs:
 gitdocs start
 ```
 
+If the start command doesn't seem to properly start the process, you can run with a debug flag:
+
+```
+gitdocs start -D
+```
+
 You can also `stop` and `restart` gitdocs as needed. Run
 
 ```
