@@ -6,18 +6,21 @@ You can also start a web front-end allowing the repo to be accessed through a br
 
 **Note:** Right now, gitdocs only supports Mac OSX using fsevent. Linux and windows support are coming very soon, so check back here again.
 
-## Why Gitdocs?
+## Why?
 
 Why should you use gitdocs for your file and doc sharing needs?
 
- * Open - gitdocs is entirely open-source under the MIT license
- * Simple - gitdocs is the simplest thing that works in both setup and usage
- * Secure - gitdocs leverages git (and existing providers like github) to store your data safely.
- * Versatile - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
+ * **Open** - gitdocs is entirely open-source under the MIT license
+ * **Simple** - gitdocs is the simplest thing that works in both setup and usage
+ * **Secure** - gitdocs leverages git (and existing providers like github) to store your data safely.
+ * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
+ * **Portable** - access your files anywhere you can use git (with upcoming cross-platform support)
+
+Thankfully, if you are interested in giving this a try the installation shouldn't take long.
 
 ## Installation
 
-Install the gem:
+Requires ruby and rubygems. Install as a gem:
 
 ```
 gem install gitdocs
