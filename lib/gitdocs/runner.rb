@@ -12,13 +12,15 @@ module Gitdocs
 
     def run
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
+      @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
+      @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", "master")
       @current_revision = sh("git rev-parse HEAD").strip rescue nil
       mutex = Mutex.new
       Thread.new do
         loop do
           mutex.synchronize do
             begin
-              out, status = sh_with_code("git fetch --all && git merge origin/master")
+              out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
               if status.success?
                 changes = get_latest_changes
                 unless changes.empty?
@@ -55,7 +57,7 @@ module Gitdocs
       # TODO make this message nicer
       sh "git commit -a -m'Auto-commit from gitdocs'" unless sh("git status -s").strip.empty?
       if @current_revision.nil?
-        out, code = sh_with_code("git push origin master")
+        out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
           changes = get_latest_changes
           info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
@@ -114,6 +116,12 @@ module Gitdocs
         Kernel.warn("#{title}: #{msg}")
       end
       raise
+    end
+
+    # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
+    def sh_string(cmd, default)
+      val = sh(cmd).strip rescue nil
+      (val.nil? || val.empty?) ? default : val
     end
 
     def sh(cmd)
