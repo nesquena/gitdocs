@@ -10,8 +10,9 @@ You can also start a web front-end allowing the repo to be accessed through a br
 
 Why should you use gitdocs for your file and doc sharing needs?
 
- * Simple - gitdocs is the simplest thing that can possibly work
- * Secure - gitdocs simply uses git (and existing providers like github) to store your data safely.
+ * Open - gitdocs is entirely open-source under the MIT license
+ * Simple - gitdocs is the simplest thing that works in both setup and usage
+ * Secure - gitdocs leverages git (and existing providers like github) to store your data safely.
  * Versatile - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
 
 ## Installation
