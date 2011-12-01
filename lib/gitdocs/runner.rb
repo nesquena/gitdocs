@@ -7,7 +7,7 @@ module Gitdocs
       out, status = sh_with_code "which growlnotify"
       @use_growl = opts && opts.key?(:growl) ? opts[:growl] : status.success?
       @polling_interval = opts && opts[:polling_interval] || 15
-      @icon = File.expand_path("../img/icon.png", __FILE__)
+      @icon = File.expand_path("../../img/icon.png", __FILE__)
     end
 
     def run
@@ -25,16 +25,19 @@ module Gitdocs
               end
               push_changes
             elsif out[/CONFLICT/]
-              conflicted_files = sh("git ls-files -u --full-name -z").split("\0")
-              conflicted_files.map!{ |line| line.split(/\t/)[1] }
-              conflicted_files.uniq!
-              conflicted_files.select!{|f| f != ''}
-              warn("There were some conflicts", "#{conflicted_files.map{|f| "* #{f}"}.join("\n")}")
-              conflicted_files.each do |conflict|
+              conflicted_files = sh("git ls-files -u --full-name -z").split("\0").
+                inject(Hash.new{|h, k| h[k] = []}) {|h, line|
+                  parts = line.split(/\t/)
+                  h[parts.last] << parts.first.split(/ /).last
+                  h
+                }
+              warn("There were some conflicts", "#{conflicted_files.keys.map{|f| "* #{f}"}.join("\n")}")
+              conflicted_files.each do |conflict, idxs|
                 conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
-                system("cd #{@root} && git show :1:#{conflict} > #{conflict_start}-original#{conflict_end}") &&
-                  system("cd #{@root} && git show :2:#{conflict} > #{conflict_start}-1#{conflict_end}") &&
-                  system("cd #{@root} && git show :3:#{conflict} > #{conflict_start}-2#{conflict_end}") or raise
+                system("cd #{@root} && git show :1:#{conflict} > #{conflict_start}-original#{conflict_end}") if idxs.include?('1')
+                system("cd #{@root} && git show :2:#{conflict} > #{conflict_start}-1#{conflict_end}") if idxs.include?('2')
+                system("cd #{@root} && git show :3:#{conflict} > #{conflict_start}-2#{conflict_end}") if idxs.include?('3')
+                system("cd #{@root} && git rm #{conflict}") or raise
               end
               push_changes
             else

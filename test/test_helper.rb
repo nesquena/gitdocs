@@ -51,7 +51,7 @@ class MiniTest::Spec
         STDERR.reopen(File.open("/dev/null", 'w'))
       end
       begin
-        Gitdocs::Runner.new(path, :growl => false, :polling_interval => 0.1).run
+        Gitdocs::Runner.new(path, :growl => false, :polling_interval => 0.5).run
       rescue
         puts "RATHER BAD ~~~~~"
         puts $!.message
