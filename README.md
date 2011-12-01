@@ -19,6 +19,25 @@ Why should you use gitdocs for your file and doc sharing needs?
 
 The best part is that giving this a try is quick and easy.
 
+## Quick Start
+
+Gitdocs monitors any number of directories for changes and keeps them automatically synced. You can either add
+existing git directories to be watched or have gitdocs pull down a repository for you.
+
+There are plenty of great git hosting providers to safely store your data and you can trust the data is stored securely.
+If you want a private repo to use with gitdocs, we recommend you check out [BitBucket](https://bitbucket.org/) which
+provides free private git repos after registration.
+
+To get started with gitdocs and a secure private bitbucket repo:
+
+ - `gem install gitdocs`
+ - `gitdocs start`
+ -  Login to [BitBucket](https://bitbucket.org/) and add a new private repo named 'docs'
+ - `git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git`
+
+There you go! Now just edit and add files to the directory and they will be automatically
+synchronized across all gitdocs-enabled clients.
+
 ## Installation
 
 Requires ruby and rubygems. Install as a gem:
@@ -36,9 +55,6 @@ brew install growlnotify
 to enable Growl support (other platforms coming soon).
 
 ## Usage
-
-Gitdocs is centered around 'watching' any number of directories for changes and keeping them automatically synced. You can either add
-existing git directories for monitoring or have gitdocs pull down a repository to monitor.
 
 You can add existing folders to watch:
 
@@ -94,29 +110,6 @@ gitdocs serve
 ```
 
 and then visit `http://localhost:8888` for access to all your docs in the browser.
-
-## Quick Start
-
-There are plenty of great git hosting providers to safely store your data and you can trust the data is stored securely.
-If you want a private repo to use with gitdocs, we recommend you check out [BitBucket](https://bitbucket.org/) which
-provides free private git repos after registration.
-
-To get started with gitdocs and a private, secure bitbucket repo:
-
- - `gem install gitdocs`
- - `gitdocs start`
- -  Login to [BitBucket](https://bitbucket.org/), add a new private repo 'docs'
- - `git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git`
-
-Each subsequent that wants these docs just needs to do:
-
-```
-gem install gitdocs && gitdocs start
-git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git
-```
-
-There you go! Now just edit and add files to the directory and
-they will be automatically synchronized across all computers.
 
 ## Planned Features
 
