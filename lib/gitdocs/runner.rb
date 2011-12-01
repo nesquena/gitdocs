@@ -17,24 +17,33 @@ module Gitdocs
       Thread.new do
         loop do
           mutex.synchronize do
-            begin
-              out, status = sh_with_code("git fetch --all && git merge origin/master")
-              if status.success?
-                changes = get_latest_changes
-                unless changes.empty?
-                  info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been updated")
-                end
-              else
-                warn("Error attempting to pull", out)
+            out, status = sh_with_code("git fetch --all && git merge origin/master")
+            if status.success?
+              changes = get_latest_changes
+              unless changes.empty?
+                info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been updated")
               end
               push_changes
-            rescue Exception
-              error("There was an error", $!.message) rescue nil
+            elsif out[/CONFLICT/]
+              conflicted_files = sh("git ls-files -u --full-name -z").split("\0")
+              conflicted_files.map!{ |line| line.split(/\t/)[1] }
+              conflicted_files.uniq!
+              conflicted_files.select!{|f| f != ''}
+              warn("There were some conflicts", "#{conflicted_files.map{|f| "* #{f}"}.join("\n")}")
+              conflicted_files.each do |conflict|
+                conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
+                system("cd #{@root} && git show :1:#{conflict} > #{conflict_start}-original#{conflict_end}") &&
+                  system("cd #{@root} && git show :2:#{conflict} > #{conflict_start}-1#{conflict_end}") &&
+                  system("cd #{@root} && git show :3:#{conflict} > #{conflict_start}-2#{conflict_end}") or raise
+              end
+              push_changes
+            else
+              error("There was a problem synchronizing this gitdoc", "A problem occurred in #{@root}:\n#{out}")
             end
           end
           sleep @polling_interval
         end
-      end
+      end.abort_on_exception = true
       listener = FSEvent.new
       listener.watch(@root) do |directories|
         directories.uniq!
@@ -54,21 +63,19 @@ module Gitdocs
       sh 'git add .'
       # TODO make this message nicer
       sh "git commit -a -m'Auto-commit from gitdocs'" unless sh("git status -s").strip.empty?
-      if @current_revision.nil?
+      if @current_revision.nil? || sh('git status')[/branch is ahead/]
         out, code = sh_with_code("git push origin master")
         if code.success?
           changes = get_latest_changes
           info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
+        elsif @current_revision.nil?
+          # ignorable
+        elsif out[/CONFLICT/]
+          error("CONFLICT Could not push changes in #{@root}", out)
+          exit
         else
-          error("Could not push changes", out)
-        end
-      elsif sh('git status')[/branch is ahead/]
-        out, code = sh_with_code("git push")
-        if code.success?
-          changes = get_latest_changes
-          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
-        else
-          error("Could not push changes", out)
+          error("BAD Could not push changes in #{@root}", out)
+          exit
         end
       end
     end
@@ -113,7 +120,6 @@ module Gitdocs
       else
         Kernel.warn("#{title}: #{msg}")
       end
-      raise
     end
 
     def sh(cmd)
