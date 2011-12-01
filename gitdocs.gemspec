@@ -5,11 +5,11 @@ require "gitdocs/version"
 Gem::Specification.new do |s|
   s.name        = "gitdocs"
   s.version     = Gitdocs::VERSION
-  s.authors     = ["Josh Hull"]
-  s.email       = ["joshbuddy@gmail.com"]
-  s.homepage    = ""
-  s.summary     = %q{Docs + git = gitdocs}
-  s.description = %q{Docs + git = gitdocs.}
+  s.authors     = ["Josh Hull", "Nathan Esquenazi"]
+  s.email       = ["joshbuddy@gmail.com", "nesquena@gmail.com"]
+  s.homepage    = "http://engineering.gomiso.com/2011/11/30/collaborate-and-track-tasks-with-ease-using-gitdocs/"
+  s.summary     = %q{Open-source Dropbox using Ruby and Git}
+  s.description = %q{Open-source Dropbox using Ruby and Git.}
 
   s.rubyforge_project = "gitdocs"
 
