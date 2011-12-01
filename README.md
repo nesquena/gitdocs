@@ -33,7 +33,7 @@ To get started with gitdocs and a secure private bitbucket repo:
  - `gem install gitdocs`
  - `gitdocs start`
  -  Login to [BitBucket](https://bitbucket.org/) and add a new private repo named 'docs'
- - `git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git`
+ - `gitdocs create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git`
 
 There you go! Now just edit and add files to the directory and they will be automatically
 synchronized across all gitdocs-enabled clients.
