@@ -7,11 +7,15 @@ module Gitdocs
     def self.source_root; File.expand_path('../../', __FILE__); end
 
     desc "start", "Starts a daemonized gitdocs process"
+    method_option :debug, :type => :boolean, :aliases => "-D"
     def start
-      if !self.running?
+      if !self.running? && !options[:debug]
         self.runner(:daemonize => true, :pid_path => self.pid_path).execute { Gitdocs.run }
         say "Started gitdocs", :green
-      else
+      elsif !self.running? && options[:debug]
+        say "Running in debug mode", :yellow
+        Gitdocs.run(nil, true)
+      else # already running
         say "Gitdocs is already running, please use restart", :red
       end
     end
