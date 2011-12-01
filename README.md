@@ -1,7 +1,7 @@
 # Gitdocs
 
 Collaborate on files and docs through a shared git repository. gitdocs will automatically push changes to the repo as well as pull in changes.
-This allows any git repo to be used as a collaborative task list or wiki for a team. 
+This allows any git repo to be used as a collaborative task list or wiki for a team.
 You can also start a web front-end allowing the repo to be accessed through a browser.
 
 ## Installation
@@ -84,8 +84,21 @@ and then visit `http://localhost:8888` for access to all your docs in the browse
 
 Gitdocs is a young project but we have big plans for it including:
 
- - A web UI for easy uploading, and editing of files (in addition to viewing)
- - Local-area peer-to-peer syncing, avoiding 'polling' in cases where we can.
- - Click-to-share instant access granting using a local tunnel or other means.
- - Better conflict-resolution behavior (maintains both versions of a file)
- - Support for linux and windows (coming soon)
+ - A web front-end UI for file uploading and editing of files (with rich text editor and syntax highlighting)
+ - Local-area peer-to-peer syncing, avoid 'polling' in cases where we can using a messaging protocol.
+ - Click-to-share instant access granting file access to users using a local tunnel or other means.
+ - Better conflict-resolution behavior on updates (maintain both versions of a file)
+ - Support for linux and windows platforms (coming soon), and maybe android and iOS as well?
+
+## Prior Projects
+
+Gitdocs is a fresh project that we spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
+but provide the features that makes dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
+
+ * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative. Nice project and a great alternative but has a lot of dependencies,
+   more complex codebase, and lacks some of the features we have planned for gitdocs in the near future.
+ * [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
+   Very similar project but again we have features planned that are out of scope (local tunnel file sharing, complete web ui for browsing, uploading and editing).
+ * [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
+
+If any other open-source dropbox alternatives are available, we would love to hear about them so let us know!
