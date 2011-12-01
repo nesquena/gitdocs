@@ -1,8 +1,9 @@
 # Gitdocs
 
-Collaborate on files and docs through a shared git repository. gitdocs will automatically push changes to the repo as well as pull in changes.
-This allows any git repo to be used as a collaborative task list or wiki for a team.
-You can also start a web front-end allowing the repo to be accessed through a browser.
+Open-source dropbox alternative powered by git. Collaborate on files and tasks without any extra hassle.
+gitdocs will automatically keep everyone's repos in sync by pushing and pulling changes.
+This allows any git repo to be used as a collaborative task list, file share, or wiki for a team.
+Supports a web front-end allowing each repo to be accessed through your browser.
 
 **Note:** Right now, gitdocs only supports Mac OSX using fsevent. Linux and windows support are coming very soon, so check back here again.
 
@@ -16,7 +17,7 @@ Why should you use gitdocs for your file and doc sharing needs?
  * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
  * **Portable** - access your files anywhere you can use git (with upcoming cross-platform support)
 
-Thankfully giving this a try is quick and easy.
+The best part is that giving this a try is quick and easy.
 
 ## Installation
 
