@@ -12,58 +12,67 @@ Install the gem:
 gem install gitdocs
 ```
 
-If you have Growl installed, you'll probably want to run `brew install growlnotify` to enable Growl support.
+If you have Growl installed on Max OSX, you'll probably want to run:
+
+```
+brew install growlnotify
+```
+
+to enable Growl support (other platforms coming soon).
 
 ## Usage
 
-First add the doc folders to watch:
+Gitdocs is centered around 'watching' any number of directories for changes and keeping them automatically synced. You can either add
+existing git directories for monitoring or have gitdocs pull down a repository to monitor.
+
+You can add existing folders to watch:
 
 ```
 gitdocs add my/path/to/watch
 ```
 
-You can remove and clear paths as well:
+or instruct gitdocs to fetch a remote repository and keep it synced with:
+
+```
+gitdocs create local/path/for/repo git@github.com:user/some/remote/repo.git
+```
+
+This will clone the remote repo and begin monitoring the local path. You can remove and clear monitored paths as well:
 
 ```
 gitdocs rm my/path/to/watch
-# or gitdocs clear
+gitdocs clear
 ```
 
-You need to startup gitdocs:
+You need to start gitdocs in order for the monitoring to work:
 
 ```
 gitdocs start
 ```
 
-If the start command doesn't seem to properly start the process, you can run with a debug flag:
+If the start command fails, you can run again with a debug flag:
 
 ```
 gitdocs start -D
 ```
 
-You can also `stop` and `restart` gitdocs as needed. Run
+and gitdocs can be easily stopped and restarted:
+
+```
+gitdocs stop
+gitdocs restart
+```
+
+For an overview of gitdocs current status, run:
 
 ```
 gitdocs status
 ```
 
-for a helpful listing of the current state. Once gitdocs is started, simply start editing or adding files to your
-designated git repository. Changes will be automatically pushed and pulled to your local repo.
+Once gitdocs has been started and is monitoring the correct directories, simply start editing or adding files to your
+designated git repos. Changes will be automatically pushed and pulled to your local repos.
 
-You can also have gitdocs fetch a remote repository with:
-
-```
-gitdocs create my/path/for/doc git@github.com:user/some_docs.git
-```
-
-This will clone the repo and add the path to your watched docs. Be sure to restart gitdocs
-to have path changes update:
-
-```
-gitdocs restart
-```
-
-To view the docs in your browser with file formatting:
+To explore the repos in your browser, simply start the server:
 
 ```
 gitdocs serve
