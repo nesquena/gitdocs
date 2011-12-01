@@ -24,7 +24,7 @@ module Gitdocs
               if status.success?
                 changes = get_latest_changes
                 unless changes.empty?
-                  info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been updated")
+                  info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "Repo `#{@root}' has been updated")
                 end
               else
                 warn("Error attempting to pull", out)
@@ -60,7 +60,7 @@ module Gitdocs
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
           changes = get_latest_changes
-          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
+          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "Repo `#{@root}' has been pushed")
         else
           error("Could not push changes", out)
         end
@@ -68,7 +68,7 @@ module Gitdocs
         out, code = sh_with_code("git push")
         if code.success?
           changes = get_latest_changes
-          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
+          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "Repo `#{@root}' has been pushed")
         else
           error("Could not push changes", out)
         end
