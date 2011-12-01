@@ -75,9 +75,10 @@ module Gitdocs
           info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
         elsif @current_revision.nil?
           # ignorable
-        elsif out[/CONFLICT/]
-          error("CONFLICT Could not push changes in #{@root}", out)
-          exit
+        elsif out[/\[rejected\]/]
+          warn("There was a conflict in #{@root}, retrying", "")
+          #error("CONFLICT Could not push changes in #{@root}", out)
+          #exit
         else
           error("BAD Could not push changes in #{@root}", out)
           exit
