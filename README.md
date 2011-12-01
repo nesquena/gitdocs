@@ -1,9 +1,8 @@
 # Gitdocs
 
 Collaborate on files and docs through a shared git repository. gitdocs will automatically push changes to the repo as well as pull in changes.
-This allows any git repo to be used as a collaborative task list or wiki for a team.
-
-You can also start a web front-end allowing the repo to be viewed through the browser.
+This allows any git repo to be used as a collaborative task list or wiki for a team. 
+You can also start a web front-end allowing the repo to be accessed through a browser.
 
 ## Installation
 
@@ -74,8 +73,10 @@ and then visit `http://localhost:8888` for access to all your docs in the browse
 
 ## Planned Features
 
- - A web UI for uploading, and editing text files (in addition to viewing)
- - Local-area peer-to-peer sync.
- - Click-to-share instant access granting.
+Gitdocs is a young project but we have big plans for it including:
+
+ - A web UI for easy uploading, and editing of files (in addition to viewing)
+ - Local-area peer-to-peer syncing, avoiding 'polling' in cases where we can.
+ - Click-to-share instant access granting using a local tunnel or other means.
  - Better conflict-resolution behavior (maintains both versions of a file)
  - Support for linux and windows (coming soon)
