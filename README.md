@@ -82,6 +82,15 @@ gitdocs serve
 
 and then visit `http://localhost:8888` for access to all your docs in the browser.
 
+## Hosted Repos
+
+The best part of using gitdocs to store all your files is what you get for free for using git. There are
+plenty of great git hosting providers to safely store your data and you can trust the data is stored securely.
+
+If you want a private repo to use with gitdocs, we recommend you check out [BitBucket](https://bitbucket.org/) which
+provides free private git repos after registration. Simply login, add a new private repo and then
+add the repo to your gitdocs monitored folders. Voila! Hosted and secure storage of all your data.
+
 ## Planned Features
 
 Gitdocs is a young project but we have big plans for it including:
