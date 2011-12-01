@@ -13,6 +13,7 @@ module Gitdocs
   def self.run(config_root = nil, debug=false)
     loop do
       @config = Configuration.new(config_root)
+      puts "Gitdocs v#{VERSION}" if debug
       puts "Using configuration root: '#{@config.config_root}'" if debug
       puts "Watch paths: #{@config.paths.join(", ")}" if debug
       @threads = @config.paths.map do |path|
