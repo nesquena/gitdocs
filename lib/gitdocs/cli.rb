@@ -23,14 +23,18 @@ module Gitdocs
 
     desc "stop", "Stops the gitdocs process"
     def stop
-      self.runner(:kill => true, :pid_path => self.pid_path).execute
-      say "Stopped gitdocs", :red
+      if self.running?
+        self.runner(:kill => true, :pid_path => self.pid_path).execute
+        say "Stopped gitdocs", :red
+      else # not running
+        say "Gitdocs is not running", :red
+      end
     end
 
     desc "restart", "Restarts the gitdocs process"
     def restart
       self.stop
-      sleep(1)
+      until_true(5) { self.running? }
       self.start
     end
 
