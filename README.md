@@ -95,14 +95,28 @@ gitdocs serve
 
 and then visit `http://localhost:8888` for access to all your docs in the browser.
 
-## Hosted Repos
+## Quick Start
 
-The best part of using gitdocs to store all your files is what you get for free for using git. There are
-plenty of great git hosting providers to safely store your data and you can trust the data is stored securely.
-
+There are plenty of great git hosting providers to safely store your data and you can trust the data is stored securely.
 If you want a private repo to use with gitdocs, we recommend you check out [BitBucket](https://bitbucket.org/) which
-provides free private git repos after registration. Simply login, add a new private repo and then
-add the repo to your gitdocs monitored folders. Voila! Hosted and secure storage of all your data.
+provides free private git repos after registration.
+
+To get started with gitdocs and a private, secure bitbucket repo:
+
+ - `gem install gitdocs`
+ - `gitdocs start`
+ -  Login to [BitBucket](https://bitbucket.org/), add a new private repo 'docs'
+ - `git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git`
+
+Each subsequent that wants these docs just needs to do:
+
+```
+gem install gitdocs && gitdocs start
+git create ~/Documents/gitdocs https://username@bitbucket.org/username/docs.git
+```
+
+There you go! Now just edit and add files to the directory and
+they will be automatically synchronized across all computers.
 
 ## Planned Features
 
