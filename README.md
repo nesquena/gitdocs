@@ -128,7 +128,7 @@ Gitdocs is a fresh project that we spiked on in a few days time. Our primary goa
 but provide the features that makes dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
 
  * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative. Nice project and a great alternative but has a lot of dependencies,
-   more complex codebase, and lacks some of the features we have planned for gitdocs in the near future.
+   and lacks some of the features we have planned for gitdocs in the near future. More mature project, so be sure to take a look.
  * [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
    Very similar project but again we have features planned that are out of scope (local tunnel file sharing, complete web ui for browsing, uploading and editing).
  * [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
