@@ -10,17 +10,10 @@ module Gitdocs
     def start(port = 8888)
       gds = @gitdocs
       Thin::Server.start('127.0.0.1', port) do
+        use Rack::Static, :urls => ['/css', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
           if request.path_info == '/'
-            inline!(<<-EOT, :erb, :locals => {:gds => gds})
-            <html><body>
-            <table>
-            <% gds.each_with_index do |gd, idx| %>
-              <tr><a href="/<%=idx%>"><%=gd.root%></a></tr>
-            <% end %>
-            </table>
-            </body></html>
-            EOT
+            render! "home", :layout => 'app', :locals => {:gds => gds}
           else
             var :int do |idx|
               gd = gds[idx]
@@ -29,7 +22,12 @@ module Gitdocs
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               halt 404 unless File.exist?(expanded_path)
               if File.directory?(expanded_path)
-                run! Rack::Directory.new(gd.root)
+                contents = Dir[File.join(gd.root, request.path_info, '*')]
+                #run! Rack::Directory.new(gd.root)
+                parent = File.dirname(request.path_info)
+                parent = '' if parent == '/'
+                parent = nil if parent == '.'
+                render! "dir", :layout => 'app', :locals => {:contents => contents, :idx => idx, :parent => parent, :root => gd.root}
               else
                 begin
                   render! expanded_path
@@ -39,6 +37,8 @@ module Gitdocs
               end
             end
           end
+        }.setup {
+          views_path File.expand_path("../views", __FILE__)
         }
       end
     end
