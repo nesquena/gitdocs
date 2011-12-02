@@ -12,57 +12,61 @@ module Gitdocs
 
     def run
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
-      @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-      @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", "master")
+      @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", 'origin')
+      @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", 'master')
       @current_revision = sh("git rev-parse HEAD").strip rescue nil
       mutex = Mutex.new
+
+      # Pull changes from remote repository
       Thread.new do
         loop do
-          mutex.synchronize do
-            out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
-            if status.success?
-              changes = get_latest_changes
-              unless changes.empty?
-                author_list = changes.inject(Hash.new{|h, k| h[k] = 0}) {|h, c| h[c['author']] += 1; h}.to_a.sort{|a,b| b[1] <=> a[1]}.map{|(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})"}.join("\n")
-                info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "In `#{@root}':\n#{author_list}")
-              end
-              push_changes
-            elsif out[/CONFLICT/]
-              conflicted_files = sh("git ls-files -u --full-name -z").split("\0").
-                inject(Hash.new{|h, k| h[k] = []}) {|h, line|
-                  parts = line.split(/\t/)
-                  h[parts.last] << parts.first.split(/ /)
-                  h
-                }
-              warn("There were some conflicts", "#{conflicted_files.keys.map{|f| "* #{f}"}.join("\n")}")
-              conflicted_files.each do |conflict, ids|
-                conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
-                puts "solving #{conflict} with #{ids.inspect}"
-                ids.each do |(mode, sha, id)|
-                  system("cd #{@root} && git show :#{id}:#{conflict} > #{conflict_start}-#{sha[0..6]}#{conflict_end}")
-                end
-                system("cd #{@root} && git rm #{conflict}") or raise
-              end
-              push_changes
-            else
-              error("There was a problem synchronizing this gitdoc", "A problem occurred in #{@root}:\n#{out}")
-            end
-          end
+          mutex.synchronize { pull_changes }
           sleep @polling_interval
         end
       end.abort_on_exception = true
+
+      # Listen for changes in local repository
       listener = FSEvent.new
       listener.watch(@root) do |directories|
         directories.uniq!
         directories.delete_if {|d| d =~ /\/\.git/}
         unless directories.empty?
-          mutex.synchronize do
-            push_changes
-          end
+          mutex.synchronize { push_changes }
         end
       end
       at_exit { listener.stop }
       listener.run
+    end
+
+    def pull_changes
+      out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
+      if status.success?
+        changes = get_latest_changes
+        unless changes.empty?
+          author_list = changes.inject(Hash.new{|h, k| h[k] = 0}) {|h, c| h[c['author']] += 1; h}.to_a.sort{|a,b| b[1] <=> a[1]}.map{|(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})"}.join("\n")
+          info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "In `#{@root}':\n#{author_list}")
+        end
+        push_changes
+      elsif out[/CONFLICT/]
+        conflicted_files = sh("git ls-files -u --full-name -z").split("\0").
+          inject(Hash.new{|h, k| h[k] = []}) {|h, line|
+            parts = line.split(/\t/)
+            h[parts.last] << parts.first.split(/ /)
+            h
+          }
+        warn("There were some conflicts", "#{conflicted_files.keys.map{|f| "* #{f}"}.join("\n")}")
+        conflicted_files.each do |conflict, ids|
+          conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
+          puts "solving #{conflict} with #{ids.inspect}"
+          ids.each do |(mode, sha, id)|
+            system("cd #{@root} && git show :#{id}:#{conflict} > #{conflict_start}-#{sha[0..6]}#{conflict_end}")
+          end
+          system("cd #{@root} && git rm #{conflict}") or raise
+        end
+        push_changes
+      else
+        error("There was a problem synchronizing this gitdoc", "A problem occurred in #{@root}:\n#{out}")
+      end
     end
 
     def push_changes
