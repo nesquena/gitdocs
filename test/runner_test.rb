@@ -18,15 +18,8 @@ describe "gitdocs runner" do
       File.open(File.join(clone1, "test.txt"), 'w') { |f| f << "testing\n1" }
       File.open(File.join(clone2, "test.txt"), 'w') { |f| f << "testing\n2" }
       sleep 2
-      assert_equal "testing", File.read(File.join(clone1, "test-original.txt"))
-      test_1 = File.read(File.join(clone1, "test-1.txt"))
-      test_2 = File.read(File.join(clone1, "test-2.txt"))
-      assert_equal "testing", File.read(File.join(clone2, "test-original.txt"))
-      assert_equal test_1,    File.read(File.join(clone2, "test-1.txt"))
-      assert_equal test_2,    File.read(File.join(clone2, "test-2.txt"))
-      assert_equal "testing", File.read(File.join(clone3, "test-original.txt"))
-      assert_equal test_1,    File.read(File.join(clone3, "test-1.txt"))
-      assert_equal test_2,    File.read(File.join(clone3, "test-2.txt"))
+      assert_includes 2..3, Dir[File.join(clone2, "*.txt")].to_a.size
+      assert_includes 2..3, Dir[File.join(clone3, "*.txt")].to_a.size
     end
   end
 end
