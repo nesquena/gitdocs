@@ -31,10 +31,8 @@ module Gitdocs
         t
       end
       sleep 1
-      unless pid
-        pid = fork { Server.new(*runners).start }
-        at_exit { Process.kill("KILL", pid) rescue nil }
-      end
+      pid = fork { Server.new(*runners).start }
+      at_exit { Process.kill("KILL", pid) rescue nil }
       puts "Watch threads: #{threads.map { |t| "Thread status: '#{t.status}', running: #{t.alive?}" }}" if debug
       puts "Joined #{threads.size} watch threads...running" if debug
       threads.each(&:join)
