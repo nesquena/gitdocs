@@ -75,12 +75,6 @@ module Gitdocs
       say self.config.paths.map { |p| "  - #{p}" }.join("\n")
     end
 
-    desc "serve", "Serves web frontend for files"
-    def serve
-      puts "Serving docs..."
-      Gitdocs::Server.new(*self.config.paths.map{|p| Gitdocs::Runner.new(p)}).start
-    end
-
     desc "config", "Configuration options for gitdocs"
     def config
       # TODO make this work
