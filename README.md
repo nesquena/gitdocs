@@ -139,5 +139,7 @@ but provide the features that makes dropbox great. If you are interested in othe
  * [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
    Very similar project but again we have features planned that are out of scope (local tunnel file sharing, complete web ui for browsing, uploading and editing).
  * [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
+ * [bitpocket](https://github.com/sickill/bitpocket) is a project that uses rsync to synchronize data. Interesting concept, but
+   lacks revision history, author tracking, etc and we have features planned that are out of scope for this project
 
 If any other open-source dropbox alternatives are available, we would love to hear about them so let us know!
