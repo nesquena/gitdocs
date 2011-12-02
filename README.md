@@ -57,6 +57,8 @@ to enable Growl support (other platforms coming soon).
 
 ## Usage
 
+### Monitoring Repos
+
 You can add existing folders to watch:
 
 ```
@@ -76,6 +78,8 @@ gitdocs rm my/path/to/watch
 gitdocs clear
 ```
 
+### Starting Gitdocs
+
 You need to start gitdocs in order for the monitoring to work:
 
 ```
@@ -88,12 +92,15 @@ If the start command fails, you can run again with a debug flag:
 gitdocs start -D
 ```
 
-and gitdocs can be easily stopped and restarted:
+Once gitdocs has been started and is monitoring the correct directories, simply start editing or adding files to your
+designated git repos and changes will be automatically pushed. Gitdocs can be easily stopped or restarted:
 
 ```
 gitdocs stop
 gitdocs restart
 ```
+
+### Exploring Gitdocs
 
 For an overview of gitdocs current status, run:
 
@@ -101,16 +108,17 @@ For an overview of gitdocs current status, run:
 gitdocs status
 ```
 
-Once gitdocs has been started and is monitoring the correct directories, simply start editing or adding files to your
-designated git repos. Changes will be automatically pushed and pulled to your local repos.
+To explore the repos in your browser, simply visit `http://localhost:8888` for access to all your docs within the browser.
 
-To explore the repos in your browser, simply start the server:
+### Conflict Resolution
 
-```
-gitdocs serve
-```
+Proper conflict resolution is an important part of any good doc and file collaboration tool.
+In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
+resolved automatically?
 
-and then visit `http://localhost:8888` for access to all your docs in the browser.
+Don't worrry, gitdocs makes this easy. In the event of a conflict, **all the different versions
+of a document are stored** in the repo tagged with the **git sha** for the commit for each variation. The members
+of the repo can then compare all versions and resolve the conflict.
 
 ## Planned Features
 
@@ -119,7 +127,6 @@ Gitdocs is a young project but we have big plans for it including:
  - A web front-end UI for file uploading and editing of files (with rich text editor and syntax highlighting)
  - Local-area peer-to-peer syncing, avoid 'polling' in cases where we can using a messaging protocol.
  - Click-to-share instant access granting file access to users using a local tunnel or other means.
- - Better conflict-resolution behavior on updates (maintain both versions of a file)
  - Support for linux and windows platforms (coming soon), and maybe android and iOS as well?
 
 ## Prior Projects
