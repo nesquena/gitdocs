@@ -64,6 +64,8 @@ module Gitdocs
           system("cd #{@root} && git rm #{conflict}") or raise
         end
         push_changes
+      elsif sh_string("git remote").nil? # no remote to pull from
+        # Do nothing, no remote repo yet
       else
         error("There was a problem synchronizing this gitdoc", "A problem occurred in #{@root}:\n#{out}")
       end
