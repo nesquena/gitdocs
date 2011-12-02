@@ -1,5 +1,6 @@
 %table
   -gds.each_with_index do |gd, idx|
     %tr
-      %a{ :href => "/#{idx}" }
-        =gd.root
+      %td
+        %a{ :href => "/#{idx}" }
+          =gd.root
