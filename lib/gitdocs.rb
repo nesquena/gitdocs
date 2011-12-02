@@ -20,6 +20,7 @@ module Gitdocs
       puts "Gitdocs v#{VERSION}" if debug
       puts "Using configuration root: '#{config.config_root}'" if debug
       puts "Watch paths: #{config.paths.join(", ")}" if debug
+      # Start the repo watchers
       runners = []
       threads = config.paths.map do |path|
         t = Thread.new(runners) { |r|
@@ -32,6 +33,7 @@ module Gitdocs
       end
       sleep 1
       unless defined?(pid) && pid
+        # Start the web front-end
         pid = fork { Server.new(*runners).start }
         at_exit { Process.kill("KILL", pid) rescue nil }
       end

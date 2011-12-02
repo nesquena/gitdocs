@@ -14,9 +14,9 @@ module Gitdocs
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
       @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", 'origin')
       @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", 'master')
-      @current_revision = sh("git rev-parse HEAD").strip rescue nil
-      mutex = Mutex.new
+      @current_revision = sh_string("git rev-parse HEAD")
 
+      mutex = Mutex.new
       # Pull changes from remote repository
       Thread.new do
         loop do
@@ -133,7 +133,7 @@ module Gitdocs
     end
 
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-    def sh_string(cmd, default)
+    def sh_string(cmd, default=nil)
       val = sh(cmd).strip rescue nil
       (val.nil? || val.empty?) ? default : val
     end
