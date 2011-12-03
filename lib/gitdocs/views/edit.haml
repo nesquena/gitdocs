@@ -19,10 +19,15 @@
   #editor
   %textarea{ :id => 'data', :name => "data" }= preserve contents
   %input{ :type => 'submit', :value => "Save" }
+  %input{ :type => 'hidden', :class => 'filename', :value => request.path_info }
 
+<script src="/js/util.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/mode-css.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/mode-html.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/mode-markdown.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/mode-ruby.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/edit.js" type="text/javascript" charset="utf-8"></script>
