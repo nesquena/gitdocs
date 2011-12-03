@@ -1,5 +1,4 @@
-%h1
-  =root
+%h1= root
 
 - if parent
   %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
@@ -9,8 +8,7 @@
   %a{ :href => "/", :class => "parent" }
     &#8618; Back to selection
 
-%h2
-  =request.path_info.empty? ? '/' : request.path_info
+%h2= request.path_info.empty? ? '/' : request.path_info
 
 %table
   -contents.each_with_index do |f, i|

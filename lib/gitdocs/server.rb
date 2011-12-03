@@ -10,7 +10,7 @@ module Gitdocs
     def start(port = 8888)
       gds = @gitdocs
       Thin::Server.start('127.0.0.1', port) do
-        use Rack::Static, :urls => ['/css', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
+        use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
           if request.path_info == '/'
             render! "home", :layout => 'app', :locals => {:gds => gds}
@@ -18,17 +18,26 @@ module Gitdocs
             var :int do |idx|
               gd = gds[idx]
               halt 404 if gd.nil?
-              expanded_path = File.expand_path(".#{request.path_info}", gd.root)
+              file_path = request.path_info
+              file_path = request.path_info.gsub('/save', '') if save_file = request.path_info =~ %r{/save$}
+              expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               halt 404 unless File.exist?(expanded_path)
-              parent = File.dirname(request.path_info)
+              parent = File.dirname(file_path)
               parent = '' if parent == '/'
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
-              if File.directory?(expanded_path)
+              mode, mime = request.params['mode'], `file -I #{expanded_path}`.strip
+              if save_file # Saving
+                File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
+                redirect! "/" + idx.to_s + file_path
+              elsif File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
-              elsif request.params['mode'] != 'raw' && `file -I #{expanded_path}`.strip.match(%r{text/}) # render file
+              elsif mode == 'edit' && mime.match(%r{text/}) # edit file
+                contents = File.read(expanded_path)
+                render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
+              elsif mode != 'raw' && mime.match(%r{text/}) # render file
                 contents = Tilt.new(expanded_path).render rescue "<pre>#{File.read(expanded_path)}</pre>"
                 render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
               else # other file

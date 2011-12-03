@@ -1,5 +1,4 @@
-%h1
-  = root
+%h1= root
 
 - if parent
   %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
@@ -13,6 +12,9 @@
   = request.path_info.empty? ? '/' : request.path_info
   %a{ :href => "?mode=raw" }
     (raw)
+  %a{ :href => "?mode=edit" }
+    (edit)
 
 .contents
   = preserve contents
+
