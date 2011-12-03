@@ -4,6 +4,14 @@ body {
   font-family: Arial, Verdana;
 }
 
+body h1, h2 {
+  margin: 0;
+  padding-bottom: 0.8em;
+  font-weight: bold;
+}
+body h1 { font-size: 2em; }
+body h2 { font-size: 1.5em; }
+
 body .container {
   min-width: 500px;
   background: #FCEA97;
@@ -15,3 +23,21 @@ body .container {
   margin-top: 1.2em;
 }
 
+body .contents {
+  overflow: auto;
+  background-color: #F8F8F8;
+  border: 3px solid #EFEFEF;
+  padding: 1.2em;
+  margin: 0;
+  font-family: ;
+}
+
+body .contents h1 {
+  font-size: 2em;
+  padding-bottom: 0.8em;
+}
+
+body .contents h2 {
+  font-size: 1.4em;
+  padding-bottom: 0.6em;
+}

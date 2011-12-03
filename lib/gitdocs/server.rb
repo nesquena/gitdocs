@@ -21,19 +21,19 @@ module Gitdocs
               expanded_path = File.expand_path(".#{request.path_info}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               halt 404 unless File.exist?(expanded_path)
+              parent = File.dirname(request.path_info)
+              parent = '' if parent == '/'
+              parent = nil if parent == '.'
+              p `file -I #{expanded_path}`.strip
+              locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
               if File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
-                #run! Rack::Directory.new(gd.root)
-                parent = File.dirname(request.path_info)
-                parent = '' if parent == '/'
-                parent = nil if parent == '.'
-                render! "dir", :layout => 'app', :locals => {:contents => contents, :idx => idx, :parent => parent, :root => gd.root}
-              else
-                begin
-                  render! expanded_path
-                rescue
-                  run! Rack::File.new(gd.root)
-                end
+                render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
+              elsif `file -I #{expanded_path}`.strip.match(%r{text/}) # render file
+                contents = Tilt.new(expanded_path).render rescue "<pre>#{File.read(expanded_path)}</pre>"
+                render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
+              else # other file
+                run! Rack::File.new(gd.root)
               end
             end
           end
