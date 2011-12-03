@@ -9,7 +9,6 @@ require 'growl'
 require 'yajl'
 require 'dante'
 
-
 module Gitdocs
 
   DEBUG = ENV['DEBUG']

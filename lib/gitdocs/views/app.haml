@@ -12,9 +12,10 @@
   %body
     .nav
       %h1
-        %img{ :src => "/img/git_logo.png", :width => 30, :height => 30}
-        Gitdocs
-        =Gitdocs::VERSION
+        %a{:href => '/'}
+          %img{ :src => "/img/git_logo.png", :width => 30, :height => 30}
+          Gitdocs
+          =Gitdocs::VERSION
     .container
       = preserve(yield)
 
