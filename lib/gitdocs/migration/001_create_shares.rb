@@ -3,7 +3,7 @@ class CreateShares < ActiveRecord::Migration
     create_table :shares do |t|
       t.column :path, :string
       t.column :polling_interval, :integer, :default => 15
-      t.column :notifications, :boolean, :default => true
+      t.column :notification, :boolean, :default => true
     end
   end
 

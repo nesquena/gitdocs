@@ -1,5 +1,17 @@
 %h1 Settings
 
-%dl
-  %dt 
-  %dd 
+%h2 Shares
+
+-conf.shares.each_with_index do |share, idx|
+  %div{:id => "share-#{idx}", :class => 'share'}
+    %dl
+      %dt Path
+      %dd #{share.path}
+    %dl
+      %dt Polling interval
+      %dd #{share.polling_interval}
+    %dl
+      %dt Notifications?
+      %dd #{share.notification}
+
+    

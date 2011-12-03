@@ -5,7 +5,7 @@ module Gitdocs
     def initialize(share)
       @share = share
       out, status = sh_with_code "which growlnotify"
-      @use_growl = share.notifications && status.success?
+      @use_growl = share.notification && status.success?
       @root = share.path
       @polling_interval = share.polling_interval
       @icon = File.expand_path("../../img/icon.png", __FILE__)

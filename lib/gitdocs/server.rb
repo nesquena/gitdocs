@@ -10,6 +10,7 @@ module Gitdocs
 
     def start(port = 8888)
       gds = @gitdocs
+      conf = @config
       Thin::Server.start('127.0.0.1', port) do
         use Rack::Static, :urls => ['/css', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
@@ -17,7 +18,7 @@ module Gitdocs
             render! "home", :layout => 'app', :locals => {:gds => gds}
           else
             path 'settings' do
-              get.render! 'settings', :layout => 'app', :locals => {:config => @config}
+              get.render! 'settings', :layout => 'app', :locals => {:conf => conf}
             end
 
             var :int do |idx|

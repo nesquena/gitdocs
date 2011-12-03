@@ -17,6 +17,15 @@ body h2 { font-size: 1.5em; margin-top: 0.2em; }
 	text-align: center;
 }
 
+.nav h1 a {
+	text-decoration: none;
+	color: black;
+}
+
+.nav h1 a:hover {
+	text-decoration: none;
+}
+
 .menu {
 	margin-top :10px;
 	display: absolute;
