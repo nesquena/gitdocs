@@ -10,5 +10,13 @@
     %script{ :src => "/js/jquery.js", :type => "text/javascript", :charset => "utf-8" }
     %script{ :src => "/js/app.js", :type => "text/javascript", :charset => "utf-8" }
   %body
+    .nav
+      %h1
+        %img{ :src => "/img/git_logo.png", :width => 30, :height => 30}
+        Gitdocs
+        =Gitdocs::VERSION
     .container
       = preserve(yield)
+
+    .menu
+      %a{:href => '/settings'} Settings
