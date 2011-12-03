@@ -64,7 +64,7 @@ module Gitdocs
       FileUtils.mkdir_p(File.dirname(path))
       system("git clone -q #{remote} #{path}") or raise "Unable to clone into #{path}"
       self.add(path)
-      say "Created & added path #{path} to doc list"
+      say "Created #{path} path for gitdoc"
     end
 
     desc "status", "Retrieve gitdocs status"
