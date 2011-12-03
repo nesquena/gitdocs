@@ -3,7 +3,8 @@ require 'renee'
 
 module Gitdocs
   class Server
-    def initialize(*gitdocs)
+    def initialize(config, *gitdocs)
+      @config = config
       @gitdocs = gitdocs
     end
 
@@ -15,6 +16,10 @@ module Gitdocs
           if request.path_info == '/'
             render! "home", :layout => 'app', :locals => {:gds => gds}
           else
+            path 'settings' do
+              get.render! 'settings', :layout => 'app', :locals => {:config => @config}
+            end
+
             var :int do |idx|
               gd = gds[idx]
               halt 404 if gd.nil?

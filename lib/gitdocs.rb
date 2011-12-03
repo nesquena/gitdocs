@@ -19,12 +19,12 @@ module Gitdocs
       config = Configuration.new(config_root)
       puts "Gitdocs v#{VERSION}" if debug
       puts "Using configuration root: '#{config.config_root}'" if debug
-      puts "Watch paths: #{config.paths.join(", ")}" if debug
+      puts "Shares: #{config.shares.map(&:inspect).join(", ")}" if debug
       # Start the repo watchers
       runners = []
-      threads = config.paths.map do |path|
+      threads = config.shares.map do |share|
         t = Thread.new(runners) { |r|
-          runner = Runner.new(path)
+          runner = Runner.new(share)
           r << runner
           runner.run
         }
@@ -34,7 +34,7 @@ module Gitdocs
       sleep 1
       unless defined?(pid) && pid
         # Start the web front-end
-        pid = fork { Server.new(*runners).start }
+        pid = fork { Server.new(config, *runners).start }
         at_exit { Process.kill("KILL", pid) rescue nil }
       end
       puts "Watch threads: #{threads.map { |t| "Thread status: '#{t.status}', running: #{t.alive?}" }}" if debug

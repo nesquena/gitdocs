@@ -2,11 +2,12 @@ module Gitdocs
   class Runner
     attr_accessor :root
 
-    def initialize(root, opts = nil)
-      @root = root
+    def initialize(share)
+      @share = share
       out, status = sh_with_code "which growlnotify"
-      @use_growl = opts && opts.key?(:growl) ? opts[:growl] : status.success?
-      @polling_interval = opts && opts[:polling_interval] || 15
+      @use_growl = share.notifications && status.success?
+      @root = share.path
+      @polling_interval = share.polling_interval
       @icon = File.expand_path("../../img/icon.png", __FILE__)
     end
 

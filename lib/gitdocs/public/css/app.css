@@ -9,8 +9,19 @@ body h1, h2 {
   padding-bottom: 0.8em;
   font-weight: bold;
 }
+
 body h1 { font-size: 2em; }
 body h2 { font-size: 1.5em; margin-top: 0.2em; }
+
+.nav h1 {
+	text-align: center;
+}
+
+.menu {
+	margin-top :10px;
+	display: absolute;
+	float:right;
+}
 
 body .container {
   min-width: 500px;

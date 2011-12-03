@@ -27,6 +27,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'growl', '~> 1.0.3'
   s.add_dependency 'yajl-ruby'
   s.add_dependency 'haml'
+  s.add_dependency 'sqlite3', "~> 1.3.4"
+  s.add_dependency 'activerecord', "~> 3.1.0"
 
   s.add_development_dependency 'minitest', "~> 2.6.1"
   s.add_development_dependency 'rake'

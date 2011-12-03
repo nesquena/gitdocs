@@ -72,7 +72,7 @@ module Gitdocs
       say "GitDoc v#{VERSION}"
       say "Running: #{self.running?}"
       say "Watching paths:"
-      say self.config.paths.map { |p| "  - #{p}" }.join("\n")
+      say self.config.shares.map { |s| "  - #{s.path}" }.join("\n")
     end
 
     desc "config", "Configuration options for gitdocs"
