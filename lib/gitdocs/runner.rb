@@ -20,7 +20,7 @@ module Gitdocs
       # Pull changes from remote repository
       Thread.new do
         loop do
-          mutex.synchronize { pull_changes }
+          mutex.synchronize { sync_changes }
           sleep @polling_interval
         end
       end.abort_on_exception = true
@@ -38,7 +38,7 @@ module Gitdocs
       listener.run
     end
 
-    def pull_changes
+    def sync_changes
       out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
       if status.success?
         changes = get_latest_changes
@@ -59,7 +59,8 @@ module Gitdocs
           conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
           puts "solving #{conflict} with #{ids.inspect}"
           ids.each do |(mode, sha, id)|
-            system("cd #{@root} && git show :#{id}:#{conflict} > #{conflict_start}-#{sha[0..6]}#{conflict_end}")
+            author =  " original" if id == "1"
+            system("cd #{@root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
           end
           system("cd #{@root} && git rm #{conflict}") or raise
         end
