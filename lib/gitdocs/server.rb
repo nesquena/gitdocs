@@ -24,12 +24,11 @@ module Gitdocs
               parent = File.dirname(request.path_info)
               parent = '' if parent == '/'
               parent = nil if parent == '.'
-              p `file -I #{expanded_path}`.strip
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
               if File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
-              elsif `file -I #{expanded_path}`.strip.match(%r{text/}) # render file
+              elsif request.params['mode'] != 'raw' && `file -I #{expanded_path}`.strip.match(%r{text/}) # render file
                 contents = Tilt.new(expanded_path).render rescue "<pre>#{File.read(expanded_path)}</pre>"
                 render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
               else # other file

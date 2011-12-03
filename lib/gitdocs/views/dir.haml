@@ -1,12 +1,13 @@
 %h1
   =root
 
--if parent
-  %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}" }
-    =parent.empty? ? '/' : parent
--else
-  %a{ :href => "/" }
-    Back to selection
+- if parent
+  %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
+    &#8618;
+    = parent.empty? ? '/' : parent
+- else
+  %a{ :href => "/", :class => "parent" }
+    &#8618; Back to selection
 
 %h2
   =request.path_info.empty? ? '/' : request.path_info

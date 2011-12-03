@@ -10,7 +10,7 @@ body h1, h2 {
   font-weight: bold;
 }
 body h1 { font-size: 2em; }
-body h2 { font-size: 1.5em; }
+body h2 { font-size: 1.5em; margin-top: 0.2em; }
 
 body .container {
   min-width: 500px;
@@ -22,6 +22,9 @@ body .container {
   padding: 2em;
   margin-top: 1.2em;
 }
+
+body a { text-decoration: none; color: blue; }
+body a:hover { text-decoration: underline; }
 
 body .contents {
   overflow: auto;
