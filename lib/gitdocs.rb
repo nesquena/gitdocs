@@ -1,3 +1,4 @@
+require 'grit'
 require 'gitdocs/version'
 require 'gitdocs/configuration'
 require 'gitdocs/runner'

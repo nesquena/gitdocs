@@ -1,6 +1,6 @@
 module Gitdocs
   class Runner
-    attr_accessor :root
+    attr_accessor :root, :repo
 
     def initialize(share)
       @share = share
@@ -13,9 +13,10 @@ module Gitdocs
       return false unless self.valid?
       out, status = sh_with_code "which growlnotify"
       @use_growl = @share.notification && status.success?
+      @repo      = Grit::Repo.new(@root)
       @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", 'origin')
-      @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", 'master')
-      @current_revision = sh_string("git rev-parse HEAD")
+      @current_branch   = @repo.head.try(:name) || "master"
+      @current_revision = @repo.commits('HEAD', 1).first.try(:sha)
 
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
 
