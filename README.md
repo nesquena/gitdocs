@@ -128,6 +128,7 @@ Gitdocs is a young project but we have big plans for it including:
  - Local-area peer-to-peer syncing, avoid 'polling' in cases where we can using a messaging protocol.
  - Click-to-share instant access granting file access to users using a local tunnel or other means.
  - Support for linux and windows platforms (coming soon), and maybe android and iOS as well?
+ - Indexing and full-text search for all documents in a repo
 
 ## Prior Projects
 
