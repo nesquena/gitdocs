@@ -32,6 +32,21 @@ body h2 { font-size: 1.5em; margin-top: 0.2em; }
   float:right;
 }
 
+div.share {
+  border-color: #000000;
+  border-radius: 7px;
+  padding: 2em;
+  margin-top: 1.2em;
+}
+
+div.share.even {
+	background: #FEFBAA;
+}
+
+div.share input {
+	width :100%;
+}
+
 body .container {
   min-width: 500px;
   background: #FCEA97;

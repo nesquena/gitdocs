@@ -20,6 +20,13 @@ module Gitdocs
           else
             path 'settings' do
               get.render! 'settings', :layout => 'app', :locals => {:conf => conf}
+              post do
+                shares = conf.shares
+                request.POST['share'].each do |idx, share|
+                  shares[Integer(idx)].update_attributes(share)
+                end
+                redirect! '/settings'
+              end
             end
 
             var :int do |idx|
