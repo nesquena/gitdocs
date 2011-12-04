@@ -4,18 +4,20 @@ module Gitdocs
 
     def initialize(share)
       @share = share
-      out, status = sh_with_code "which growlnotify"
-      @use_growl = share.notification && status.success?
-      @root = share.path
+      @root  = share.path
       @polling_interval = share.polling_interval
       @icon = File.expand_path("../../img/icon.png", __FILE__)
     end
 
     def run
-      info("Running gitdocs!", "Running gitdocs in `#{@root}'")
+      return false unless self.valid?
+      out, status = sh_with_code "which growlnotify"
+      @use_growl = @share.notification && status.success?
       @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", 'origin')
       @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", 'master')
       @current_revision = sh_string("git rev-parse HEAD")
+
+      info("Running gitdocs!", "Running gitdocs in `#{@root}'")
 
       mutex = Mutex.new
       # Pull changes from remote repository
@@ -110,6 +112,10 @@ module Gitdocs
       else
         []
       end
+    end
+
+    def valid?
+      File.exist?(File.expand_path(".git", @root))
     end
 
     def warn(title, msg)
