@@ -115,7 +115,8 @@ module Gitdocs
     end
 
     def valid?
-      File.exist?(File.expand_path(".git", @root))
+      out, status = sh_with_code "git status"
+      status.success?
     end
 
     def warn(title, msg)
