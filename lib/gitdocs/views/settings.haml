@@ -2,16 +2,25 @@
 
 %h2 Shares
 
--conf.shares.each_with_index do |share, idx|
-  %div{:id => "share-#{idx}", :class => 'share'}
-    %dl
-      %dt Path
-      %dd #{share.path}
-    %dl
-      %dt Polling interval
-      %dd #{share.polling_interval}
-    %dl
-      %dt Notifications?
-      %dd #{share.notification}
-
-    
+%form{:method => 'POST', :action => '/settings'}
+  -conf.shares.each_with_index do |share, idx|
+    %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}
+      %dl
+        %dt Path
+        %dd
+          %input{:name=>"share[#{idx}][path]", :value => share.path}
+      %dl
+        %dt Polling interval
+        %dd
+          %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
+      %dl
+        %dt Notifications?
+        %dd
+          %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
+          %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
+      %dl.delete
+        %dt Delete
+        %dd
+          %input{:type =>'button', :value => "Delete"}
+          %input{:type =>'hidden', :name=>"share[#{idx}][delete]"}
+  %input{:value => 'Save', :type => 'submit'}

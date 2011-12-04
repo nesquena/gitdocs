@@ -16,7 +16,7 @@ module Gitdocs
     end
 
     class Share < ActiveRecord::Base
-
+      attr_accessible :polling_interval, :path, :notification
     end
 
     def add_path(path)
