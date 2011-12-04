@@ -8,7 +8,7 @@ module Gitdocs
     end
 
     def start(port = 8888)
-      gds = @gitdocs
+      gds = @gitdocs.sort { |a, b| a.root <=> b.root }
       Thin::Server.start('127.0.0.1', port) do
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
@@ -20,6 +20,7 @@ module Gitdocs
               halt 404 if gd.nil?
               file_path = request.path_info
               file_path = request.path_info.gsub('/save', '') if save_file = request.path_info =~ %r{/save$}
+              file_path = request.path_info.gsub('/upload', '') if upload_file = request.path_info =~ %r{/upload$}
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               halt 404 unless File.exist?(expanded_path)
@@ -31,9 +32,17 @@ module Gitdocs
               if save_file # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
+              elsif upload_file # Uploading
+                halt 404 unless file = request.params['file']
+                tempfile, filename = file[:tempfile], file[:filename]
+                FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))
+                redirect! "/" + idx.to_s + file_path
               elsif File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
+              elsif mode == 'delete' # delete file
+                FileUtils.rm(expanded_path)
+                redirect! "/" + idx.to_s + parent
               elsif mode == 'edit' && mime.match(%r{text/}) # edit file
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)

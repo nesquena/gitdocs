@@ -50,3 +50,12 @@ body #editor {
   width: 700px;
   height: 400px;
 }
+
+body form.upload {
+  padding-top: 1.4em;
+}
+
+body form.upload p {
+  padding-bottom: 0.6em;
+  font-weight: bold;
+}

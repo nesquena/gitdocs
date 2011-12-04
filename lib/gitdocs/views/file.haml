@@ -14,6 +14,8 @@
     (raw)
   %a{ :href => "?mode=edit" }
     (edit)
+  %a{ :href => "?mode=delete", :onclick => "confirm('Are you sure?')" }
+    (delete)
 
 .contents
   = preserve contents

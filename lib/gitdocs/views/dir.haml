@@ -16,3 +16,9 @@
       %td
         %a{ :href => "/#{idx}#{request.path_info}/#{File.basename(f)}" }
           ="#{request.path_info}/#{File.basename(f)}"
+
+
+%form.upload{ :method => "post", :enctype => "multipart/form-data", :action => "/#{idx}#{request.path_info}/upload" }
+  %p Upload a file to this directory
+  %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
+  %input{:type => 'submit', :value => "Upload file"}
