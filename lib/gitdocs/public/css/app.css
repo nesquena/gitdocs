@@ -26,21 +26,20 @@ body .container {
 body a { text-decoration: none; color: blue; }
 body a:hover { text-decoration: underline; }
 
-body .contents {
+body .contents .tilt {
   overflow: auto;
   background-color: #F8F8F8;
-  border: 3px solid #EFEFEF;
   padding: 1.2em;
+  border: 3px solid #EFEFEF;
   margin: 0;
-  font-family: ;
 }
 
-body .contents h1 {
+body .tilt h1 {
   font-size: 2em;
   padding-bottom: 0.8em;
 }
 
-body .contents h2 {
+body .tilt h2 {
   font-size: 1.4em;
   padding-bottom: 0.6em;
 }
@@ -48,7 +47,8 @@ body .contents h2 {
 body #editor {
   position: relative;
   width: 700px;
-  height: 400px;
+  height: 600px;
+  margin-bottom: 1em;
 }
 
 body form.upload {

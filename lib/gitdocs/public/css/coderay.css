@@ -1,0 +1,39 @@
+pre.CodeRay {
+  border: 1px black solid;
+  background-color: #1d1f21;
+  color: white;
+  padding: 5px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  overflow: auto;
+}
+
+pre.CodeRay .string {
+  color: #b5bd68;
+}
+
+pre.CodeRay .constant, .predefined-constant {
+  color: #cc6666;
+}
+
+pre.CodeRay .instance-variable, pre.CodeRay .class {
+  color: #cc6666;
+
+}
+
+pre.CodeRay .keyword {
+  color: #b294bb;
+}
+
+pre.CodeRay .symbol {
+  color: #b5bd68;
+}
+
+pre.CodeRay .integer {
+  color: #f77;
+
+}
+
+pre.CodeRay .comment {
+  color: #969896;
+}

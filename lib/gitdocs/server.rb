@@ -1,5 +1,6 @@
 require 'thin'
 require 'renee'
+require 'coderay'
 
 module Gitdocs
   class Server
@@ -21,6 +22,7 @@ module Gitdocs
               file_path = request.path_info
               file_path = request.path_info.gsub('/save', '') if save_file = request.path_info =~ %r{/save$}
               file_path = request.path_info.gsub('/upload', '') if upload_file = request.path_info =~ %r{/upload$}
+              file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               halt 404 unless File.exist?(expanded_path)
@@ -47,7 +49,11 @@ module Gitdocs
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode != 'raw' && mime.match(%r{text/}) # render file
-                contents = Tilt.new(expanded_path).render rescue "<pre>#{File.read(expanded_path)}</pre>"
+                begin # attempting to render file
+                  contents = '<div class="tilt">'  + Tilt.new(expanded_path).render + '</div>'
+                rescue RuntimeError => e # not tilt supported
+                  contents = '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
+                end
                 render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
               else # other file
                 run! Rack::File.new(gd.root)

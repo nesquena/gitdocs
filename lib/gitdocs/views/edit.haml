@@ -14,6 +14,8 @@
     (raw)
   %a{ :href => "?mode=edit" }
     (edit)
+  %a{ :href => "?mode=delete", :onclick => "javascript:return confirm('Are you sure?')" }
+    (delete)
 
 %form{ :class => "edit", :action => "/#{idx}#{request.path_info}/save", :method => "post", :style => "display:none;" }
   #editor
