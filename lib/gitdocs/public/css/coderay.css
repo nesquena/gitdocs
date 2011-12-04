@@ -6,6 +6,8 @@ pre.CodeRay {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   overflow: auto;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Droid Sans Mono', 'Courier New', monospace;
 }
 
 pre.CodeRay .string {
