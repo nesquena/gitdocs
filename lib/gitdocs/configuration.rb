@@ -19,8 +19,10 @@ module Gitdocs
       attr_accessible :polling_interval, :path, :notification
     end
 
-    def add_path(path)
-      Share.new(path)
+    def add_path(path, opts = nil)
+      path_opts = {:path => path}
+      path_opts.merge!(opts) if opts
+      Share.new(path_opts).save!
     end
 
     def shares
@@ -33,20 +35,6 @@ module Gitdocs
 
     def paths=(paths)
       write_file('paths', paths.uniq.join("\n"))
-    end
-
-    # @config.add_path('my/path/1')
-    def add_path(path)
-      path = normalize_path(path)
-      self.paths += [path]
-      path
-    end
-
-    # @config.remove_path('my/path/1')
-    def remove_path(path)
-      path = normalize_path(path)
-      self.paths -= [path]
-      path
     end
 
     def normalize_path(path)

@@ -16,6 +16,7 @@ module Gitdocs
   def self.run(config_root = nil, debug = DEBUG)
     loop do
       config = Configuration.new(config_root)
+      yield config if block_given?
       puts "Gitdocs v#{VERSION}" if debug
       puts "Using configuration root: '#{config.config_root}'" if debug
       puts "Shares: #{config.shares.map(&:inspect).join(", ")}" if debug
