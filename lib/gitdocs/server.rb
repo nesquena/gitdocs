@@ -38,7 +38,6 @@ module Gitdocs
               file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
-              halt 404 unless File.exist?(expanded_path)
               parent = File.dirname(file_path)
               parent = '' if parent == '/'
               parent = nil if parent == '.'
@@ -52,6 +51,8 @@ module Gitdocs
                 tempfile, filename = file[:tempfile], file[:filename]
                 FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))
                 redirect! "/" + idx.to_s + file_path + "/" + filename
+              elsif !File.exist?(expanded_path) # edit for non-existent file
+                render! "edit", :layout => 'app', :locals => locals.merge(:contents => "")
               elsif File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)

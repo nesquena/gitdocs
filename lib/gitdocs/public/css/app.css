@@ -68,11 +68,11 @@ body #editor {
   margin-bottom: 1em;
 }
 
-body form.upload {
+body form.upload, form.add {
   padding-top: 1.4em;
 }
 
-body form.upload p {
+body form.upload p, form.add p {
   padding-bottom: 0.6em;
   font-weight: bold;
 }
