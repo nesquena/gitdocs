@@ -18,12 +18,12 @@ body h2 { font-size: 1.5em; margin-top: 0.2em; }
 }
 
 .nav h1 a {
-	text-decoration: none;
-	color: black;
+  text-decoration: none;
+  color: black;
 }
 
 .nav h1 a:hover {
-	text-decoration: none;
+  text-decoration: none;
 }
 
 .menu {
@@ -40,15 +40,15 @@ div.share {
 }
 
 div.share.even {
-	background: #FEFBAA;
+  background: #FEFBAA;
 }
 
 div.share input {
-	width :100%;
+  width :100%;
 }
 
 body .container {
-  min-width: 500px;
+  min-width: 700px;
   background: #FCEA97;
   border-style: solid;
   border-width: 5px;
