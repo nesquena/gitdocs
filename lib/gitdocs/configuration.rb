@@ -33,30 +33,16 @@ module Gitdocs
       Share.all
     end
 
-    def paths
-      read_file('paths').split("\n")
-    end
-
-    def paths=(paths)
-      write_file('paths', paths.uniq.join("\n"))
-    end
-
     def normalize_path(path)
       File.expand_path(path, Dir.pwd)
     end
 
     private
-    def read_file(name)
-      full_path = File.expand_path(name, @config_root)
-      File.exist?(full_path) ? File.read(full_path) : ''
-    end
-
-    def write_file(name, content)
-      File.open(File.expand_path(name, @config_root), 'w') { |f| f.puts content }
-    end
-
     def import_old_shares
-      paths.each { |path| Share.find_or_create_by_path(path) }
+      full_path = File.expand_path('paths', config_root)
+      if File.exist?(full_path)
+        File.read(full_path).split("\n").each { |path| Share.find_or_create_by_path(path) }
+      end
     end
   end
 end
