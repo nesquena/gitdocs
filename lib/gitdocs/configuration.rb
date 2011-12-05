@@ -25,6 +25,10 @@ module Gitdocs
       Share.new(path_opts).save!
     end
 
+    def remove_path(path)
+      Share.where(:path => path).destroy_all
+    end
+
     def shares
       Share.all
     end
