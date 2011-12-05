@@ -2,14 +2,13 @@
 
 - if parent
   %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
-    &#8618;
-    = parent.empty? ? '/' : parent
+    &#8618; Back to parent
 - else
   %a{ :href => "/", :class => "parent" }
     &#8618; Back to selection
 
 %h2
-  = request.path_info.empty? ? '/' : request.path_info
+  %span.path= request.path_info.empty? ? '/' : request.path_info
   %a{ :href => "?mode=raw" }
     (raw)
   %a{ :href => "?mode=edit" }
@@ -24,8 +23,6 @@
   %a{ :href => "/#{idx}/#{request.path_info}" } Cancel
   %input{ :type => 'hidden', :class => 'filename', :value => request.path_info }
 
-<script src="/js/util.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/mode-css.js" type="text/javascript" charset="utf-8"></script>
