@@ -39,7 +39,6 @@ class MiniTest::Spec
   def with_clones(count = 3)
     FileUtils.rm_rf("/tmp/gitdocs")
     master_path = "/tmp/gitdocs/master"
-    FileUtils.mkdir_p("/tmp/gitdocs/config")
     FileUtils.mkdir_p("/tmp/gitdocs/master")
     capture_out { `git init /tmp/gitdocs/master --bare` }
     sub_paths = count.times.map do |c|
@@ -48,12 +47,14 @@ class MiniTest::Spec
       FileUtils.mkdir_p(conf_path)
       ["/tmp/gitdocs/#{c}", conf_path]
     end
-    pids = sub_paths.map { |(path, conf_path)| fork do
+    pids = sub_paths.map do |(path, conf_path)|
+      fork do
       unless ENV['DEBUG']
         STDOUT.reopen(File.open("/dev/null", 'w'))
         STDERR.reopen(File.open("/dev/null", 'w'))
       end
       begin
+        puts "RUNNING!"
         Gitdocs.run(conf_path) do |conf|
           conf.add_path(path, :polling_interval => 0.1, :notification => false)
         end
@@ -61,10 +62,11 @@ class MiniTest::Spec
         puts "RATHER BAD ~~~~~"
         puts $!.message
         puts $!.backtrace.join("\n  ")
+        end
       end
-    end }
+    end
     begin
-      sleep 0.1
+      sleep 1
       yield sub_paths.map{|sp| sp.first}
     ensure
       pids.each { |pid| Process.kill("INT", pid) rescue nil }

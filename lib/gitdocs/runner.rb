@@ -13,8 +13,8 @@ module Gitdocs
       return false unless self.valid?
       out, status = sh_with_code "which growlnotify"
       @use_growl = @share.notification && status.success?
-      @current_remote   = sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", 'origin')
-      @current_branch   = sh_string("git branch | grep '^\*' | sed -e 's/\* //'", 'master')
+      @current_remote   = @share.remote_name
+      @current_branch   = @share.branch_name
       @current_revision = sh_string("git rev-parse HEAD")
 
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
@@ -60,7 +60,6 @@ module Gitdocs
         warn("There were some conflicts", "#{conflicted_files.keys.map{|f| "* #{f}"}.join("\n")}")
         conflicted_files.each do |conflict, ids|
           conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
-          puts "solving #{conflict} with #{ids.inspect}"
           ids.each do |(mode, sha, id)|
             author =  " original" if id == "1"
             system("cd #{@root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
