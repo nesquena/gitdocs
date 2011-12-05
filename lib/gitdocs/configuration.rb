@@ -9,10 +9,10 @@ module Gitdocs
       FileUtils.mkdir_p(@config_root)
       ActiveRecord::Base.establish_connection(
         :adapter => 'sqlite3',
-        :database => File.join(@config_root, 'config.db')
+        :database => ENV["TEST"] ? ':memory:' : File.join(@config_root, 'config.db')
       )
       ActiveRecord::Migrator.migrate(File.expand_path("../migration", __FILE__))
-      import_old_shares
+      import_old_shares unless ENV["TEST"]
     end
 
     class Share < ActiveRecord::Base
