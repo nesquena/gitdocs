@@ -23,26 +23,8 @@ body .container {
   margin-top: 1.2em;
 }
 
-body a { text-decoration: none; color: blue; }
+body a { text-decoration: none; color: #33e; }
 body a:hover { text-decoration: underline; }
-
-body .contents .tilt {
-  overflow: auto;
-  background-color: #F8F8F8;
-  padding: 1.2em;
-  border: 3px solid #EFEFEF;
-  margin: 0;
-}
-
-body .tilt h1 {
-  font-size: 2em;
-  padding-bottom: 0.8em;
-}
-
-body .tilt h2 {
-  font-size: 1.4em;
-  padding-bottom: 0.6em;
-}
 
 body #editor {
   position: relative;

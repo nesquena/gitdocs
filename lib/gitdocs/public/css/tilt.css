@@ -1,0 +1,77 @@
+body .contents .tilt {
+  overflow: auto;
+  background-color: #F8F8F8;
+  padding: 1.2em;
+  border: 3px solid #EFEFEF;
+  margin: 0;
+  font-family: helvetica, arial, freesans, clean, sans-serif;
+}
+
+.tilt strong { font-weight: bold; }
+.tilt em { font-style: italic; }
+
+.tilt pre {
+  background-color: #eee;
+  padding: 10px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  overflow: auto;
+}
+
+.tilt code {
+  background-color: #eee;
+  padding: 1px 3px;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+}
+
+.tilt ul {
+  margin-top: 1em;
+  margin-left: 2em;
+}
+
+.tilt li p {
+  margin: 0.3em;
+}
+
+.tilt li {
+  list-style-type: disc;
+}
+
+.tilt a:link, .tilt a:visited{
+  color: #33e;
+  text-decoration: none;
+}
+
+.tilt a:hover{
+  color: #00f;
+  text-shadow:1px 1px 2px #ccf;
+  text-decoration:underline;
+}
+
+.tilt h1 {
+  font-size: 1.8em;
+  padding-bottom: 0.4em;
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+.tilt h2 {
+  font-size: 1.4em;
+  border-bottom: 1px dotted #aaa;
+  margin-bottom: 1em;
+  padding-bottom: 0;
+  color: #333;
+}
+
+.tilt h3{
+  color: #666;
+}
+
+.tilt .shadow {
+  -webkit-box-shadow:0 5px 15px #000;
+  -moz-box-shadow:0 5px 15px #000;
+  box-shadow:0 5px 15px #000;
+}
