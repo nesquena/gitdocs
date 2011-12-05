@@ -18,6 +18,11 @@
           ="#{request.path_info}/#{File.basename(f)}"
 
 
+%form.add
+  %p Add a file in this directory
+  %input{:type => 'text', :name => "path", :class => "edit" }
+  %input{:type => 'submit', :value => "New file" }
+
 %form.upload{ :method => "post", :enctype => "multipart/form-data", :action => "/#{idx}#{request.path_info}/upload" }
   %p Upload a file to this directory
   %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
