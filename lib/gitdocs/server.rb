@@ -38,7 +38,7 @@ module Gitdocs
                 halt 404 unless file = request.params['file']
                 tempfile, filename = file[:tempfile], file[:filename]
                 FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))
-                redirect! "/" + idx.to_s + file_path
+                redirect! "/" + idx.to_s + file_path + "/" + filename
               elsif File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
