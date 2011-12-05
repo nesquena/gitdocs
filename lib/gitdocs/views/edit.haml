@@ -17,7 +17,7 @@
   #editor
   %textarea{ :id => 'data', :name => "data" }= preserve contents
   %input{ :type => 'submit', :value => "Save" }
-  %a{ :href => "/#{idx}/#{request.path_info}" } Cancel
+  %a{ :href => "/#{idx}#{request.path_info}" } Cancel
   %input{ :type => 'hidden', :class => 'filename', :value => request.path_info }
 
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
