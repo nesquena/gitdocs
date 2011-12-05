@@ -22,13 +22,16 @@ body .contents .tilt {
 .tilt code {
   background-color: #eee;
   padding: 1px 3px;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  border-radius: 2px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  font-family: monospace;
 }
 
+.tilt p { padding-bottom: 0.5em; }
+
 .tilt ul {
-  margin-top: 1em;
+  margin: 1em 2em 1em 0;
   margin-left: 2em;
 }
 
@@ -37,7 +40,7 @@ body .contents .tilt {
 }
 
 .tilt li {
-  list-style-type: disc;
+  list-style-type: square;
 }
 
 .tilt a:link, .tilt a:visited{
@@ -53,7 +56,7 @@ body .contents .tilt {
 
 .tilt h1 {
   font-size: 1.8em;
-  padding-bottom: 0.4em;
+  padding-bottom: 0.6em;
   margin-bottom: 0;
   font-weight: bold;
 }
@@ -66,8 +69,9 @@ body .contents .tilt {
   color: #333;
 }
 
-.tilt h3{
+.tilt h3 {
   color: #666;
+  padding-bottom: 0.4em;
 }
 
 .tilt .shadow {
