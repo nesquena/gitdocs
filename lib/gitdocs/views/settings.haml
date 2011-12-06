@@ -1,8 +1,16 @@
 %h1 Settings
 
-%h2 Shares
-
 %form{:method => 'POST', :action => '/settings'}
+  %h2 Gitdocs
+  %div{:id => "config", :class => "config"}
+    %dl
+      %dt Open browser on startup?
+      %dd
+        %input{:type =>'hidden', :value => '0', :name=>"config[load_browser_on_startup]"}
+        %input{:type =>'checkbox', :value => '1', :name=>"config[load_browser_on_startup]", :checked => conf.global.load_browser_on_startup ? 'checked' : nil}
+
+
+  %h2 Shares
   -conf.shares.each_with_index do |share, idx|
     %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}
       %dl

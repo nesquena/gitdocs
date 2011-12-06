@@ -22,6 +22,7 @@ module Gitdocs
               get.render! 'settings', :layout => 'app', :locals => {:conf => conf}
               post do
                 shares = conf.shares
+                conf.global.update_attributes(request.POST['config'])
                 request.POST['share'].each do |idx, share|
                   shares[Integer(idx)].update_attributes(share)
                 end

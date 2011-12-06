@@ -39,6 +39,8 @@ module Gitdocs
       end
       puts "Watch threads: #{threads.map { |t| "Thread status: '#{t.status}', running: #{t.alive?}" }}" if debug
       puts "Joined #{threads.size} watch threads...running" if debug
+      sleep 1
+      system("open http://localhost:8888/") || raise if config.global.load_browser_on_startup
       threads.each(&:join)
       sleep(60)
     end

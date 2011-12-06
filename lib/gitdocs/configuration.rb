@@ -19,6 +19,10 @@ module Gitdocs
       attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name
     end
 
+    class Config < ActiveRecord::Base
+      attr_accessible :load_browser_on_startup
+    end
+
     def add_path(path, opts = nil)
       path_opts = {:path => path}
       path_opts.merge!(opts) if opts
@@ -31,6 +35,12 @@ module Gitdocs
 
     def shares
       Share.all
+    end
+
+    def global
+      raise if Config.all.size > 1
+      Config.create! if Config.all.empty?
+      Config.all.first
     end
 
     def normalize_path(path)
