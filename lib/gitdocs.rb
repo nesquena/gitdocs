@@ -8,6 +8,7 @@ require 'rb-fsevent'
 require 'growl'
 require 'yajl'
 require 'dante'
+require 'socket'
 
 module Gitdocs
 
@@ -39,8 +40,17 @@ module Gitdocs
       end
       puts "Watch threads: #{threads.map { |t| "Thread status: '#{t.status}', running: #{t.alive?}" }}" if debug
       puts "Joined #{threads.size} watch threads...running" if debug
-      sleep 1
-      system("open http://localhost:8888/") || raise if config.global.load_browser_on_startup
+      i = 0
+      web_started = false
+      begin
+        TCPSocket.open('127.0.0.1', 8888).close
+        web_started = true
+      rescue Errno::ECONNREFUSED
+        sleep 0.2
+        i += 1
+        retry if i <= 20
+      end
+      system("open http://localhost:8888/") if config.global.load_browser_on_startup && web_started
       threads.each(&:join)
       sleep(60)
     end
