@@ -24,6 +24,9 @@ module Gitdocs
                 shares = conf.shares
                 conf.global.update_attributes(request.POST['config'])
                 request.POST['share'].each do |idx, share|
+                  if remote_branch = share.delete('remote_branch')
+                    share['remote_name'], share['branch_name'] = remote_branch.split('/', 2)
+                  end
                   shares[Integer(idx)].update_attributes(share)
                 end
                 redirect! '/settings'

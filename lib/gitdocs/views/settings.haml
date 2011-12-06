@@ -21,14 +21,23 @@
         %dt Polling interval
         %dd
           %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
-      %dl
-        %dt Remote
-        %dd
-          %input{:name=>"share[#{idx}][remote_name]", :value => share.remote_name}
-      %dl
-        %dt Branch
-        %dd
-          %input{:name=>"share[#{idx}][branch_name]", :value => share.branch_name}
+      -if share.available_remotes
+        %dl
+          %dt Remote
+          %dd
+            %select{:name=>"share[#{idx}][remote_branch]"}
+              -share.available_remotes.each do |remote|
+                %option{:value => remote, :selected => remote == "#{share.remote_name}/#{share.branch_name}" ? 'selected' : nil}
+                  =remote
+      -else
+        %dl
+          %dt Remote
+          %dd
+            %input{:name=>"share[#{idx}][remote_name]", :value => share.remote_name}
+        %dl
+          %dt Branch
+          %dd
+            %input{:name=>"share[#{idx}][branch_name]", :value => share.branch_name}
       %dl
         %dt Notifications?
         %dd

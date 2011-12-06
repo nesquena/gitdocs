@@ -1,4 +1,5 @@
 require 'active_record'
+require 'grit'
 
 module Gitdocs
   class Configuration
@@ -17,6 +18,20 @@ module Gitdocs
 
     class Share < ActiveRecord::Base
       attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name
+
+      def available_remotes
+        repo = Grit::Repo.new(path)
+        repo.remotes.map{|r| r.name}
+      rescue
+        nil
+      end
+
+      def available_branches
+        repo = Grit::Repo.new(path)
+        repo.heads.map{|r| r.name}
+      rescue
+        nil
+      end
     end
 
     class Config < ActiveRecord::Base
