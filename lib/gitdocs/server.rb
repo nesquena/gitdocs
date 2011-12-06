@@ -38,8 +38,6 @@ module Gitdocs
               gd = gds[idx]
               halt 404 if gd.nil?
               file_path = request.path_info
-              file_path = request.path_info.gsub('/save', '') if save_file = request.path_info =~ %r{/save$}
-              file_path = request.path_info.gsub('/upload', '') if upload_file = request.path_info =~ %r{/upload$}
               file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
@@ -48,10 +46,10 @@ module Gitdocs
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
               mode, mime = request.params['mode'], `file -I #{expanded_path}`.strip
-              if save_file # Saving
+              if mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
-              elsif upload_file # Uploading
+              elsif mode == 'upload'  # Uploading
                 halt 404 unless file = request.params['file']
                 tempfile, filename = file[:tempfile], file[:filename]
                 FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))

@@ -13,7 +13,7 @@
   %a{ :href => "?mode=edit" } (edit)
   %a{ :href => "?mode=delete", :onclick => "javascript:return confirm('Are you sure?')" } (delete)
 
-%form{ :class => "edit", :action => "/#{idx}#{request.path_info}/save", :method => "post", :style => "display:none;" }
+%form{ :class => "edit", :action => "/#{idx}#{request.path_info}?mode=save", :method => "post", :style => "display:none;" }
   #editor
   %textarea{ :id => 'data', :name => "data" }= preserve contents
   %input{ :type => 'submit', :value => "Save" }
