@@ -27,3 +27,10 @@
   %p Upload a file to this directory
   %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
   %input{:type => 'submit', :value => "Upload file"}
+
+%h2
+  =index_file
+
+-if index_contents
+  .contents
+    = preserve index_contents
