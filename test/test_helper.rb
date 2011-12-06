@@ -56,6 +56,7 @@ class MiniTest::Spec
       begin
         puts "RUNNING!"
         Gitdocs.run(conf_path) do |conf|
+          conf.global.update_attributes(:load_browser_on_startup => false)
           conf.add_path(path, :polling_interval => 0.1, :notification => false)
         end
       rescue
