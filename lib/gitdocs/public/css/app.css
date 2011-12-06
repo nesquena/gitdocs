@@ -47,7 +47,7 @@ div.share input {
   width :100%;
 }
 
-body .container {
+.container {
   min-width: 700px;
   background: #FCEA97;
   border-style: solid;
@@ -58,8 +58,14 @@ body .container {
   margin-top: 1.2em;
 }
 
-body a { text-decoration: none; color: #33e; }
-body a:hover { text-decoration: underline; }
+.container .inline-frame {
+	width:100%;
+	min-height: 600px;
+	background: white;
+}
+
+a { text-decoration: none; color: #33e; }
+a:hover { text-decoration: underline; }
 
 body #editor {
   position: relative;
