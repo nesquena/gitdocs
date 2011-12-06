@@ -1,6 +1,6 @@
 module Gitdocs
   class Runner
-    attr_accessor :root
+    attr_reader :root, :listener
 
     def initialize(share)
       @share = share
@@ -29,16 +29,16 @@ module Gitdocs
       end.abort_on_exception = true
 
       # Listen for changes in local repository
-      listener = FSEvent.new
-      listener.watch(@root) do |directories|
+      @listener = FSEvent.new
+      @listener.watch(@root) do |directories|
         directories.uniq!
         directories.delete_if {|d| d =~ /\/\.git/}
         unless directories.empty?
           mutex.synchronize { push_changes }
         end
       end
-      at_exit { listener.stop }
-      listener.run
+      at_exit { @listener.stop }
+      @listener.run
     end
 
     def sync_changes

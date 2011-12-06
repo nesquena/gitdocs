@@ -4,14 +4,14 @@ require 'coderay'
 
 module Gitdocs
   class Server
-    def initialize(config, *gitdocs)
-      @config = config
+    def initialize(manager, *gitdocs)
+      @manager = manager
       @gitdocs = gitdocs
     end
 
     def start(port = 8888)
       gds = @gitdocs
-      conf = @config
+      manager = @manager
       Thin::Server.start('127.0.0.1', port) do
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
@@ -19,16 +19,17 @@ module Gitdocs
             render! "home", :layout => 'app', :locals => {:gds => gds}
           else
             path 'settings' do
-              get.render! 'settings', :layout => 'app', :locals => {:conf => conf}
+              get.render! 'settings', :layout => 'app', :locals => {:conf => manager.config}
               post do
-                shares = conf.shares
-                conf.global.update_attributes(request.POST['config'])
+                shares = manager.config.shares
+                manager.config.global.update_attributes(request.POST['config'])
                 request.POST['share'].each do |idx, share|
                   if remote_branch = share.delete('remote_branch')
                     share['remote_name'], share['branch_name'] = remote_branch.split('/', 2)
                   end
                   shares[Integer(idx)].update_attributes(share)
                 end
+                manager.restart
                 redirect! '/settings'
               end
             end
