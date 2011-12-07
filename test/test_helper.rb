@@ -11,38 +11,14 @@ FakeWeb.allow_net_connect = false
 ## Kernel Extensions
 require 'stringio'
 
-module Kernel
-  # Redirect standard out, standard error and the buffered logger for sprinkle to StringIO
-  # capture_stdout { any_commands; you_want } => "all output from the commands"
-  def capture_out
-    yield and return if ENV['DEBUG']
-    begin
-      old_out, old_err = STDOUT.dup, STDERR.dup
-      stdout_read, stdout_write = IO.pipe
-      stderr_read, stderr_write = IO.pipe
-      $stdout.reopen(stdout_write)
-      $stderr.reopen(stderr_write)
-      yield
-      stdout_write.close
-      stderr_write.close
-      out = stdout_read.rewind && stdout_read.read rescue nil
-      err = stderr_read.rewind && stderr_read.read rescue nil
-      [out, err]
-    ensure
-      $stdout.reopen(old_out)
-      $stderr.reopen(old_err)
-    end
-  end
-end
-
 class MiniTest::Spec
   def with_clones(count = 3)
     FileUtils.rm_rf("/tmp/gitdocs")
     master_path = "/tmp/gitdocs/master"
     FileUtils.mkdir_p("/tmp/gitdocs/master")
-    capture_out { `git init /tmp/gitdocs/master --bare` }
+    ShellTools.capture { `git init /tmp/gitdocs/master --bare` }
     sub_paths = count.times.map do |c|
-      capture_out { `cd /tmp/gitdocs && git clone file://#{master_path} #{c}` }
+      ShellTools.capture { `cd /tmp/gitdocs && git clone file://#{master_path} #{c}` }
       conf_path = "/tmp/gitdocs/config/#{c}"
       FileUtils.mkdir_p(conf_path)
       ["/tmp/gitdocs/#{c}", conf_path]

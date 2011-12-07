@@ -1,7 +1,6 @@
 require 'thin'
 require 'renee'
 require 'coderay'
-require 'shell_tools'
 require 'uri'
 
 module Gitdocs

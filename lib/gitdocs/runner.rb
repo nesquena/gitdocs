@@ -1,5 +1,7 @@
 module Gitdocs
   class Runner
+    include ShellTools
+
     attr_reader :root, :listener
 
     def initialize(share)
@@ -148,18 +150,10 @@ module Gitdocs
       (val.nil? || val.empty?) ? default : val
     end
 
-    def sh(cmd)
-      out, code = sh_with_code(cmd)
-      code == 0 ? out : raise(out.empty? ? "Running `#{cmd}' failed. Run this command directly for more detailed output." : out)
-    end
-
     # Run in shell, return both status and output
     # @see #sh
     def sh_with_code(cmd)
-      cmd << " 2>&1"
-      outbuf = ''
-      outbuf = `cd "#{@root}" && #{cmd}`
-      [outbuf, $?]
+      ShellTools.sh_with_code(cmd, @root)
     end
   end
 end

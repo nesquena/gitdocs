@@ -2,7 +2,7 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe "gitdocs configuration" do
   before do
-    capture_out { @config = Gitdocs::Configuration.new("/tmp/gitdocs") }
+    ShellTools.capture { @config = Gitdocs::Configuration.new("/tmp/gitdocs") }
   end
 
   it "has sensible default config root" do
