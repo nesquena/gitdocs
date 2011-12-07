@@ -1,8 +1,6 @@
 require 'thin'
 require 'renee'
 require 'coderay'
-require 'uri'
-require 'shell_tools'
 
 module Gitdocs
   class Server
@@ -39,7 +37,7 @@ module Gitdocs
             var :int do |idx|
               gd = gds[idx]
               halt 404 if gd.nil?
-              file_path = URI.unescape(request.path_info)
+              file_path = request.path_info
               file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
@@ -47,7 +45,7 @@ module Gitdocs
               parent = '' if parent == '/'
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
-              mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
+              mode, mime = request.params['mode'], `file -I #{expanded_path}`.strip
               if mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
@@ -60,13 +58,7 @@ module Gitdocs
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => "")
               elsif File.directory?(expanded_path)
                 contents = Dir[File.join(gd.root, request.path_info, '*')]
-                index_file = Dir[File.join(gd.root, request.path_info, 'README.{md,txt}')].to_a + Dir[File.join(gd.root, request.path_info, 'README')].to_a
-                index_contents = unless index_file.empty?
-                  Tilt.new(index_file.first).render
-                else
-                  nil
-                end
-                render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents, :index_contents => index_contents, :index_file => index_file.first)
+                render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode == 'delete' # delete file
                 FileUtils.rm(expanded_path)
                 redirect! "/" + idx.to_s + parent
