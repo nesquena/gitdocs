@@ -1,6 +1,8 @@
 require 'thin'
 require 'renee'
 require 'coderay'
+require 'shell_tools'
+require 'uri'
 
 module Gitdocs
   class Server
@@ -37,7 +39,7 @@ module Gitdocs
             var :int do |idx|
               gd = gds[idx]
               halt 404 if gd.nil?
-              file_path = request.path_info
+              file_path = URI.unescape(request.path_info)
               file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
@@ -45,7 +47,8 @@ module Gitdocs
               parent = '' if parent == '/'
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
-              mode, mime = request.params['mode'], `file -I #{expanded_path}`.strip
+              mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
+              puts "mode, mime: #{mode.inspect}, #{mime.inspect}"
               if mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
@@ -65,11 +68,15 @@ module Gitdocs
               elsif mode == 'edit' && mime.match(%r{text/}) # edit file
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
-              elsif mode != 'raw' && mime.match(%r{text/}) # render file
+              elsif mode != 'raw' # render file
                 begin # attempting to render file
                   contents = '<div class="tilt">'  + Tilt.new(expanded_path).render + '</div>'
                 rescue RuntimeError => e # not tilt supported
-                  contents = '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
+                  contents = if mime.match(%r{text/})
+                    '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
+                  else
+                    %|<embed class="inline-file" src="/#{idx}#{request.path_info}?mode=raw"></embed>|
+                  end
                 end
                 render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
               else # other file

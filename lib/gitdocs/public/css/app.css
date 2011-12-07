@@ -4,14 +4,14 @@ body {
   font-family: Helvetica, Arial, Verdana;
 }
 
-body h1, h2 {
+h1, h2 {
   margin: 0;
   padding-bottom: 0.8em;
   font-weight: bold;
 }
 
-body h1 { font-size: 1.8em; }
-body h2 { font-size: 1.5em; margin-top: 0.2em; }
+h1 { font-size: 1.8em; }
+h2 { font-size: 1.5em; margin-top: 0.2em; }
 
 .nav h1 {
   text-align: center;
@@ -47,7 +47,7 @@ div.share input {
   width :100%;
 }
 
-body .container {
+.container {
   min-width: 700px;
   background: #FCEA97;
   border-style: solid;
@@ -58,21 +58,27 @@ body .container {
   margin-top: 1.2em;
 }
 
-body a { text-decoration: none; color: #33e; }
-body a:hover { text-decoration: underline; }
+.container .inline-file {
+	width:100%;
+	min-height: 600px;
+	background: white;
+}
 
-body #editor {
+a { text-decoration: none; color: #33e; }
+a:hover { text-decoration: underline; }
+
+#editor {
   position: relative;
   width: 700px;
   height: 600px;
   margin-bottom: 1em;
 }
 
-body form.upload, form.add {
+form.upload, form.add {
   padding-top: 1.4em;
 }
 
-body form.upload p, form.add p {
+form.upload p, form.add p {
   padding-bottom: 0.6em;
   font-weight: bold;
 }
