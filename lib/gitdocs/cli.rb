@@ -9,12 +9,11 @@ module Gitdocs
     desc "start", "Starts a daemonized gitdocs process"
     method_option :debug, :type => :boolean, :aliases => "-D"
     def start
-      if !self.running? && !options[:debug]
-        self.runner(:daemonize => true, :pid_path => self.pid_path).execute { Gitdocs.run }
-        until_true(5) { self.running? }
+      if self.stopped? && !options[:debug]
+        self.runner.execute { Gitdocs.run }
         self.running? ? say("Started gitdocs", :green) : say("Failed to start gitdocs", :red)
-      elsif !self.running? && options[:debug]
-        say "Running in debug mode", :yellow
+      elsif self.stopped? && options[:debug]
+        say "Starting in debug mode", :yellow
         Gitdocs.run(nil, true)
       else # already running
         say "Gitdocs is already running, please use restart", :red
@@ -24,7 +23,7 @@ module Gitdocs
     desc "stop", "Stops the gitdocs process"
     def stop
       if self.running?
-        self.runner(:kill => true, :pid_path => self.pid_path).execute
+        self.runner.execute(:kill => true)
         say "Stopped gitdocs", :red
       else # not running
         say "Gitdocs is not running", :red
@@ -34,7 +33,6 @@ module Gitdocs
     desc "restart", "Restarts the gitdocs process"
     def restart
       self.stop
-      until_true(5) { self.running? }
       self.start
     end
 
@@ -88,7 +86,7 @@ module Gitdocs
     # Helpers for thor
     no_tasks do
       def runner(options={})
-        Dante::Runner.new('gitdocs', options)
+        Dante::Runner.new('gitdocs', options.merge(:debug => false, :daemonize => true, :pid_path => self.pid_path))
       end
 
       def config
@@ -96,26 +94,15 @@ module Gitdocs
       end
 
       def running?
-        return false unless File.exist?(pid_path)
-        Process.kill 0, File.read(pid_path).to_i
-        true
-      rescue Errno::ESRCH
-        false
+        self.runner.daemon_running?
+      end
+
+      def stopped?
+        self.runner.daemon_stopped?
       end
 
       def pid_path
         "/tmp/gitdocs.pid"
-      end
-
-      # Runs until the block condition is met or the retry_count is exceeded
-      # until_true(10) { ...return_condition... }
-      def until_true(retry_count, &block)
-        count = 0
-        while count < retry_count && block.call != true
-          count += 1
-          sleep(1)
-        end
-        count < retry_count
       end
     end
 
