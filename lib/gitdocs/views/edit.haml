@@ -1,17 +1,6 @@
 %h1= root
 
-- if parent
-  %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
-    &#8618; Back to parent
-- else
-  %a{ :href => "/", :class => "parent" }
-    &#8618; Back to selection
-
-%h2
-  %span.path= request.path_info.empty? ? '/' : request.path_info
-  %a{ :href => "?mode=raw" } (raw)
-  %a{ :href => "?mode=edit" } (edit)
-  %a{ :href => "?mode=delete", :onclick => "javascript:return confirm('Are you sure?')" } (delete)
+= partial("header", :locals => { :parent => parent, :file => true, :idx => idx  })
 
 %form{ :class => "edit", :action => "/#{idx}#{request.path_info}?mode=save", :method => "post", :style => "display:none;" }
   #editor
@@ -20,13 +9,5 @@
   %a{ :href => "/#{idx}#{request.path_info}" } Cancel
   %input{ :type => 'hidden', :class => 'filename', :value => request.path_info }
 
-<script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/mode-css.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/mode-html.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/mode-markdown.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/mode-ruby.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/edit.js" type="text/javascript" charset="utf-8"></script>
-
+= partial("ace_scripts")
 

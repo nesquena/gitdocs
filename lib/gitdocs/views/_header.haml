@@ -1,0 +1,13 @@
+- if parent
+  %a{ :href => parent.empty? ? "/#{idx}" : "/#{idx}#{parent}", :class => "parent" }
+    &#8618; Back to parent
+- else
+  %a{ :href => "/", :class => "parent" }
+    &#8618; Back to selection
+
+%h2
+  %span.path= request.path_info.empty? ? '/' : request.path_info
+  - if file
+    %a{ :href => "?mode=raw" } (raw)
+    %a{ :href => "?mode=edit" } (edit)
+    %a{ :href => "?mode=delete", :onclick => "javascript:return confirm('Are you sure?')" } (delete)

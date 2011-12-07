@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rb-fsevent',   '~> 0.4.3.1'
   s.add_dependency 'thin'
-  s.add_dependency 'renee', '~> 0.3.6'
+  s.add_dependency 'renee', '~> 0.3.7'
   s.add_dependency 'redcarpet'
   s.add_dependency 'thor'
   s.add_dependency 'coderay'
