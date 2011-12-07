@@ -50,6 +50,10 @@ module Gitdocs
       Share.where(:path => path).destroy_all
     end
 
+    def clear
+      Share.destroy_all
+    end
+
     def shares
       Share.all
     end

@@ -52,7 +52,7 @@ module Gitdocs
 
     desc "clear", "Clears all paths from gitdocs"
     def clear
-      self.config.paths = []
+      self.config.clear
       say "Cleared paths from gitdocs"
     end
 
