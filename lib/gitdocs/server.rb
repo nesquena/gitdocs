@@ -65,15 +65,11 @@ module Gitdocs
               elsif mode == 'edit' && mime.match(%r{text/}) # edit file
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
-              elsif mode != 'raw'
+              elsif mode != 'raw' && mime.match(%r{text/}) # render file
                 begin # attempting to render file
                   contents = '<div class="tilt">'  + Tilt.new(expanded_path).render + '</div>'
                 rescue RuntimeError => e # not tilt supported
-                  contents = if mime.match(%r{text/})
-                    '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
-                  else
-                    %|<iframe class="inline-frame" src="/#{idx}#{request.path_info}?mode=raw"></iframe>|
-                  end
+                  contents = '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
                 end
                 render! "file", :layout => 'app', :locals => locals.merge(:contents => contents)
               else # other file
