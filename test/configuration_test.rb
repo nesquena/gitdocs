@@ -14,7 +14,7 @@ describe "gitdocs configuration" do
   end
 
   it "can have a path added" do
-    @config.add_path('/my/path')
+    @config.add_path('/my/../my/path') # normalized test
     assert_equal "/my/path", @config.shares.first.path
     assert_equal 15.0, @config.shares.first.polling_interval
   end
@@ -22,7 +22,7 @@ describe "gitdocs configuration" do
   it "can have a path removed" do
     @config.add_path('/my/path')
     @config.add_path('/my/path/2')
-    @config.remove_path('/my/path/2')
+    @config.remove_path('/my/../my/path/2') # normalized test
     assert_equal ["/my/path"], @config.shares.map(&:path)
   end
 

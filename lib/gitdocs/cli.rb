@@ -60,7 +60,6 @@ module Gitdocs
 
     desc "create PATH REMOTE", "Creates a new gitdoc root based on an existing remote"
     def create(path, remote)
-      path = self.config.normalize_path(path)
       FileUtils.mkdir_p(File.dirname(path))
       system("git clone -q #{remote} #{path}") or raise "Unable to clone into #{path}"
       self.add(path)

@@ -39,12 +39,14 @@ module Gitdocs
     end
 
     def add_path(path, opts = nil)
+      path = self.normalize_path(path)
       path_opts = {:path => path}
       path_opts.merge!(opts) if opts
       Share.new(path_opts).save!
     end
 
     def remove_path(path)
+      path = self.normalize_path(path)
       Share.where(:path => path).destroy_all
     end
 
