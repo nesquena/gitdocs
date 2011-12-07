@@ -100,31 +100,40 @@ gitdocs stop
 gitdocs restart
 ```
 
-### Exploring Gitdocs
-
 For an overview of gitdocs current status, run:
 
 ```
 gitdocs status
 ```
-
-To explore the repos in your browser, simply visit `http://localhost:8888` for access to all your docs within the browser.
-
 ### Conflict Resolution
 
 Proper conflict resolution is an important part of any good doc and file collaboration tool.
 In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
 resolved automatically?
 
-Don't worrry, gitdocs makes this easy. In the event of a conflict, **all the different versions
+Don't worry, gitdocs makes handling this simple. In the event of a conflict, **all the different versions
 of a document are stored** in the repo tagged with the **git sha** for the commit for each variation. The members
 of the repo can then compare all versions and resolve the conflict.
+
+### Web Front-end
+
+Gitdocs come with a handy web front-end that is available. This browser front-end supports the following features:
+
+ * Explore all repos and directories
+ * View source files in your repos with smart syntax highlighting (ruby, python, js, etc)
+ * View text files in your repos with smart formatting (markdown, textile)
+ * View any file in your repos that can be embedded in the browser
+ * Edit and update text files with rich text editor (ace editor)
+ * Upload or create new files in your repos
+ * Manage path settings and other configuration options
+
+To check out the front-end, simply visit `http://localhost:8888` whenever gitdocs is running. Yes, we know
+this currently looks (design-wise) like hot garbage. We will get to the aesthetics but patches and help welcome.
 
 ## Planned Features
 
 Gitdocs is a young project but we have big plans for it including:
 
- - A web front-end UI for file uploading and editing of files (with rich text editor and syntax highlighting)
  - Local-area peer-to-peer syncing, avoid 'polling' in cases where we can using a messaging protocol.
  - Click-to-share instant access granting file access to users using a local tunnel or other means.
  - Support for linux and windows platforms (coming soon), and maybe android and iOS as well?
