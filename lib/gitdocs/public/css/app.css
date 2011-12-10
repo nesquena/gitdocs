@@ -2,17 +2,6 @@ body {
   padding-top: 50px;
 }
 
-div.share {
-  border-color: #000000;
-  border-radius: 7px;
-  padding: 2em;
-  margin-top: 1.2em;
-}
-
-div.share input {
-  width :100%;
-}
-
 .inline-file {
   width:100%;
   min-height: 600px;
@@ -35,3 +24,21 @@ form.upload p, form.add p {
   padding-bottom: 0.6em;
   font-weight: bold;
 }
+
+/* Settings */
+div.share {
+  border-radius: 7px;
+  border: 1px solid black;
+  padding: 1em;
+  margin: 1em 0;
+  width: 60%;
+}
+
+input.path {
+  width: 80%;
+}
+
+.field {
+  padding: 0.8em 0;
+}
+.field span { font-weight: bold; }

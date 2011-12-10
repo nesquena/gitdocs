@@ -2,34 +2,33 @@
 
 %form{:method => 'POST', :action => '/settings'}
   %h2 Gitdocs
-  %div{:id => "config", :class => "config"}
-    %dl
-      %dt Open browser on startup?
-      %dd
-        %input{:type =>'hidden', :value => '0', :name=>"config[load_browser_on_startup]"}
-        %input{:type =>'checkbox', :value => '1', :name=>"config[load_browser_on_startup]", :checked => conf.global.load_browser_on_startup ? 'checked' : nil}
+  #config.field.config
+    %input{:type =>'hidden', :value => '0', :name=>"config[load_browser_on_startup]"}
+    %input{:type =>'checkbox', :value => '1', :name=>"config[load_browser_on_startup]", :checked => conf.global.load_browser_on_startup ? 'checked' : nil}
+    %span Open browser on startup?
 
 
   %h2 Shares
-  -conf.shares.each_with_index do |share, idx|
+  - conf.shares.each_with_index do |share, idx|
     %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}
       %dl
         %dt Path
         %dd
-          %input{:name=>"share[#{idx}][path]", :value => share.path}
+          %input{:name=>"share[#{idx}][path]", :value => share.path, :class => "path" }
       %dl
         %dt Polling interval
         %dd
           %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
-      -if share.available_remotes
+
+      - if share.available_remotes
         %dl
           %dt Remote
           %dd
             %select{:name=>"share[#{idx}][remote_branch]"}
-              -share.available_remotes.each do |remote|
+              - share.available_remotes.each do |remote|
                 %option{:value => remote, :selected => remote == "#{share.remote_name}/#{share.branch_name}" ? 'selected' : nil}
-                  =remote
-      -else
+                  = remote
+      - else
 
         %dl
           %dt Remote
@@ -39,14 +38,12 @@
           %dt Branch
           %dd
             %input{:name=>"share[#{idx}][branch_name]", :value => share.branch_name}
-      %dl
-        %dt Notifications?
-        %dd
-          %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
-          %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
-      %dl.delete
-        %dt Delete
-        %dd
-          %input{:type =>'button', :value => "Delete"}
-          %input{:type =>'hidden', :name=>"share[#{idx}][delete]"}
-  %input{:value => 'Save', :type => 'submit'}
+      .notify.field
+        %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
+        %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
+        %span Notifications?
+      .delete
+        %input{:type =>'button', :value => "Delete", :class => "btn danger"}
+        %input{:type =>'hidden', :name=>"share[#{idx}][delete]"}
+
+  %input{:value => 'Save', :type => 'submit', :class => "btn primary" }
