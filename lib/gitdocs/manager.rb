@@ -17,37 +17,26 @@ module Gitdocs
         puts "Shares: #{config.shares.map(&:inspect).join(", ")}" if self.debug
         # Start the repo watchers
         runners = []
-        threads = config.shares.map do |share|
-          t = Thread.new(runners) { |r|
-            runner = Runner.new(share)
-            r << runner
-            runner.run
-          }
-          t.abort_on_exception = true
-          t
-        end
-        trap("USR1") { puts "stopping threads: #{threads.map(&:alive?)}"; runners.each { |r| r.listener.stop } }
-        sleep 1
-        unless @pid
+        EM.run do
+          threads = config.shares.map { |share| Runner.new(share).run }
+          trap("USR1") { EM.stop_reactor }
           # Start the web front-end
-          @pid = fork { Server.new(self, *runners).start }
-          at_exit { Process.kill("KILL", @pid) rescue nil }
+          if self.config.global.start_web_frontend
+            Server.new(self, *runners).start
+            i = 0
+            web_started = false
+            begin
+              TCPSocket.open('127.0.0.1', 8888).close
+              web_started = true
+            rescue Errno::ECONNREFUSED
+              sleep 0.2
+              i += 1
+              retry if i <= 20
+            end
+            system("open http://localhost:8888/") if self.config.global.load_browser_on_startup && web_started
+          end
         end
-        puts "Watch threads: #{threads.map { |t| "Thread status: '#{t.status}', running: #{t.alive?}" }}" if self.debug
-        puts "Joined #{threads.size} watch threads...running" if self.debug
-        i = 0
-        web_started = false
-        begin
-          TCPSocket.open('127.0.0.1', 8888).close
-          web_started = true
-        rescue Errno::ECONNREFUSED
-          sleep 0.2
-          i += 1
-          retry if i <= 20
-        end
-        system("open http://localhost:8888/") if self.config.global.load_browser_on_startup && web_started
-        threads.each(&:join)
-        sleep(60) if threads.empty?
+        sleep(10) if runners.empty?
       end
     end
 

@@ -1,10 +1,10 @@
 require 'thread'
-require 'rb-fsevent'
 require 'growl'
 require 'yajl'
 require 'dante'
 require 'socket'
 require 'shell_tools'
+require 'guard'
 
 require 'gitdocs/version'
 require 'gitdocs/configuration'
