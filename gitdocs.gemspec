@@ -18,8 +18,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  #s.add_dependency 'em-dir-watcher', '~> 0.9.4'
-  s.add_dependency 'joshbuddy-guard', '~> 0.8.8'
+  s.add_dependency 'joshbuddy-guard', '~> 0.10.0'
   s.add_dependency 'thin'
   s.add_dependency 'renee', '~> 0.3.7'
   s.add_dependency 'redcarpet'
