@@ -122,7 +122,6 @@ module Gitdocs
       files = {}
       ls_files = sh_string("git ls-files").split("\n").map { |f| Docfile.new(f) }
       ls_files.select { |f| f.within?(dir, @root) }.each do |f|
-        print "."
         path = File.expand_path(f.parent, root)
         files[path] ||= Docdir.new(path)
         files[path].files << f unless IGNORED_FILES.include?(f.name)
