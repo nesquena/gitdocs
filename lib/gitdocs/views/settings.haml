@@ -7,7 +7,6 @@
     %input{:type =>'checkbox', :value => '1', :name=>"config[load_browser_on_startup]", :checked => conf.global.load_browser_on_startup ? 'checked' : nil}
     %span Open browser on startup?
 
-
   %h2 Shares
   - conf.shares.each_with_index do |share, idx|
     %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}

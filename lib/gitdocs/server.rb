@@ -2,6 +2,7 @@ require 'thin'
 require 'renee'
 require 'coderay'
 require 'uri'
+require 'haml'
 
 module Gitdocs
   class Server
@@ -17,7 +18,7 @@ module Gitdocs
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
           if request.path_info == '/'
-            render! "home", :layout => 'app', :locals => {:gds => gds, :nav_state => "home" }
+            render! "home", :layout => 'app', :locals => {:conf => manager.config, :nav_state => "home" }
           else
             path 'settings' do
               get.render! 'settings', :layout => 'app', :locals => {:conf => manager.config, :nav_state => "settings" }
