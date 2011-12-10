@@ -47,7 +47,6 @@ module Gitdocs
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
               mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
-              # puts "mode, mime: #{mode.inspect}, #{mime.inspect}"
               if mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
