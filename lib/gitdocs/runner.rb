@@ -42,7 +42,9 @@ module Gitdocs
           directories.delete_if {|d| d =~ /\/\.git/}
           unless directories.empty?
             EM.next_tick do
-              mutex.synchronize { push_changes }
+              EM.defer(proc {
+                mutex.synchronize { push_changes }
+              }, proc {} )
             end
           end
         }
