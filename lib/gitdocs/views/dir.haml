@@ -1,21 +1,31 @@
-%h1= root
+- @title = root
 
 = partial("header", :locals => { :parent => parent, :file => false, :idx => idx })
 
-%table
-  -contents.each_with_index do |f, i|
+%table.condensed-table.zebra-striped.listing
+  %thead
     %tr
-      %td
-        %a{ :href => "/#{idx}#{request.path_info}/#{File.basename(f)}" }
-          ="#{request.path_info}/#{File.basename(f)}"
+      %th File
+      %th Author
+      %th Last Modified
 
+  %tbody
+    - contents.items.each_with_index do |f, i|
+      %tr
+        %td
+          %a{ :href => "/#{idx}#{request.path_info}/#{f.name}" }
+            = f.name
+        %td.author
+        %td.modified
 
-%form.add
-  %p Add a file in this directory
-  %input{:type => 'text', :name => "path", :class => "edit" }
-  %input{:type => 'submit', :value => "New file" }
-
-%form.upload{ :method => "post", :enctype => "multipart/form-data", :action => "/#{idx}#{request.path_info}?mode=upload" }
-  %p Upload a file to this directory
-  %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
-  %input{:type => 'submit', :value => "Upload file"}
+.row
+  .span6
+    %form.add
+      %p Add a file in this directory
+      %input{:type => 'text', :name => "path", :class => "edit" }
+      %input{:type => 'submit', :value => "New file" }
+  .span6
+    %form.upload{ :method => "post", :enctype => "multipart/form-data", :action => "/#{idx}#{request.path_info}?mode=upload" }
+      %p Upload a file to this directory
+      %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
+      %input{:type => 'submit', :value => "Upload file"}

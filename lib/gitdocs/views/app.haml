@@ -2,7 +2,7 @@
 %html
   %head
     %title Gitdocs #{Gitdocs::VERSION}
-    %link{ :href => "/css/reset.css", :rel => "stylesheet" }
+    %link{ :href => "/css/bootstrap.css", :rel => "stylesheet"}
     %link{ :href => "/css/app.css", :rel => "stylesheet" }
     %link{ :href => "/css/tilt.css", :rel => "stylesheet" }
     %link{ :href => "/css/coderay.css", :rel => "stylesheet" }
@@ -10,14 +10,23 @@
     %script{ :src => "/js/jquery.js", :type => "text/javascript", :charset => "utf-8" }
     %script{ :src => "/js/app.js", :type => "text/javascript", :charset => "utf-8" }
   %body
-    .nav
-      %h1
-        %a{:href => '/'}
-          %img{ :src => "/img/git_logo.png", :width => 30, :height => 30}
-          Gitdocs
-          = Gitdocs::VERSION
-    .container
-      = preserve(yield)
+    #nav.topbar
+      .fill
+        .container
+          %a{:class => "brand", :href => "/"} Gitdocs
+          %ul(class="nav")
+            %li{ :class => ("active" if nav_state == "home") }
+              %a(href = "/") Home
+            %li{ :class => ("active" if nav_state == "settings") }
+              %a(href = "/settings") Settings
 
-    .menu
-      %a{:href => '/settings'} Settings
+    #main.container
+      .content
+        - if @title
+          .page-header
+            %h1= @title
+        .row
+          .span16= preserve(yield)
+
+      %footer
+        %p &copy; Gitdocs 2011

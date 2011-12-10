@@ -1,6 +1,10 @@
+- @title = "Pick a Share"
+
+%p Select a share to browse:
+
 %table
   - gds.each_with_index do |gd, idx|
     %tr
       %td
         %a{ :href => "/#{idx}" }
-          =gd.root
+          = gd.root

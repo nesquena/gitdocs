@@ -115,6 +115,29 @@ module Gitdocs
       end
     end
 
+    IGNORED_FILES = ['.gitignore']
+    # dir_files("some/dir") => [<Docfile>, <Docfile>]
+    def dir_files(dir)
+      dir_path = File.expand_path(dir, @root)
+      files = {}
+      ls_files = sh_string("git ls-files").split("\n").map { |f| Docfile.new(f) }
+      ls_files.select { |f| f.within?(dir, @root) }.each do |f|
+        print "."
+        path = File.expand_path(f.parent, root)
+        files[path] ||= Docdir.new(path)
+        files[path].files << f unless IGNORED_FILES.include?(f.name)
+      end
+      files.keys.each { |f| files[f].parent = files[File.dirname(f)] }
+      files[dir_path]
+    end
+
+    def file_meta(file)
+      file = file.gsub(%r{^/}, '')
+      author, modified = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}").split("|")
+      modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
+      { :author => author, :modified => modified }
+    end
+
     def valid?
       out, status = sh_with_code "git status"
       status.success?

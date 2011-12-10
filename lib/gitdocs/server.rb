@@ -17,10 +17,10 @@ module Gitdocs
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
           if request.path_info == '/'
-            render! "home", :layout => 'app', :locals => {:gds => gds}
+            render! "home", :layout => 'app', :locals => {:gds => gds, :nav_state => "home" }
           else
             path 'settings' do
-              get.render! 'settings', :layout => 'app', :locals => {:conf => manager.config}
+              get.render! 'settings', :layout => 'app', :locals => {:conf => manager.config, :nav_state => "settings" }
               post do
                 shares = manager.config.shares
                 manager.config.global.update_attributes(request.POST['config'])
@@ -45,10 +45,13 @@ module Gitdocs
               parent = File.dirname(file_path)
               parent = '' if parent == '/'
               parent = nil if parent == '.'
-              locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path}
+              locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path, :nav_state => nil }
               mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
+
               # puts "mode, mime: #{mode.inspect}, #{mime.inspect}"
-              if mode == 'save' # Saving
+              if mode == 'meta' # Meta
+                halt 200, { 'Content-Type' => 'application/json' }, gd.file_meta(file_path).to_json
+              elsif mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
               elsif mode == 'upload'  # Uploading
@@ -58,8 +61,8 @@ module Gitdocs
                 redirect! "/" + idx.to_s + file_path + "/" + filename
               elsif !File.exist?(expanded_path) # edit for non-existent file
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => "")
-              elsif File.directory?(expanded_path)
-                contents = Dir[File.join(gd.root, request.path_info, '*')]
+              elsif File.directory?(expanded_path) # list directory
+                contents = gd.dir_files(expanded_path)
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode == 'delete' # delete file
                 FileUtils.rm(expanded_path)

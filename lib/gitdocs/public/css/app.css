@@ -1,35 +1,5 @@
 body {
-  margin-left: 20%;
-  margin-right: 20%;
-  font-family: Helvetica, Arial, Verdana;
-}
-
-h1, h2 {
-  margin: 0;
-  padding-bottom: 0.8em;
-  font-weight: bold;
-}
-
-h1 { font-size: 1.8em; }
-h2 { font-size: 1.5em; margin-top: 0.2em; }
-
-.nav h1 {
-  text-align: center;
-}
-
-.nav h1 a {
-  text-decoration: none;
-  color: black;
-}
-
-.nav h1 a:hover {
-  text-decoration: none;
-}
-
-.menu {
-  margin-top :10px;
-  display: absolute;
-  float:right;
+  padding-top: 50px;
 }
 
 div.share {
@@ -39,43 +9,26 @@ div.share {
   margin-top: 1.2em;
 }
 
-div.share.even {
-  background: #FEFBAA;
-}
-
 div.share input {
   width :100%;
 }
 
-.container {
-  min-width: 700px;
-  background: #FCEA97;
-  border-style: solid;
-  border-width: 5px;
-  border-color: #FFC003;
-  border-radius: 15px;
-  padding: 2em;
-  margin-top: 1.2em;
+.inline-file {
+  width:100%;
+  min-height: 600px;
+  background: white;
 }
 
-.container .inline-file {
-	width:100%;
-	min-height: 600px;
-	background: white;
+h2.path {
+  margin-bottom: 0.8em;
 }
-
-a { text-decoration: none; color: #33e; }
-a:hover { text-decoration: underline; }
 
 #editor {
+  line-height: normal;
   position: relative;
-  width: 700px;
+  width: 100%;
   height: 600px;
   margin-bottom: 1em;
-}
-
-form.upload, form.add {
-  padding-top: 1.4em;
 }
 
 form.upload p, form.add p {
