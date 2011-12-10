@@ -18,29 +18,40 @@ module Gitdocs
       @current_remote   = @share.remote_name
       @current_branch   = @share.branch_name
       @current_revision = sh_string("git rev-parse HEAD")
+      mutex = Mutex.new
 
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
 
-      mutex = Mutex.new
       # Pull changes from remote repository
-      Thread.new do
-        loop do
+      syncer = proc do
+        EM.defer(proc do
           mutex.synchronize { sync_changes }
-          sleep @polling_interval
-        end
-      end.abort_on_exception = true
-
-      # Listen for changes in local repository
-      @listener = FSEvent.new
-      @listener.watch(@root) do |directories|
-        directories.uniq!
-        directories.delete_if {|d| d =~ /\/\.git/}
-        unless directories.empty?
-          mutex.synchronize { push_changes }
-        end
+        end, proc do
+          EM.add_timer(@polling_interval) {
+            syncer.call
+          }
+        end)
       end
-      at_exit { @listener.stop }
-      @listener.run
+      syncer.call
+      # Listen for changes in local repository
+
+      EM.defer(proc{
+        listener = Guard::Listener.select_and_init(@root, :watch_all_modifications => true)
+        listener.on_change { |directories|
+          directories.uniq!
+          directories.delete_if {|d| d =~ /\/\.git/}
+          unless directories.empty?
+            EM.next_tick do
+              mutex.synchronize { push_changes }
+            end
+          end
+        }
+        listener.start
+      }, proc{EM.stop_reactor})
+    end
+
+    def clear_state
+      @state = nil
     end
 
     def sync_changes

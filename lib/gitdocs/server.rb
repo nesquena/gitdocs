@@ -47,8 +47,6 @@ module Gitdocs
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path, :nav_state => nil }
               mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
-
-              # puts "mode, mime: #{mode.inspect}, #{mime.inspect}"
               if mode == 'meta' # Meta
                 halt 200, { 'Content-Type' => 'application/json' }, gd.file_meta(file_path).to_json
               elsif mode == 'save' # Saving
