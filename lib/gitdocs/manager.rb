@@ -11,15 +11,18 @@ module Gitdocs
     end
 
     def run
-      loop do
+      run = true
+      trap('USR1') { run = true; EM.stop }
+      while run
+        run = false
         puts "Gitdocs v#{VERSION}" if self.debug
         puts "Using configuration root: '#{self.config.config_root}'" if self.debug
         puts "Shares: #{config.shares.map(&:inspect).join(", ")}" if self.debug
         # Start the repo watchers
-        runners = []
+        runners = nil
         EM.run do
-          threads = config.shares.map { |share| Runner.new(share).run }
-          trap("USR1") { EM.stop_reactor }
+          runners = config.shares.map { |share| Runner.new(share) }
+          runners.each(&:run)
           # Start the web front-end
           if self.config.global.start_web_frontend
             Server.new(self, *runners).start
@@ -36,7 +39,7 @@ module Gitdocs
             system("open http://localhost:8888/") if self.config.global.load_browser_on_startup && web_started
           end
         end
-        sleep(10) if runners.empty?
+        sleep(10) if runners && runners.empty?
       end
     end
 
