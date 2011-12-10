@@ -25,6 +25,11 @@ form.upload p, form.add p {
   font-weight: bold;
 }
 
+/* Dir Listing */
+table td.author, td.modified {
+  width: 30%;
+}
+
 /* Settings */
 div.share {
   border-radius: 7px;
