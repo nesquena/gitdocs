@@ -5,7 +5,9 @@ gitdocs will automatically keep everyone's repos in sync by pushing and pulling 
 This allows any git repo to be used as a collaborative task list, file share, or wiki for a team.
 Supports a web front-end allowing each repo to be accessed through your browser.
 
-**Note:** Right now, gitdocs only supports Mac OSX using fsevent. Linux and windows support are coming very soon, so check back here again.
+**Note:** Gitdocs uses [joshbuddy-guard](https://github.com/joshbuddy/guard) for file system monitoring. This
+means that gitdocs works on Mac OSX, Linux and Windows. That being said, we have only currently
+tested on Mac OSX and our notifications are still mac-only. Stay tuned.
 
 ## Why?
 
@@ -57,7 +59,7 @@ to enable Growl support (other platforms coming soon).
 
 ## Usage
 
-### Monitoring Repos
+### Monitoring Shares
 
 You can add existing folders to watch:
 
@@ -65,7 +67,7 @@ You can add existing folders to watch:
 gitdocs add my/path/to/watch
 ```
 
-or instruct gitdocs to fetch a remote repository and keep it synced with:
+or instruct gitdocs to fetch a remote share and keep it synced with:
 
 ```
 gitdocs create local/path/for/repo git@github.com:user/some/remote/repo.git
@@ -119,25 +121,24 @@ of the repo can then compare all versions and resolve the conflict.
 
 Gitdocs come with a handy web front-end that is available. This browser front-end supports the following features:
 
- * Explore all repos and directories
- * View source files in your repos with smart syntax highlighting (ruby, python, js, etc)
- * View text files in your repos with smart formatting (markdown, textile)
- * View any file in your repos that can be embedded in the browser
- * Edit and update text files with rich text editor (ace editor)
- * Upload or create new files in your repos
- * Manage path settings and other configuration options
+ * Explore the files within all your shares
+ * View source files in your shares with code syntax highlighting
+ * View text files in your shares with smart formatting (markdown, textile)
+ * View any file in your shares that can be rendered inline (pdf, images, et al)
+ * Edit and update text files using a text editor
+ * Upload and create new files within your shares
+ * Manage share settings and other configuration options
 
-To check out the front-end, simply visit `http://localhost:8888` whenever gitdocs is running. Yes, we know
-this currently looks (design-wise) like hot garbage. We will get to the aesthetics but patches and help welcome.
+To check out the front-end, simply visit `http://localhost:8888` whenever gitdocs is running.
 
 ## Planned Features
 
 Gitdocs is a young project but we have big plans for it including:
 
- - Local-area peer-to-peer syncing, avoid 'polling' in cases where we can using a messaging protocol.
  - Click-to-share instant access granting file access to users using a local tunnel or other means.
- - Support for linux and windows platforms (coming soon), and maybe android and iOS as well?
  - Indexing and full-text search for all documents in a repo
+ - Better access to the versions for a particular file within the web front-end
+ - Tagging and organizing of files within the web front-end
 
 ## Prior Projects
 
