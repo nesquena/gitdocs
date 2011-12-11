@@ -13,11 +13,12 @@ module Gitdocs
 
     def run
       return false unless self.valid?
-      out, status = sh_with_code "which growlnotify"
-      @use_growl = @share.notification && status.success?
-      @current_remote   = @share.remote_name
-      @current_branch   = @share.branch_name
-      @current_revision = sh_string("git rev-parse HEAD")
+      @show_notifications = @share.notification
+      @current_remote     = @share.remote_name
+      @current_branch     = @share.branch_name
+      @current_revision   = sh_string("git rev-parse HEAD")
+      Guard::Notifier.turn_on if @show_notifications
+
       mutex = Mutex.new
 
       info("Running gitdocs!", "Running gitdocs in `#{@root}'")
@@ -156,24 +157,24 @@ module Gitdocs
     end
 
     def warn(title, msg)
-      if @use_growl
-        Growl.notify_warning(msg, :title => title)
+      if @show_notifications
+        Guard::Notifier.notify(msg, :title => title)
       else
         Kernel.warn("#{title}: #{msg}")
       end
     end
 
     def info(title, msg)
-      if @use_growl
-        Growl.notify_ok(msg, :title => title, :icon => @icon)
+      if @show_notifications
+        Guard::Notifier.notify(msg, :title => title, :image => @icon)
       else
         puts("#{title}: #{msg}")
       end
     end
 
     def error(title, msg)
-      if @use_growl
-        Growl.notify_error(msg, :title => title)
+      if @show_notifications
+        Guard::Notifier.notify(msg, :title => title, :image => :failure)
       else
         Kernel.warn("#{title}: #{msg}")
       end
