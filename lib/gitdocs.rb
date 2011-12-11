@@ -1,5 +1,4 @@
 require 'thread'
-require 'growl'
 require 'yajl'
 require 'dante'
 require 'socket'
