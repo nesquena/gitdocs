@@ -113,13 +113,25 @@ Proper conflict resolution is an important part of any good doc and file collabo
 In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
 resolved automatically?
 
-Don't worry, gitdocs makes handling this simple. In the event of a conflict, **all the different versions
-of a document are stored** in the repo tagged with the **git sha** for the commit for each variation. The members
-of the repo can then compare all versions and resolve the conflict.
+Don't worry, gitdocs makes handling this simple. In the event of a conflict, 
+**all the different versions of a document are stored** in the repo tagged with the **git sha** for each 
+committed version. The members of the repo can then compare all versions and resolve the conflict.
 
 ### Web Front-end
 
-Gitdocs come with a handy web front-end that is available. This browser front-end supports the following features:
+Gitdocs come with a handy web front-end that is available. 
+
+<a href="http://i.imgur.com/IMwqN.png">
+  <img src="http://i.imgur.com/IMwqN.png" width="250" />
+</a>
+<a href="http://i.imgur.com/0wVyB.png">
+  <img src="http://i.imgur.com/0wVyB.png" width="250" />
+</a>
+<a href="http://i.imgur.com/Ijyo9.png">
+  <img src="http://i.imgur.com/Ijyo9.png" width="250" />
+</a>
+
+This browser front-end supports the following features:
 
  * Explore the files within all your shares
  * View source files in your shares with code syntax highlighting
