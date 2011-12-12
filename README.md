@@ -59,27 +59,6 @@ to enable Growl support (other platforms coming soon).
 
 ## Usage
 
-### Monitoring Shares
-
-You can add existing folders to watch:
-
-```
-gitdocs add my/path/to/watch
-```
-
-or instruct gitdocs to fetch a remote share and keep it synced with:
-
-```
-gitdocs create local/path/for/repo git@github.com:user/some/remote/repo.git
-```
-
-This will clone the remote repo and begin monitoring the local path. You can remove and clear monitored paths as well:
-
-```
-gitdocs rm my/path/to/watch
-gitdocs clear
-```
-
 ### Starting Gitdocs
 
 You need to start gitdocs in order for the monitoring to work:
@@ -107,15 +86,27 @@ For an overview of gitdocs current status, run:
 ```
 gitdocs status
 ```
-### Conflict Resolution
 
-Proper conflict resolution is an important part of any good doc and file collaboration tool.
-In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
-resolved automatically?
+### Monitoring Shares
 
-Don't worry, gitdocs makes handling this simple. In the event of a conflict, 
-**all the different versions of a document are stored** in the repo tagged with the **git sha** for each 
-committed version. The members of the repo can then compare all versions and resolve the conflict.
+You can add existing folders to watch:
+
+```
+gitdocs add my/path/to/watch
+```
+
+or instruct gitdocs to fetch a remote share and keep it synced with:
+
+```
+gitdocs create local/path/for/repo git@github.com:user/some/remote/repo.git
+```
+
+This will clone the remote repo and begin monitoring the local path. You can remove and clear monitored paths as well:
+
+```
+gitdocs rm my/path/to/watch
+gitdocs clear
+```
 
 ### Web Front-end
 
@@ -142,6 +133,16 @@ This browser front-end supports the following features:
  * Manage share settings and other configuration options
 
 To check out the front-end, simply visit `http://localhost:8888` whenever gitdocs is running.
+
+### Conflict Resolution
+
+Proper conflict resolution is an important part of any good doc and file collaboration tool.
+In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
+resolved automatically?
+
+Don't worry, gitdocs makes handling this simple. In the event of a conflict, 
+**all the different versions of a document are stored** in the repo tagged with the **git sha** for each 
+committed version. The members of the repo can then compare all versions and resolve the conflict.
 
 ## Planned Features
 
