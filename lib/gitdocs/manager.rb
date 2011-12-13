@@ -16,7 +16,8 @@ module Gitdocs
       results = {}
       @runners.each_with_index do |runner, index|
         descriptor = RepoDescriptor.new(runner.root, index)
-        results[descriptor] = runner.search(term)
+        repo_results = runner.search(term)
+        results[descriptor] = repo_results unless repo_results.empty?
       end
       results
     end
