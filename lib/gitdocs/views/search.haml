@@ -1,0 +1,10 @@
+-results.each do |repo, search_results|
+  %h2
+    =repo.name
+  %dl
+    -search_results.each do |res|
+      %dt
+        %a{:href => "/#{repo.index}/#{res.file}"}
+          ="/#{res.file}"
+      %dd
+        =res.context

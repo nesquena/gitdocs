@@ -11,6 +11,15 @@ module Gitdocs
       @icon = File.expand_path("../../img/icon.png", __FILE__)
     end
 
+    SearchResult = Struct.new(:file, :context)
+    def search(term)
+      results = []
+      sh_string("git grep #{ShellTools.escape(term)}").scan(/(.*?):([^\n]*)/) do |(file, context)|
+        results << SearchResult.new(file, context)
+      end
+      results
+    end
+
     def run
       return false unless self.valid?
       out, status = sh_with_code "which growlnotify"

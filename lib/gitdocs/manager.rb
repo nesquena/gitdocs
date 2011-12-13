@@ -10,6 +10,17 @@ module Gitdocs
       yield @config if block_given?
     end
 
+    RepoDescriptor = Struct.new(:name, :index)
+
+    def search(term)
+      results = {}
+      @runners.each_with_index do |runner, index|
+        descriptor = RepoDescriptor.new(runner.root, index)
+        results[descriptor] = runner.search(term)
+      end
+      results
+    end
+
     def run
       run = true
       trap('USR1') { run = true; EM.stop }
@@ -21,11 +32,11 @@ module Gitdocs
         # Start the repo watchers
         runners = nil
         EM.run do
-          runners = config.shares.map { |share| Runner.new(share) }
-          runners.each(&:run)
+          @runners = config.shares.map { |share| Runner.new(share) }
+          @runners.each(&:run)
           # Start the web front-end
           if self.config.global.start_web_frontend
-            Server.new(self, *runners).start
+            Server.new(self, *@runners).start
             i = 0
             web_started = false
             begin
@@ -39,7 +50,7 @@ module Gitdocs
             system("open http://localhost:8888/") if self.config.global.load_browser_on_startup && web_started
           end
         end
-        sleep(10) if runners && runners.empty?
+        sleep(10) if @runners && @runners.empty?
       end
     end
 

@@ -36,6 +36,10 @@ module Gitdocs
               end
             end
 
+            path('search').get do
+              render! "search", :layout => 'app', :locals => {:conf => manager.config, :results => manager.search(request.GET['q']), :nav_state => nil}
+            end
+
             var :int do |idx|
               gd = gds[idx]
               halt 404 if gd.nil?
