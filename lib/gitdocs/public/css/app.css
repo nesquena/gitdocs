@@ -2,6 +2,8 @@ body {
   padding-top: 50px;
 }
 
+.contents a { color: inherit; }
+
 .inline-file {
   width:100%;
   min-height: 600px;
