@@ -3,4 +3,8 @@
   * Adds a basic search to web front-end
   * Beginning of the work towards cross-platform notifications
 
-0.4.2 (Not yet released)
+0.4.2 (12/13/2012)
+
+  * Fixes search on blank results case
+
+0.4.3 (Not Yet Released)
