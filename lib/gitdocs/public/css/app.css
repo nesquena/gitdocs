@@ -28,9 +28,9 @@ form.upload p, form.add p {
 }
 
 /* Dir Listing */
-table td.author, td.modified {
-  width: 30%;
-}
+table td img { vertical-align: middle; }
+table td.author, td.modified { width: 30%; }
+table td.size { width: 15%; }
 
 /* Settings */
 div.share {

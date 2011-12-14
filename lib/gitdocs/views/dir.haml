@@ -2,21 +2,24 @@
 
 = partial("header", :locals => { :parent => parent, :file => false, :idx => idx })
 
-%table.condensed-table.zebra-striped.listing
+%table#fileListing.condensed-table.zebra-striped
   %thead
     %tr
       %th File
       %th Author
       %th Last Modified
+      %th Size
 
   %tbody
     - contents.items.each_with_index do |f, i|
       %tr
         %td
+          %img{ :src => "/img/#{f.file? ? 'file' : 'folder'}.png", :width => 16, :height => 16 }
           %a{ :href => "/#{idx}#{request.path_info}/#{f.name}" }
             = f.name
         %td.author
         %td.modified
+        %td.size
 
 .row
   .span6

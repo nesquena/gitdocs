@@ -155,9 +155,11 @@ module Gitdocs
 
     def file_meta(file)
       file = file.gsub(%r{^/}, '')
+      full_path = File.expand_path(file, @root)
       author, modified = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}").split("|")
       modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
-      { :author => author, :modified => modified }
+      size = (File.symlink?(full_path) || File.directory?(full_path)) ? -1 : File.size(full_path)
+      { :author => author, :size => size, :modified => modified }
     end
 
     def valid?

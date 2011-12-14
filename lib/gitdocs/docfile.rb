@@ -14,6 +14,10 @@ module Gitdocs
       File.expand_path(@parent, root) == expanded_root ||
         File.expand_path(@path, root).include?(expanded_root)
     end
+
+    def file?
+      true
+    end
   end
 
   class Docdir < Docfile
@@ -32,6 +36,10 @@ module Gitdocs
 
     def parent=(dir)
       dir.subdirs.push(self) if dir
+    end
+
+    def file?
+      false
     end
   end
 end
