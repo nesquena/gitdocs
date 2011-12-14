@@ -17,12 +17,17 @@ module Gitdocs
 
   DEBUG = ENV['DEBUG']
 
-  def self.run(config_root = nil, debug = DEBUG, &blk)
+  def self.start(config_root = nil, debug = DEBUG, &blk)
+    @manager.stop if @manager
     @manager = Manager.new(config_root, debug, &blk)
-    @manager.run
+    @manager.start
   end
 
   def self.restart
     @manager.restart
+  end
+
+  def self.stop
+    @manager.stop
   end
 end

@@ -10,11 +10,11 @@ module Gitdocs
     method_option :debug, :type => :boolean, :aliases => "-D"
     def start
       if self.stopped? && !options[:debug]
-        self.runner.execute { Gitdocs.run }
+        self.runner.execute { Gitdocs.start }
         self.running? ? say("Started gitdocs", :green) : say("Failed to start gitdocs", :red)
       elsif self.stopped? && options[:debug]
         say "Starting in debug mode", :yellow
-        Gitdocs.run(nil, true)
+        Gitdocs.start(nil, true)
       else # already running
         say "Gitdocs is already running, please use restart", :red
       end
