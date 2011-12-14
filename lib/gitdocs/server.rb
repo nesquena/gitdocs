@@ -3,6 +3,7 @@ require 'renee'
 require 'coderay'
 require 'uri'
 require 'haml'
+require 'mime/types'
 
 module Gitdocs
   class Server
@@ -51,7 +52,8 @@ module Gitdocs
               parent = '' if parent == '/'
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path, :nav_state => nil }
-              mode, mime = request.params['mode'], `file -I #{ShellTools.escape(expanded_path)}`.strip
+              mode, mime = request.params['mode'], MIME::Types.type_for(expanded_path).first.to_s
+              p mime
               if mode == 'meta' # Meta
                 halt 200, { 'Content-Type' => 'application/json' }, gd.file_meta(file_path).to_json
               elsif mode == 'save' # Saving
