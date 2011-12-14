@@ -11,4 +11,11 @@
 
   * Javascript fixes for front-end
 
-0.4.4 (Not Yet Released)
+0.4.4 (12/14/2012)
+
+  * Lock to eventmachine 1.0
+  * Use mime-types over file for better platform support
+  * Remove signal handling and just leverage EM start/stop
+  * Adds table sorting and file+folder icons in web front-end
+
+0.4.5 (Not yet released)
