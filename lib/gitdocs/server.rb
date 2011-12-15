@@ -3,7 +3,7 @@ require 'renee'
 require 'coderay'
 require 'uri'
 require 'haml'
-require 'mime/types'
+require 'mimetype_fu'
 
 module Gitdocs
   class Server
@@ -15,6 +15,7 @@ module Gitdocs
     def start(port = 8888)
       gds = @gitdocs
       manager = @manager
+      Thin::Logging.debug = @manager.debug
       Thin::Server.start('127.0.0.1', port) do
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         run Renee {
@@ -52,10 +53,10 @@ module Gitdocs
               parent = '' if parent == '/'
               parent = nil if parent == '.'
               locals = {:idx => idx, :parent => parent, :root => gd.root, :file_path => expanded_path, :nav_state => nil }
-              mode, mime = request.params['mode'], MIME::Types.type_for(expanded_path).first.to_s
-              p mime
+              mime = File.mime_type?(File.open(expanded_path)) if File.file?(expanded_path)
+              mode = request.params['mode']
               if mode == 'meta' # Meta
-                halt 200, { 'Content-Type' => 'application/json' }, gd.file_meta(file_path).to_json
+                halt 200, { 'Content-Type' => 'application/json' }, [gd.file_meta(file_path).to_json]
               elsif mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 redirect! "/" + idx.to_s + file_path
@@ -77,7 +78,7 @@ module Gitdocs
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode != 'raw' # render file
                 begin # attempting to render file
-                  contents = '<div class="tilt">'  + Tilt.new(expanded_path).render + '</div>'
+                  contents = '<div class="tilt">' + render(expanded_path) + '</div>'
                 rescue RuntimeError => e # not tilt supported
                   contents = if mime.match(%r{text/})
                     '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'

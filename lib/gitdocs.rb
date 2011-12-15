@@ -12,6 +12,7 @@ require 'gitdocs/server'
 require 'gitdocs/cli'
 require 'gitdocs/manager'
 require 'gitdocs/docfile'
+require 'gitdocs/rendering'
 
 module Gitdocs
 
