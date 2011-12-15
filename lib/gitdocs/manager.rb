@@ -54,6 +54,7 @@ module Gitdocs
     rescue Exception => e # Report all errors in log
       self.log(e.class.inspect + " - " + e.inspect + " - " + e.message.inspect, :error)
       self.log(e.backtrace.join("\n"), :error)
+      raise
     ensure
       self.log("Gitdocs is terminating...goodbye\n\n")
     end
