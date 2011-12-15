@@ -31,7 +31,7 @@ module Gitdocs
     end
 
     def items
-      subdirs + files
+      (subdirs + files).sort { |a,b| a.name.downcase <=> b.name.downcase }
     end
 
     def parent=(dir)
