@@ -25,4 +25,8 @@
   * Fixes major mime type detection issues
   * Fixes rendering issues
 
-0.4.7 (Not yet released)
+0.4.7 (12/15/2012)
+
+  * Re-throw exceptions from reactor loop
+  * Socket testing moved to defer block
+  
