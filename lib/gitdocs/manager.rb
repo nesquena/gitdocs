@@ -6,6 +6,7 @@ module Gitdocs
 
     def initialize(config_root, debug)
       @config = Configuration.new(config_root)
+      @logger = Logger.new(File.expand_path('log', @config.config_root))
       @debug  = debug
       yield @config if block_given?
     end
@@ -23,12 +24,13 @@ module Gitdocs
     end
 
     def start
-      puts "Gitdocs v#{VERSION}" if self.debug
-      puts "Using configuration root: '#{self.config.config_root}'" if self.debug
-      puts "Shares: #{config.shares.map(&:inspect).join(", ")}" if self.debug
+      self.log "Starting Gitdocs v#{VERSION}..."
+      self.log "Using configuration root: '#{self.config.config_root}'"
+      self.log "Shares: #{config.shares.map(&:inspect).join(", ")}"
       # Start the repo watchers
       runners = nil
       EM.run do
+        self.log "Starting EM loop..."
         @runners = config.shares.map { |share| Runner.new(share) }
         @runners.each(&:run)
         # Start the web front-end
@@ -40,13 +42,20 @@ module Gitdocs
             TCPSocket.open('127.0.0.1', 8888).close
             web_started = true
           rescue Errno::ECONNREFUSED
+            self.log "Retrying server loop..."
             sleep 0.2
             i += 1
             retry if i <= 20
           end
+          self.log "Web server running: #{web_started}"
           system("open http://localhost:8888/") if self.config.global.load_browser_on_startup && web_started
         end
       end
+    rescue Exception => e # Report all errors in log
+      self.log(e.class.inspect + " - " + e.inspect + " - " + e.message.inspect, :error)
+      self.log(e.backtrace.join("\n"), :error)
+    ensure
+      self.log("Gitdocs is terminating...goodbye\n\n")
     end
 
     def restart
@@ -56,6 +65,14 @@ module Gitdocs
 
     def stop
       EM.stop
+    end
+
+    protected
+
+    # Logs and outputs to file or stdout based on debugging state
+    # log("message")
+    def log(msg, level=:info)
+      @debug ? puts(msg) : @logger.send(level, msg)
     end
   end
 end

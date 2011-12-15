@@ -67,7 +67,7 @@ You need to start gitdocs in order for the monitoring to work:
 gitdocs start
 ```
 
-If the start command fails, you can run again with a debug flag:
+If the start command fails, you can check the logs in `~/.gitdocs/log` or run again with the debug flag:
 
 ```
 gitdocs start -D
@@ -110,7 +110,7 @@ gitdocs clear
 
 ### Web Front-end
 
-Gitdocs come with a handy web front-end that is available. 
+Gitdocs come with a handy web front-end that is available.
 
 <a href="http://i.imgur.com/IMwqN.png">
   <img src="http://i.imgur.com/IMwqN.png" width="250" />
@@ -140,8 +140,8 @@ Proper conflict resolution is an important part of any good doc and file collabo
 In most cases, git does a good job of handling file merges for you. Still, what about cases where the conflict cannot be
 resolved automatically?
 
-Don't worry, gitdocs makes handling this simple. In the event of a conflict, 
-**all the different versions of a document are stored** in the repo tagged with the **git sha** for each 
+Don't worry, gitdocs makes handling this simple. In the event of a conflict,
+**all the different versions of a document are stored** in the repo tagged with the **git sha** for each
 committed version. The members of the repo can then compare all versions and resolve the conflict.
 
 ## Planned Features
@@ -158,7 +158,7 @@ Gitdocs is a young project but we have big plans for it including:
 Gitdocs is a fresh project that we spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
 but provide the features that makes dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
 
- * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative written using C# and the [Mono Project](http://www.mono-project.com/Main_Page). 
+ * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative written using C# and the [Mono Project](http://www.mono-project.com/Main_Page).
    More mature but has a lot of dependencies, and lacks some of the features planned in Gitdocs.
  * [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
    Very similar project but again we have features planned that are out of scope (local tunnel file sharing, complete web ui for browsing, uploading and editing).
