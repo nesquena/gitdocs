@@ -18,4 +18,11 @@
   * Remove signal handling and just leverage EM start/stop
   * Adds table sorting and file+folder icons in web front-end
 
-0.4.5 (Not yet released)
+0.4.5 (12/14/2012)
+
+  * Enables logs in ~/.gitdocs/log for easier debugging
+  * Fix issue with default sort order on web interface
+  * Fixes major mime type detection issues
+  * Fixes rendering issues
+
+0.4.6 (Not yet released)
