@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'joshbuddy-guard', '~> 0.10.0'
   s.add_dependency 'thin'
   s.add_dependency 'renee', '~> 0.3.7'
-  s.add_dependency 'redcarpet'
+  s.add_dependency 'redcarpet', '~> 2.0.0'
   s.add_dependency 'thor'
   s.add_dependency 'coderay'
   s.add_dependency 'dante', '~> 0.1.2'
