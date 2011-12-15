@@ -16,14 +16,7 @@ require 'redcarpet'
 # and no accessors to change this. 100% pure, standard
 # Markdown.
 class RedcarpetCompat
-  attr_accessor :text
-
-  def initialize(text, *_dummy)
-    @text = text
-    @markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
-  end
-
   def to_html(*_dummy)
-    @markdown.render(@text.force_encoding('utf-8'))
+    @markdown.render(@text.encode('utf-8'))
   end
 end
