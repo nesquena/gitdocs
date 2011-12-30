@@ -140,11 +140,15 @@ module Gitdocs
     end
 
     IGNORED_FILES = ['.gitignore']
+    # Returns the list of files in a given directory
     # dir_files("some/dir") => [<Docfile>, <Docfile>]
     def dir_files(dir_path)
       Dir[File.join(dir_path, "*")].to_a.map { |path| Docfile.new(path) }
     end
 
+    # Returns file meta data based on relative file path
+    # file_meta("path/to/file")
+    #  => { :author => "Nick", :size => 1000, :modified => ... }
     def file_meta(file)
       result = {}
       file = file.gsub(%r{^/}, '')
@@ -156,6 +160,28 @@ module Gitdocs
       size = (File.symlink?(full_path) || File.directory?(full_path)) ? -1 : File.size(full_path)
       result = { :author => author, :size => size, :modified => modified }
       result
+    end
+
+    # Returns the revisions available for a particular file
+    # file_revisions("README")
+    def file_revisions(file)
+      file = file.gsub(%r{^/}, '')
+      output = sh_string("git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
+      output.to_s.split("\n").map do |log_result|
+        commit, subject, author, date = log_result.split("|")
+        date = Time.parse(date.sub(' ', 'T')).utc.iso8601
+        { :commit => commit, :subject => subject, :author => author, :date => date }
+      end
+    end
+
+    # Returns the temporary path of a particular revision of a file
+    # file_revision_at("README", "a4c56h") => "/tmp/some/path/README"
+    def file_revision_at(file, ref)
+      file = file.gsub(%r{^/}, '')
+      content = sh_string("git show #{ref}:#{ShellTools.escape(file)}")
+      tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
+      File.open(tmp_path, 'w') { |f| f.puts content }
+      tmp_path
     end
 
     def valid?

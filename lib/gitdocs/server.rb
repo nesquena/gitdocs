@@ -90,6 +90,9 @@ module Gitdocs
               elsif File.directory?(expanded_path) # list directory
                 contents =  gd.dir_files(expanded_path)
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
+              elsif mode == "revisions" # list revisions
+                revisions = gd.file_revisions(file_path)
+                render! "revisions", :layout => 'app', :locals => locals.merge(:revisions => revisions)
               elsif mode == 'delete' # delete file
                 FileUtils.rm(expanded_path)
                 redirect! "/" + idx.to_s + parent
@@ -97,6 +100,8 @@ module Gitdocs
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode != 'raw' # render file
+                revision = request.params['revision']
+                expanded_path = gd.file_revision_at(file_path, revision) if revision
                 begin # attempting to render file
                   contents = '<div class="tilt">' + render(expanded_path) + '</div>'
                 rescue RuntimeError => e # not tilt supported
