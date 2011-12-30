@@ -17,6 +17,7 @@ require 'redcarpet'
 # Markdown.
 class RedcarpetCompat
   def to_html(*_dummy)
-    @markdown.render(@text.encode('utf-8'))
+    @text = @text.encode('utf-8') if @text.respond_to?(:encode)
+    @markdown.render(@text)
   end
 end
