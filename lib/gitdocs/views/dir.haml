@@ -2,24 +2,28 @@
 
 = partial("header", :locals => { :parent => parent, :file => false, :idx => idx })
 
-%table#fileListing.condensed-table.zebra-striped
-  %thead
-    %tr
-      %th File
-      %th Author
-      %th Last Modified
-      %th Size
-
-  %tbody
-    - contents.items.each_with_index do |f, i|
+- if contents && contents.any?
+  %table#fileListing.condensed-table.zebra-striped
+    %thead
       %tr
-        %td
-          %img{ :src => "/img/#{f.file? ? 'file' : 'folder'}.png", :width => 16, :height => 16 }
-          %a{ :href => "/#{idx}#{request.path_info}/#{f.name}" }
-            = f.name
-        %td.author
-        %td.modified
-        %td.size
+        %th File
+        %th Author
+        %th Last Modified
+        %th Size
+
+    %tbody
+      - contents.each_with_index do |f, i|
+        %tr
+          %td
+            %img{ :src => "/img/#{f.dir? ? 'folder' : 'file'}.png", :width => 16, :height => 16 }
+            %a{ :href => "/#{idx}#{request.path_info}/#{f.name}" }
+              = f.name
+          %td.author
+          %td.modified
+          %td.size
+
+- if contents.empty?
+  %p No files were found in this directory.
 
 .row
   .span6
