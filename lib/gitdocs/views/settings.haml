@@ -1,6 +1,6 @@
 - @title = "Settings"
 
-%form{:method => 'POST', :action => '/settings'}
+%form#settings{:method => 'POST', :action => '/settings'}
   %h2 Gitdocs
   #config.field.config
     %input{:type =>'hidden', :value => '0', :name=>"config[load_browser_on_startup]"}
@@ -41,8 +41,9 @@
         %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
         %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
         %span Notifications?
-      .delete
+      .delete{ :style => "display: none;" }
         %input{:type =>'button', :value => "Delete", :class => "btn danger"}
         %input{:type =>'hidden', :name=>"share[#{idx}][delete]"}
 
   %input{:value => 'Save', :type => 'submit', :class => "btn primary" }
+  %a{ :class => "btn secondary new-share", :href => "/shares", :"data-method" => "post" } Add Share
