@@ -23,7 +23,7 @@ module Gitdocs
       results
     end
 
-    def start
+    def start(web_port=nil)
       self.log "Starting Gitdocs v#{VERSION}..."
       self.log "Using configuration root: '#{self.config.config_root}'"
       self.log "Shares: #{config.shares.map(&:inspect).join(", ")}"
@@ -41,12 +41,13 @@ module Gitdocs
           @runners.each(&:run)
           # Start the web front-end
           if self.config.global.start_web_frontend
-            Server.new(self, *@runners).start
+            web_port ||= self.config.global.web_frontend_port
+            Server.new(self, *@runners).start(web_port.to_i)
             EM.defer( proc {
               i = 0
               web_started = false
               begin
-                TCPSocket.open('127.0.0.1', 8888).close
+                TCPSocket.open('127.0.0.1', web_port.to_i).close
                 web_started = true
               rescue Errno::ECONNREFUSED
                 self.log "Retrying server loop..."
@@ -54,7 +55,7 @@ module Gitdocs
                 i += 1
                 retry if i <= 20
               end
-              system("open http://localhost:8888/") if !retrying && self.config.global.load_browser_on_startup && web_started
+              system("open http://localhost:#{web_port}/") if !retrying && self.config.global.load_browser_on_startup && web_started
             }, proc {
               self.log "Web server running!"
             })

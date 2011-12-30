@@ -18,10 +18,12 @@ module Gitdocs
 
   DEBUG = ENV['DEBUG']
 
-  def self.start(config_root = nil, debug = DEBUG, &blk)
+  # Gitdocs.start(:config_root => "...", :debug => true)
+  def self.start(options={}, &blk)
+    options = { :debug => DEBUG, :config_root => nil }.merge(options)
     @manager.stop if @manager
-    @manager = Manager.new(config_root, debug, &blk)
-    @manager.start
+    @manager = Manager.new(options[:config_root], options[:debug], &blk)
+    @manager.start(options[:port])
   end
 
   def self.restart

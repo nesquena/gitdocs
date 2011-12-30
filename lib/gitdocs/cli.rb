@@ -8,13 +8,14 @@ module Gitdocs
 
     desc "start", "Starts a daemonized gitdocs process"
     method_option :debug, :type => :boolean, :aliases => "-D"
+    method_option :port, :type => :string, :aliases => "-p"
     def start
       if self.stopped? && !options[:debug]
-        self.runner.execute { Gitdocs.start }
+        self.runner.execute { Gitdocs.start(:port => options[:port]) }
         self.running? ? say("Started gitdocs", :green) : say("Failed to start gitdocs", :red)
       elsif self.stopped? && options[:debug]
         say "Starting in debug mode", :yellow
-        Gitdocs.start(nil, true)
+        Gitdocs.start(:debug => true, :port => options[:port])
       else # already running
         say "Gitdocs is already running, please use restart", :red
       end
