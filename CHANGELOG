@@ -1,3 +1,7 @@
+0.4.9 (12/29/2011)
+
+  * Adds configuration for web port in settings
+
 0.4.8 (12/29/2011)
 
   * Only encode to utf-8 on ruby 1.9.x
