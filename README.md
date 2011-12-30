@@ -125,6 +125,7 @@ Gitdocs come with a handy web front-end that is available.
 This browser front-end supports the following features:
 
  * Explore the files within all your shares
+ * View revision history for every file in your share
  * View source files in your shares with code syntax highlighting
  * View text files in your shares with smart formatting (markdown, textile)
  * View any file in your shares that can be rendered inline (pdf, images, et al)
