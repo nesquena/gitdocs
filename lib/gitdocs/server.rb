@@ -18,6 +18,7 @@ module Gitdocs
       Thin::Logging.debug = @manager.debug
       Thin::Server.start('127.0.0.1', port) do
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
+        use Rack::MethodOverride
         run Renee {
           if request.path_info == '/'
             render! "home", :layout => 'app', :locals => {:conf => manager.config, :nav_state => "home" }
@@ -31,7 +32,10 @@ module Gitdocs
                   if remote_branch = share.delete('remote_branch')
                     share['remote_name'], share['branch_name'] = remote_branch.split('/', 2)
                   end
-                  shares[Integer(idx)].update_attributes(share)
+                  # Update paths
+                  if share['path'] && !share['path'].empty?
+                    shares[Integer(idx)].update_attributes(share)
+                  end
                 end
                 EM.add_timer(0.1) { manager.restart }
                 redirect! '/settings'
@@ -42,8 +46,20 @@ module Gitdocs
               render! "search", :layout => 'app', :locals => {:conf => manager.config, :results => manager.search(request.GET['q']), :nav_state => nil}
             end
 
-            path('shares').post do
-              Configuration::Share.create
+            path('shares') do
+              post do
+                Configuration::Share.create
+                redirect! '/settings'
+              end
+
+              var(:int) do |id|
+                delete do
+                  share = manager.config.shares.find { |s| s.id == id }
+                  halt 404 if share.nil?
+                  share.destroy
+                  redirect! '/settings'
+                end
+              end
             end
 
             var :int do |idx|

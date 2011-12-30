@@ -21,7 +21,8 @@ module Gitdocs
     end
 
     def run
-      return false unless self.valid? && !self.root.empty?
+      return false unless self.valid?
+
       @show_notifications = @share.notification
       @current_remote     = @share.remote_name
       @current_branch     = @share.branch_name
@@ -159,7 +160,7 @@ module Gitdocs
 
     def valid?
       out, status = sh_with_code "git status"
-      status.success?
+      @root.present? && status.success?
     end
 
     def warn(title, msg)

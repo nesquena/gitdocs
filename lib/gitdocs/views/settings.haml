@@ -1,4 +1,5 @@
 - @title = "Settings"
+%script{ :src => "/js/settings.js", :type => "text/javascript", :charset => "utf-8" }
 
 %form#settings{:method => 'POST', :action => '/settings'}
   %h2 Gitdocs
@@ -46,9 +47,9 @@
         %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
         %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
         %span Notifications?
-      .delete{ :style => "display: none;" }
-        %input{:type =>'button', :value => "Delete", :class => "btn danger"}
-        %input{:type =>'hidden', :name=>"share[#{idx}][delete]"}
+      .delete
+        %a{ :href => "/shares/#{share.id}", :class => "btn remove_share danger", :"data-method" => "delete"}
+          Delete
 
   %input{:value => 'Save', :type => 'submit', :class => "btn primary" }
   %a{ :class => "btn secondary new-share", :href => "/shares", :"data-method" => "post" } Add Share
