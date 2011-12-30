@@ -1,32 +1,42 @@
-0.4.1 (12/13/2012)
+0.4.8 (12/29/2011)
 
-  * Adds a basic search to web front-end
-  * Beginning of the work towards cross-platform notifications
+  * Only encode to utf-8 on ruby 1.9.x
+  * Fixes so that settings form on the web front-end saves
+  * Cleanup the front-end directory listing significantly
+  * More robust EM reactor loop handling
 
-0.4.2 (12/13/2012)
+0.4.7 (12/15/2011)
 
-  * Fixes search on blank results case
+  * Re-throw exceptions from reactor loop
+  * Socket testing moved to defer block
 
-0.4.3 (12/13/2012)
-
-  * Javascript fixes for front-end
-
-0.4.4 (12/14/2012)
-
-  * Lock to eventmachine 1.0
-  * Use mime-types over file for better platform support
-  * Remove signal handling and just leverage EM start/stop
-  * Adds table sorting and file+folder icons in web front-end
-
-0.4.5, 0.4.6 (12/14/2012)
+0.4.5, 0.4.6 (12/14/2011)
 
   * Enables logs in ~/.gitdocs/log for easier debugging
   * Fix issue with default sort order on web interface
   * Fixes major mime type detection issues
   * Fixes rendering issues
 
-0.4.7 (12/15/2012)
+0.4.4 (12/14/2011)
 
-  * Re-throw exceptions from reactor loop
-  * Socket testing moved to defer block
-  
+  * Lock to eventmachine 1.0
+  * Use mime-types over file for better platform support
+  * Remove signal handling and just leverage EM start/stop
+  * Adds table sorting and file+folder icons in web front-end
+
+0.4.3 (12/13/2011)
+
+  * Javascript fixes for front-end
+
+0.4.2 (12/13/2011)
+
+  * Fixes search on blank results case
+
+0.4.1 (12/13/2011)
+
+  * Adds a basic search to web front-end
+  * Beginning of the work towards cross-platform notifications
+
+
+
+
