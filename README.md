@@ -5,9 +5,8 @@ gitdocs will automatically keep everyone's repos in sync by pushing and pulling 
 This allows any git repo to be used as a collaborative task list, file share, or wiki for a team.
 Supports a web front-end allowing each repo to be accessed through your browser.
 
-**Note:** Gitdocs uses [joshbuddy-guard](https://github.com/joshbuddy/guard) for file system monitoring. This
-means that gitdocs works on Mac OSX, Linux and Windows. That being said, we have only currently
-tested on Mac OSX and our notifications are still mac-only. Stay tuned.
+**Note:** Gitdocs has been tested on multiple unix systems including Mac OSX and Ubuntu. Windows support is half-baked
+but we plan to tackle that in a release shortly.
 
 ## Why?
 
