@@ -15,7 +15,13 @@ module Gitdocs
     def search(term)
       results = []
       if result_test = sh_string("git grep -i #{ShellTools.escape(term)}")
-        result_test.scan(/(.*?):([^\n]*)/) { |(file, context)| results << SearchResult.new(file, context) }
+        result_test.scan(/(.*?):([^\n]*)/) do |(file, context)| 
+          if result = results.find { |s| s.file == file }
+            result.context += ' ... ' + context
+          else
+            results << SearchResult.new(file, context)
+          end
+        end
       end
       results
     end
