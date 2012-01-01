@@ -29,7 +29,7 @@
   .span6
     %form.upload{ :method => "post", :enctype => "multipart/form-data", :action => "/#{idx}#{request.path_info}?mode=upload" }
       %p Upload file to this directory
-      %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader" }
+      %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader", :size => 12}
       %input{:type => 'submit', :value => "Upload file", :class => "btn secondary" }
   .span6
     %form.add
