@@ -165,7 +165,14 @@ module Gitdocs
       result =  {} unless File.exist?(full_path) && log_result
       author, modified = log_result.split("|")
       modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
-      size = (File.symlink?(full_path) || File.directory?(full_path)) ? -1 : File.size(full_path)
+      size = if File.directory?(full_path)
+               Dir[File.join(full_path, '**', '*')].inject(0) do |size, file|
+                 File.symlink?(file) ? size : size += File.size(file)
+               end
+             else
+               File.symlink?(full_path) ? 0 : File.size(full_path)
+             end
+      size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
       result = { :author => author, :size => size, :modified => modified }
       result
     end
