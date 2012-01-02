@@ -15,8 +15,8 @@ Why should you use gitdocs for your file and doc sharing needs?
  * **Open** - gitdocs is entirely open-source under the MIT license
  * **Simple** - gitdocs is the simplest thing that works in both setup and usage
  * **Secure** - gitdocs leverages git (and existing providers like github) to store your data safely.
- * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end)
- * **Portable** - access your files anywhere you can use git (with upcoming cross-platform support)
+ * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end).
+ * **Portable** - access your files anywhere you can use git.
 
 The best part is that giving this a try is quick and easy.
 
@@ -54,7 +54,7 @@ If you have Growl installed on Max OSX, you'll probably want to run:
 brew install growlnotify
 ```
 
-to enable Growl support (other platforms coming soon).
+to enable Growl notification support (other platforms coming soon).
 
 ## Usage
 
