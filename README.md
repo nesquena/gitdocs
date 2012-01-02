@@ -5,20 +5,21 @@ gitdocs will automatically keep everyone's repos in sync by pushing and pulling 
 This allows any git repo to be used as a collaborative task list, file share, or wiki for a team.
 Supports a web front-end allowing each repo to be accessed through your browser.
 
-**Note:** Gitdocs has been tested on multiple unix systems including Mac OSX and Ubuntu. Windows support is half-baked
-but we plan to tackle that in a release shortly.
+**Note:** Gitdocs has been tested on multiple unix systems including Mac OS X and Ubuntu.
+Windows support is [half-baked](https://github.com/bazaarlabs/gitdocs/issues/7)
+but we plan to tackle that shortly in an upcoming release.
 
 ## Why?
 
-Why should you use gitdocs for your file and doc sharing needs?
+Why use gitdocs for your file and doc sharing needs?
 
  * **Open** - gitdocs is entirely open-source under the MIT license
  * **Simple** - gitdocs is the simplest thing that works in both setup and usage
  * **Secure** - gitdocs leverages git (and existing providers like github) to store your data safely.
  * **Versatile** - share task lists, code snippets, images, files or just use it as a wiki (with our web front-end).
- * **Portable** - access your files anywhere you can use git.
+ * **Portable** - access your files on any client that can use git.
 
-The best part is that giving this a try is quick and easy.
+The best part is that getting started using this project is quick and simple.
 
 ## Quick Start
 
@@ -54,7 +55,7 @@ If you have Growl installed on Max OSX, you'll probably want to run:
 brew install growlnotify
 ```
 
-to enable Growl notification support (other platforms coming soon).
+to enable Growl notification support.
 
 ## Usage
 
