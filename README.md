@@ -144,19 +144,29 @@ Don't worry, gitdocs makes handling this simple. In the event of a conflict,
 **all the different versions of a document are stored** in the repo tagged with the **git sha** for each
 committed version. The members of the repo can then compare all versions and resolve the conflict.
 
+## Gitdocs in Practice
+
+At Miso, our team actually uses gitdocs in conjunction with Dropbox. We find Dropbox is ideal for galleries, videos,
+and large binary files of all sorts. We use gitdocs for storing our actual "docs":
+Task lists, wiki pages, planning docs, collaborative designs, notes, guides, code snippets, etc.
+
+You will find that the gitdocs browser front-end is well suited for this usage scenario
+since you can browse formatted wiki pages, view files with smart syntax highlighting,
+edit files with a rich text editor, search all your files, as well as view individual file revision histories.
+
 ## Planned Features
 
-Gitdocs is a young project but we have big plans for it including:
+Gitdocs is a young project but we have many plans for it including:
 
+ - Better handling of large binary files circumventing known git limitations
  - Click-to-share instant access granting file access to users using a local tunnel or other means.
- - Indexing and full-text search for all documents in a repo
- - Better access to the versions for a particular file within the web front-end
  - Tagging and organizing of files within the web front-end
+ - Better access to the versions for a particular file within the web front-end
 
 ## Prior Projects
 
-Gitdocs is a fresh project that we spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
-but provide the features that makes dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
+Gitdocs is a fresh project that we originally spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
+but provide the features that makes Dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
 
  * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative written using C# and the [Mono Project](http://www.mono-project.com/Main_Page).
    More mature but has a lot of dependencies, and lacks some of the features planned in Gitdocs.
