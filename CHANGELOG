@@ -1,4 +1,4 @@
-0.4.12
+0.4.12 (1/05/2011)
 
   * Fixes incorrect padding style on rendered code blocks (thanks chris kempson)
   * Fixes encoding issues in markdown files
