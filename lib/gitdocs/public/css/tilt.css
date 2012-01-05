@@ -21,7 +21,7 @@ body .contents .tilt {
 
 .tilt code {
   background-color: #eee;
-  padding: 1px 3px;
+  padding: 0;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
