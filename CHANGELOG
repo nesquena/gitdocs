@@ -2,6 +2,7 @@
 
   * Fixes incorrect padding style on rendered code blocks (thanks chris kempson)
   * Fixes encoding issues in markdown files
+  * Tag documents as utf-8 in meta for web frontend (thanks chris kempson)
 
 0.4.11 (1/04/2011)
 

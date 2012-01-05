@@ -164,6 +164,16 @@ Gitdocs is a young project but we have many plans for it including:
  - Tagging and organizing of files within the web front-end
  - Better access to the versions for a particular file within the web front-end
 
+## Contributors
+
+Gitdocs was created at [Miso](http://engineering.gomiso.com) by [Joshua Hull](https://github.com/joshbuddy) and [Nathan Esquenazi](https://github.com/nesquena).
+We also have had several contributors:
+
+  * [Chris Kempson](https://github.com/ChrisKempson) - Encoding issues
+  * [Evan Tatarka](https://github.com/evant) - Browser fixes
+
+Gitdocs is still a young project with a lot of opportunity for contributions. Patches welcome!
+
 ## Prior Projects
 
 Gitdocs is a fresh project that we originally spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
