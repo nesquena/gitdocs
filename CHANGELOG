@@ -1,3 +1,7 @@
+0.4.12
+
+  * Fixes incorrect padding style on rendered code blocks (thanks chris kempson)
+
 0.4.11 (1/04/2011)
 
   * Add line-height to code blocks in file displays
