@@ -1,3 +1,8 @@
+0.4.11 (1/04/2011)
+
+  * Add line-height to code blocks in file displays
+  * Fixes various browser inconsistencies (thanks evan tatarka)
+
 0.4.10 (12/30/2011)
 
   * View revision history on the web front-end!
