@@ -93,7 +93,11 @@ module Gitdocs
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => "")
               elsif File.directory?(expanded_path) # list directory
                 contents =  gd.dir_files(expanded_path)
-                render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents)
+                rendered_readme = nil
+                if readme = Dir[File.expand_path("README.{md,txt}", expanded_path)].first
+                  rendered_readme = '<h3>' + File.basename(readme) + '</h3><div class="tilt">' + render(readme) + '</div>'
+                end
+                render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents, :rendered_readme => rendered_readme)
               elsif mode == "revisions" # list revisions
                 revisions = gd.file_revisions(file_path)
                 render! "revisions", :layout => 'app', :locals => locals.merge(:revisions => revisions)

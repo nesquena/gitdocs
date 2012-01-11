@@ -2,6 +2,10 @@
 
 = partial("header", :locals => { :parent => parent, :file => false, :idx => idx })
 
+- if rendered_readme
+  .contents
+    = preserve rendered_readme
+
 - if contents && contents.any?
   %table#fileListing.condensed-table.zebra-striped
     %thead
