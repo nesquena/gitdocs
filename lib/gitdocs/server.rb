@@ -21,7 +21,11 @@ module Gitdocs
         use Rack::MethodOverride
         run Renee {
           if request.path_info == '/'
-            render! "home", :layout => 'app', :locals => {:conf => manager.config, :nav_state => "home" }
+            if manager.config.shares.size == 1
+              redirect! "/0"
+            else
+              render! "home", :layout => 'app', :locals => {:conf => manager.config, :nav_state => "home" }
+            end
           else
             path 'settings' do
               get.render! 'settings', :layout => 'app', :locals => {:conf => manager.config, :nav_state => "settings" }
