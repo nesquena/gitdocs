@@ -72,6 +72,7 @@ module Gitdocs
               file_path = URI.unescape(request.path_info)
               file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
+              message_file = File.expand_path(".gitmessage~", gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
               parent = File.dirname(file_path)
               parent = '' if parent == '/'
@@ -83,6 +84,7 @@ module Gitdocs
                 halt 200, { 'Content-Type' => 'application/json' }, [gd.file_meta(file_path).to_json]
               elsif mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
+                File.open(message_file, 'w') { |f| f.print request.params['message'] } unless request.params['message'] == ''
                 redirect! "/" + idx.to_s + file_path
               elsif mode == 'upload'  # Uploading
                 halt 404 unless file = request.params['file']

@@ -109,10 +109,16 @@ module Gitdocs
     end
 
     def push_changes
+      message_file = File.expand_path(".gitmessage~", @root)
+      if File.exist? message_file
+        message = File.read message_file
+        File.delete message_file
+      else
+        message = 'Auto-commit from gitdocs'
+      end
       sh 'find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;'
       sh 'git add .'
-      # TODO make this message nicer
-      sh "git commit -a -m'Auto-commit from gitdocs'" unless sh("git status -s").strip.empty?
+      sh "git commit -a -m #{ShellTools.escape(message)}" unless sh("git status -s").strip.empty?
       if @current_revision.nil? || sh('git status')[/branch is ahead/]
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
