@@ -1,5 +1,6 @@
 0.4.14 (1/14/2012)
 
+  * Change file modes into tab style [thanks Kale Worsley]
   * Add ability to revert a file to a previous revision  [thanks Kale Worsley]
   * Add optional git commit message field to edit form [thanks Kale Worsley]
 
