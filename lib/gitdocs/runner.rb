@@ -205,6 +205,16 @@ module Gitdocs
       tmp_path
     end
 
+    # Revert a file to a particular revision
+    def file_revert(file, ref)
+      if file_revisions(file).map {|r| r[:commit]}.include? ref
+        file = file.gsub(%r{^/}, '')
+        full_path = File.expand_path(file, @root)
+        content = File.read(file_revision_at(file, ref))
+        File.open(full_path, 'w') { |f| f.puts content }
+      end
+    end
+
     def valid?
       out, status = sh_with_code "git status"
       @root.present? && status.success?

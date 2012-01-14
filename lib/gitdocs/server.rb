@@ -103,6 +103,12 @@ module Gitdocs
               elsif mode == "revisions" # list revisions
                 revisions = gd.file_revisions(file_path)
                 render! "revisions", :layout => 'app', :locals => locals.merge(:revisions => revisions)
+              elsif mode == "revert" # revert file
+                if revision = request.params['revision']
+                  File.open(message_file, 'w') { |f| f.print "Reverting '#{file_path}' to #{revision}" }
+                  gd.file_revert(file_path, revision)
+                end
+                redirect! "/" + idx.to_s + file_path
               elsif mode == 'delete' # delete file
                 FileUtils.rm(expanded_path)
                 redirect! "/" + idx.to_s + parent
