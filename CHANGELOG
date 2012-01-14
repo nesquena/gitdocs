@@ -1,10 +1,21 @@
-0.4.12 (1/05/2011)
+0.4.14 (1/14/2012)
+
+  * Add ability to revert a file to a previous revision  [thanks Kale Worsley]
+  * Add optional git commit message field to edit form [thanks Kale Worsley]
+
+0.4.13 (1/11/2012)
+
+  * Redirect to first share if there's only one
+  * Render inline README for a directory
+  * Front-end now lists folder sizes in directory listing [Thanks evan tatarka]
+
+0.4.12 (1/05/2012)
 
   * Fixes incorrect padding style on rendered code blocks (thanks chris kempson)
   * Fixes encoding issues in markdown files
   * Tag documents as utf-8 in meta for web frontend (thanks chris kempson)
 
-0.4.11 (1/04/2011)
+0.4.11 (1/04/2012)
 
   * Add line-height to code blocks in file displays
   * Fixes various browser inconsistencies (thanks evan tatarka)

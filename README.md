@@ -170,7 +170,8 @@ Gitdocs was created at [Miso](http://engineering.gomiso.com) by [Joshua Hull](ht
 We also have had several contributors:
 
   * [Chris Kempson](https://github.com/ChrisKempson) - Encoding issues
-  * [Evan Tatarka](https://github.com/evant) - Browser fixes
+  * [Evan Tatarka](https://github.com/evant) - Front-end style fixes
+  * [Kale Worsley](https://github.com/kaleworsley) - Custom commit msgs, revert revisions, front-end cleanup
 
 Gitdocs is still a young project with a lot of opportunity for contributions. Patches welcome!
 
