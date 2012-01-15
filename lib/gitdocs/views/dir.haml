@@ -31,11 +31,12 @@
       %p Upload file to this directory
       %input{:type => 'file', :value => "Select a file", :name => "file", :class => "uploader", :size => 12}
       %input{:type => 'submit', :value => "Upload file", :class => "btn secondary" }
-  .span6
+  .span8
     %form.add
-      %p Add new file in this directory
-      %input{:type => 'text', :name => "path", :class => "edit", :placeholder => "somefile.md" }
-      %input{:type => 'submit', :value => "New file", :class => "btn secondary" }
+      %p Add new file or directory
+      %input{:type => 'text', :name => "path", :class => "edit", :placeholder => "somefile.md or somedir" }
+      %input{:type => 'submit', :value => "New file", :class => "btn secondary file" }
+      %input{:type => 'submit', :value => "New directory", :class => "btn secondary directory" }
 
 - if rendered_readme
   .contents
