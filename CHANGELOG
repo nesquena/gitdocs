@@ -1,3 +1,8 @@
+0.4.15 (Unreleased)
+
+  * Adds a 'new directory' function to front-end [thanks Kale Worsley]
+  * Change 'New file' function to actually create a blank file [thanks Kale Worsley]
+
 0.4.14 (1/14/2012)
 
   * Change file modes into tab style [thanks Kale Worsley]
