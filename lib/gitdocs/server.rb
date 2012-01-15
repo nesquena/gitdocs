@@ -91,8 +91,13 @@ module Gitdocs
                 tempfile, filename = file[:tempfile], file[:filename]
                 FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))
                 redirect! "/" + idx.to_s + file_path + "/" + filename
-              elsif !File.exist?(expanded_path) # edit for non-existent file
-                render! "edit", :layout => 'app', :locals => locals.merge(:contents => "")
+              elsif !File.exist?(expanded_path) && !request.params['dir'] # edit for non-existent file
+                FileUtils.mkdir_p(File.dirname(expanded_path))
+                FileUtils.touch(expanded_path)
+                redirect!  "/" + idx.to_s + file_path + "?mode=edit"
+              elsif !File.exist?(expanded_path) && request.params['dir'] # create directory
+                FileUtils.mkdir_p(expanded_path)
+                redirect!  "/" + idx.to_s + file_path
               elsif File.directory?(expanded_path) # list directory
                 contents =  gd.dir_files(expanded_path)
                 rendered_readme = nil
@@ -112,7 +117,7 @@ module Gitdocs
               elsif mode == 'delete' # delete file
                 FileUtils.rm(expanded_path)
                 redirect! "/" + idx.to_s + parent
-              elsif mode == 'edit' && mime.match(%r{text/}) # edit file
+              elsif mode == 'edit' && (mime.match(%r{text/}) || mime.match(%r{x-empty})) # edit file
                 contents = File.read(expanded_path)
                 render! "edit", :layout => 'app', :locals => locals.merge(:contents => contents)
               elsif mode != 'raw' # render file
