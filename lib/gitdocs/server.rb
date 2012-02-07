@@ -1,6 +1,5 @@
 require 'thin'
 require 'renee'
-require 'coderay'
 require 'uri'
 require 'haml'
 require 'mimetype_fu'
@@ -125,10 +124,10 @@ module Gitdocs
                 expanded_path = gd.file_revision_at(file_path, revision) if revision
                 begin # attempting to render file
                   contents = '<div class="tilt">' + render(expanded_path) + '</div>'
-                rescue RuntimeError => e # not tilt supported
+                rescue RuntimeError => e # not a tilt supported file
                   contents = if mime.match(%r{text/})
-                    '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
-                  else
+                    '<pre class="prettyprint linenums">' + File.read(expanded_path) + '</pre>'
+                  else # render image or non-text file inline
                     %|<embed class="inline-file" src="/#{idx}#{request.path_info}?mode=raw"></embed>|
                   end
                 end
