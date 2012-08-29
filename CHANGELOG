@@ -2,6 +2,7 @@
 
   * Adds a 'new directory' function to front-end [thanks Kale Worsley]
   * Change 'New file' function to actually create a blank file [thanks Kale Worsley]
+  * Fixes styling for ordered lists in preview
 
 0.4.14 (1/14/2012)
 
