@@ -40,10 +40,6 @@ body .contents .tilt {
   margin: 0.3em;
 }
 
-.tilt li {
-  list-style-type: square;
-}
-
 .tilt a:link, .tilt a:visited{
   color: #33e;
   text-decoration: none;
