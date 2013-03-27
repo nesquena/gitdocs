@@ -101,7 +101,7 @@ module Gitdocs
               elsif File.directory?(expanded_path) # list directory
                 contents =  gd.dir_files(expanded_path)
                 rendered_readme = nil
-                if readme = Dir[File.expand_path("README.{md,txt}", expanded_path)].first
+                if readme = Dir[File.expand_path("README.{md}", expanded_path)].first
                   rendered_readme = '<h3>' + File.basename(readme) + '</h3><div class="tilt">' + render(readme) + '</div>'
                 end
                 render! "dir", :layout => 'app', :locals => locals.merge(:contents => contents, :rendered_readme => rendered_readme)
