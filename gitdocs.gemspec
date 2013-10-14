@@ -19,8 +19,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency 'joshbuddy-guard', '~> 0.10.0'
-  s.add_dependency 'thin', '~> 1.3.1'
-  s.add_dependency 'renee', '~> 0.3.7'
+  s.add_dependency 'thin', '~> 1.5.1'
+  s.add_dependency 'renee', '~> 0.3.11'
   s.add_dependency 'redcarpet', '~> 2.0.0'
   s.add_dependency 'thor', '~> 0.14.6'
   s.add_dependency 'coderay', '~> 1.0.4'
@@ -33,10 +33,10 @@ Gem::Specification.new do |s|
   s.add_dependency 'grit', "~> 2.4.1"
   s.add_dependency 'shell_tools', "~> 0.1.0"
   s.add_dependency 'mimetype-fu', "~> 0.1.2"
-  s.add_dependency 'eventmachine', '>= 1.0.0.beta.3'
+  s.add_dependency 'eventmachine', '>= 1.0.3'
   s.add_dependency 'bigdecimal', '~> 1.1.0'
 
-  s.add_development_dependency 'minitest', "~> 2.6.1"
+  s.add_development_dependency 'minitest', "~> 5.0.8"
   s.add_development_dependency 'rake'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'fakeweb'
