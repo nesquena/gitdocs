@@ -6,3 +6,5 @@ Rake::TestTask.new do |t|
   t.test_files = FileList[File.expand_path('../test/**/*_test.rb', __FILE__)]
   t.verbose = true
 end
+
+task :default => [:test]
