@@ -39,5 +39,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'fakeweb'
-  s.add_development_dependency 'metric_fu'
+
+  if RUBY_VERSION > '1.9'
+    s.add_development_dependency 'metric_fu'
+  end
 end
