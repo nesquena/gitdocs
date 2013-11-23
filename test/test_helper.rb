@@ -4,7 +4,7 @@ require 'minitest/autorun'
 $:.unshift File.expand_path("../../lib")
 require 'gitdocs'
 require 'fakeweb'
-require 'mocha'
+require 'mocha/setup'
 
 FakeWeb.allow_net_connect = false
 
@@ -19,6 +19,7 @@ class MiniTest::Spec
     ShellTools.capture { `git init /tmp/gitdocs/master --bare` }
     sub_paths = count.times.map do |c|
       ShellTools.capture { `cd /tmp/gitdocs && git clone file://#{master_path} #{c}` }
+      ShellTools.capture { `cd /tmp/gitdocs/#{c} && git config --local user.email "afish@example.com" && git config --local user.name "Art T. Fish"` }
       conf_path = "/tmp/gitdocs/config/#{c}"
       FileUtils.mkdir_p(conf_path)
       ["/tmp/gitdocs/#{c}", conf_path]
