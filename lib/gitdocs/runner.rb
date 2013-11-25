@@ -134,6 +134,12 @@ module Gitdocs
           #displayed.
         end
       end
+    rescue => e
+      # Rescue any standard exceptions which come from the push related
+      # commands. This will prevent problems on a single share from killing
+      # the entire daemon.
+      error("Unexpected error pushing changes in #{@root}")
+      #TODO get logging and/or put the error message into a status field in the database
     end
 
     def get_latest_changes
