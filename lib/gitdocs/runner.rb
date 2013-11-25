@@ -226,6 +226,7 @@ module Gitdocs
       else
         Kernel.warn("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     def info(title, msg)
@@ -234,6 +235,7 @@ module Gitdocs
       else
         puts("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     def error(title, msg)
@@ -242,6 +244,7 @@ module Gitdocs
       else
         Kernel.warn("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
