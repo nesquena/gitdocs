@@ -130,7 +130,8 @@ module Gitdocs
           warn("There was a conflict in #{@root}, retrying", "")
         else
           error("BAD Could not push changes in #{@root}", out)
-          exit
+          #TODO need to add a status on shares so that the push problem can be
+          #displayed.
         end
       end
     end
