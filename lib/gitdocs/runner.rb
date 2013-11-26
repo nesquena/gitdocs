@@ -130,9 +130,16 @@ module Gitdocs
           warn("There was a conflict in #{@root}, retrying", "")
         else
           error("BAD Could not push changes in #{@root}", out)
-          exit
+          #TODO need to add a status on shares so that the push problem can be
+          #displayed.
         end
       end
+    rescue => e
+      # Rescue any standard exceptions which come from the push related
+      # commands. This will prevent problems on a single share from killing
+      # the entire daemon.
+      error("Unexpected error pushing changes in #{@root}")
+      #TODO get logging and/or put the error message into a status field in the database
     end
 
     def get_latest_changes
@@ -226,6 +233,7 @@ module Gitdocs
       else
         Kernel.warn("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     def info(title, msg)
@@ -234,6 +242,7 @@ module Gitdocs
       else
         puts("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     def error(title, msg)
@@ -242,6 +251,7 @@ module Gitdocs
       else
         Kernel.warn("#{title}: #{msg}")
       end
+    rescue #Prevent StandardErrors from stopping the daemon.
     end
 
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
