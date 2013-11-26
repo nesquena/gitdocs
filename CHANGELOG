@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 0.4.16 (unreleased)
 
   * Reduce unexpected exists caused by repository and file system errors
   * Add notification of unexpected daemon exist
 
 0.4.15 (8/19/2012)
+=======
+0.5.0 (11/25/2013)
+
+ * Upgrade thin gem to v1.5.1 (Thanks @acant)
+ * Add TravisCI configuration (Thanks @acant)
+ * Rescue StandardError and better error notifications to fix crashes (Thanks @acant)
+
+0.4.15 (8/29/2012)
+>>>>>>> Bump version to 0.5.0
 
   * Adds a 'new directory' function to front-end [thanks Kale Worsley]
   * Change 'New file' function to actually create a blank file [thanks Kale Worsley]
