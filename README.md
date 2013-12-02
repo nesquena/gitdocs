@@ -193,5 +193,13 @@ but provide the features that makes Dropbox great. If you are interested in othe
  * [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
  * [bitpocket](https://github.com/sickill/bitpocket) is a project that uses rsync to synchronize data. Interesting concept, but
    lacks revision history, author tracking, etc and we have features planned that are out of scope for this project
+* [RubyDrop](https://github.com/meltingice/RubyDrop) git backed DropBox clone
+* [git-sync](http://tychoish.com/essay/git-sync/) manual git syncing tool,
+  which also use XMPP notifications
+* [git-annex-assistant](http://git-annex.branchable.com/design/assistant/)
+  directory sync tool based on [git-annex](http://git-annex.branchable.com/). (written in Haskel)
+* [BitTorrent Sync](http://www.bittorrent.com/sync) BitTorrent based syncing
+  tool, not open source or publicly defined protocol
+
 
 If any other open-source dropbox alternatives are available, we would love to hear about them so let us know!
