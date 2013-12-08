@@ -1,4 +1,9 @@
-0.4.15 (Unreleased)
+0.4.16 (unreleased)
+
+  * Reduce unexpected exists caused by repository and file system errors
+  * Add notification of unexpected daemon exist
+
+0.4.15 (8/19/2012)
 
   * Adds a 'new directory' function to front-end [thanks Kale Worsley]
   * Change 'New file' function to actually create a blank file [thanks Kale Worsley]
