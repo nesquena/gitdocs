@@ -2,8 +2,6 @@
 
 [![Gem Version](https://badge.fury.io/rb/gitdocs.png)](http://badge.fury.io/rb/gitdocs)
 [![Code Climate](https://codeclimate.com/github/bazaarlabs/gitdocs.png)](https://codeclimate.com/github/bazaarlabs/gitdocs)
-[![Dependency Status](https://gemnasium.com/bazaarlabs/gitdocs.png)](https://gemnasium.com/bazaarlabs/gitdocs)
-[![Build Status](https://travis-ci.org/bazaarlabs/gitdocs.png)](https://travis-ci.org/bazaarlabs/gitdocs)
 
 Open-source dropbox alternative powered by git. Collaborate on files and tasks without any extra hassle.
 gitdocs will automatically keep everyone's repos in sync by pushing and pulling changes.
@@ -186,12 +184,12 @@ Gitdocs is still a young project with a lot of opportunity for contributions. Pa
 Gitdocs is a fresh project that we originally spiked on in a few days time. Our primary goals are to keep the code as simple as possible,
 but provide the features that makes Dropbox great. If you are interested in other Dropbox alternatives, be sure to checkout our notes below:
 
- * [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative written using C# and the [Mono Project](http://www.mono-project.com/Main_Page).
+* [SparkleShare](http://sparkleshare.org/) is an open source, self-hosted Dropbox alternative written using C# and the [Mono Project](http://www.mono-project.com/Main_Page).
    More mature but has a lot of dependencies, and lacks some of the features planned in Gitdocs.
- * [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
+* [DVCS-Autosync](http://mayrhofer.eu.org/dvcs-autosync) is a project to create an open source replacement for Dropbox based on distributed version control systems.
    Very similar project but again we have features planned that are out of scope (local tunnel file sharing, complete web ui for browsing, uploading and editing).
- * [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
- * [bitpocket](https://github.com/sickill/bitpocket) is a project that uses rsync to synchronize data. Interesting concept, but
+* [Lipsync](https://github.com/philcryer/lipsync) is another similar project. We haven't looked at this too closely, but thought we would mention it in this list.
+* [bitpocket](https://github.com/sickill/bitpocket) is a project that uses rsync to synchronize data. Interesting concept, but
    lacks revision history, author tracking, etc and we have features planned that are out of scope for this project
 * [RubyDrop](https://github.com/meltingice/RubyDrop) git backed DropBox clone
 * [git-sync](http://tychoish.com/essay/git-sync/) manual git syncing tool,
