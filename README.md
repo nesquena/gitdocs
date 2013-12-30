@@ -200,6 +200,7 @@ but provide the features that makes Dropbox great. If you are interested in othe
   directory sync tool based on [git-annex](http://git-annex.branchable.com/). (written in Haskel)
 * [BitTorrent Sync](http://www.bittorrent.com/sync) BitTorrent based syncing
   tool, not open source or publicly defined protocol
-
+* [StrongSync](https://secure.expandrive.com/strongsync) Dropbox clone utility,
+  proprietary
 
 If any other open-source dropbox alternatives are available, we would love to hear about them so let us know!
