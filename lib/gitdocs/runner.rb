@@ -4,6 +4,12 @@ module Gitdocs
 
     attr_reader :root, :listener
 
+    def self.start_all(shares)
+      runners = shares.map { |share| Runner.new(share) }
+      runners.each(&:run)
+      runners
+    end
+
     def initialize(share)
       @share = share
       @root  = share.path.sub(%r{/+$},'') if share.path

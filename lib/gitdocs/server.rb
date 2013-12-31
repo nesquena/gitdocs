@@ -7,16 +7,17 @@ require 'mimetype_fu'
 
 module Gitdocs
   class Server
-    def initialize(manager, *gitdocs)
+    def initialize(manager, port = 8888, *gitdocs)
       @manager = manager
+      @port    = port.to_i
       @gitdocs = gitdocs
     end
 
-    def start(port = 8888)
-      gds = @gitdocs
+    def start
+      gds     = @gitdocs
       manager = @manager
       Thin::Logging.debug = @manager.debug
-      Thin::Server.start('127.0.0.1', port) do
+      Thin::Server.start('127.0.0.1', @port) do
         use Rack::Static, :urls => ['/css', '/js', '/img', '/doc'], :root => File.expand_path("../public", __FILE__)
         use Rack::MethodOverride
         run Renee {
@@ -142,6 +143,29 @@ module Gitdocs
           views_path File.expand_path("../views", __FILE__)
         }
       end
+    end
+
+    def wait_for_start_and_open(restarting)
+      wait_for_web_server = proc do
+        i = 0
+        begin
+          TCPSocket.open('127.0.0.1', @port).close
+          @manager.log('Web server running!')
+          if !restarting && @manager.config.global.load_browser_on_startup
+            system("open http://localhost:#{@port}/")
+          end
+        rescue Errno::ECONNREFUSED
+          sleep 0.2
+          i += 1
+          if i <= 20
+            @manager.log('Retrying web server loop...')
+            retry
+          else
+            @manager.log('Web server failed to start')
+          end
+        end
+      end
+      EM.defer(wait_for_web_server)
     end
   end
 end
