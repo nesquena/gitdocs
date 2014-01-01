@@ -74,15 +74,8 @@ module Gitdocs
         title = 'Unexpected exit'
         msg   = 'Something went wrong. Please see the log for details.'
 
-        if @show_notifications
-          Guard::Notifier.notify(
-            msg,
-            :title => 'Unexpected exit. Please see the log for details',
-            :image => :failure
-          )
-        else
-          Kernel.warn("#{title}: #{msg}")
-        end
+        Guard::Notifier.notify(msg, :title => title, :image => :failure)
+        Kernel.warn("#{title}: #{msg}")
       rescue
         # do nothing, This contain any exceptions which might be thrown by
         # the notification.
