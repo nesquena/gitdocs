@@ -73,6 +73,19 @@ module Gitdocs
       say self.config.shares.map { |s| "  - #{s.path}" }.join("\n")
     end
 
+    desc 'open', 'Open the Web UI'
+    method_option :port, :type => :string, :aliases => '-p'
+    def open
+      if !self.running?
+        say('Gitdocs is not running, cannot open the UI', :red)
+        return
+      end
+
+      web_port = options[:port]
+      web_port ||= config.global.web_frontend_port
+      Launchy.open("http://localhost:#{web_port}/")
+    end
+
     desc "config", "Configuration options for gitdocs"
     def config
       # TODO make this work
