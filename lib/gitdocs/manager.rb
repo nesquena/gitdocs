@@ -23,46 +23,28 @@ module Gitdocs
       results
     end
 
-    def start(web_port=nil)
-      self.log "Starting Gitdocs v#{VERSION}..."
-      self.log "Using configuration root: '#{self.config.config_root}'"
-      self.log "Shares: #{config.shares.map(&:inspect).join(", ")}"
-      # Start the repo watchers
-      runners = nil
-      retrying = false
+    def start(web_port = nil)
+      log("Starting Gitdocs v#{VERSION}...")
+      log("Using configuration root: '#{config.config_root}'")
+      log("Shares: (#{config.shares.length}) #{config.shares.map(&:inspect).join(', ')}")
+
+      restarting = false
       begin
         EM.run do
-          self.log "Starting EM loop..."
-          @runners = config.shares.map { |share|
-            self.log "Starting #{share}"
-            Runner.new(share)
-          }
-          self.log "Running runners... #{@runners.size}"
-          @runners.each(&:run)
+          log('Starting EM loop...')
+
+          @runners = Runner.start_all(config.shares)
+
           # Start the web front-end
-          if self.config.global.start_web_frontend
-            web_port ||= self.config.global.web_frontend_port
-            Server.new(self, *@runners).start(web_port.to_i)
-            EM.defer( proc {
-              i = 0
-              web_started = false
-              begin
-                TCPSocket.open('127.0.0.1', web_port.to_i).close
-                web_started = true
-              rescue Errno::ECONNREFUSED
-                self.log "Retrying server loop..."
-                sleep 0.2
-                i += 1
-                retry if i <= 20
-              end
-              system("open http://localhost:#{web_port}/") if !retrying && self.config.global.load_browser_on_startup && web_started
-            }, proc {
-              self.log "Web server running!"
-            })
+          if config.global.start_web_frontend
+            web_port ||= config.global.web_frontend_port
+            web_server = Server.new(self, web_port, *@runners)
+            web_server.start
+            web_server.wait_for_start_and_open(restarting)
           end
         end
       rescue Restart
-        retrying = true
+        restarting = true
         retry
       end
     rescue Exception => e # Report all errors in log
@@ -97,8 +79,6 @@ module Gitdocs
     def stop
       EM.stop
     end
-
-    protected
 
     # Logs and outputs to file or stdout based on debugging state
     # log("message")
