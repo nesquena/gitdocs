@@ -46,7 +46,7 @@ synchronized across all gitdocs-enabled clients.
 
 ## Installation
 
-Requires ruby and rubygems. Install as a gem:
+Requires ruby1.9+ and rubygems. Install as a gem:
 
 ```
 gem install gitdocs

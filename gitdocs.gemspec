@@ -18,6 +18,8 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
+  s.required_ruby_version = '>= 1.9'
+
   s.add_dependency 'joshbuddy-guard', '~> 0.10.0'
   s.add_dependency 'thin', '~> 1.5.1'
   s.add_dependency 'renee', '~> 0.3.11'
@@ -40,8 +42,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'fakeweb'
-
-  if RUBY_VERSION > '1.9'
-    s.add_development_dependency 'metric_fu'
-  end
+  s.add_development_dependency 'metric_fu'
 end
