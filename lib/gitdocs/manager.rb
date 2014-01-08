@@ -51,7 +51,7 @@ module Gitdocs
       log(e.class.inspect + ' - ' + e.inspect + ' - ' + e.message.inspect, :error)
       log(e.backtrace.join("\n"), :error)
 
-      # HACK duplicating the error notification code from the Runner
+      # HACK: duplicating the error notification code from the Runner
       begin
         title = 'Unexpected exit'
         msg   = 'Something went wrong. Please see the log for details.'

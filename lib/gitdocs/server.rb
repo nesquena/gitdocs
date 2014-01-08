@@ -72,7 +72,6 @@ module Gitdocs
               gd = gds[idx]
               halt 404 if gd.nil?
               file_path = URI.unescape(request.path_info)
-              file_ext  = File.extname(file_path)
               expanded_path = File.expand_path(".#{file_path}", gd.root)
               message_file = File.expand_path('.gitmessage~', gd.root)
               halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
@@ -127,7 +126,7 @@ module Gitdocs
                 expanded_path = gd.file_revision_at(file_path, revision) if revision
                 begin # attempting to render file
                   contents = '<div class="tilt">' + render(expanded_path) + '</div>'
-                rescue RuntimeError => e # not tilt supported
+                rescue RuntimeError # not tilt supported
                   contents = if mime.match(%r{text/})
                     '<pre class="CodeRay">' + CodeRay.scan_file(expanded_path).encode(:html) + '</pre>'
                   else

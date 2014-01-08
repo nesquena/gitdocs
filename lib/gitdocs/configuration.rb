@@ -69,6 +69,7 @@ module Gitdocs
     end
 
     private
+
     def import_old_shares
       full_path = File.expand_path('paths', config_root)
       if File.exist?(full_path)

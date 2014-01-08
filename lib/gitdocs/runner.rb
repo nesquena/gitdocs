@@ -91,8 +91,8 @@ module Gitdocs
         end
         push_changes
       elsif out[/CONFLICT/]
-        conflicted_files = sh('git ls-files -u --full-name -z').split("\0").
-          reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
+        conflicted_files = sh('git ls-files -u --full-name -z').split("\0")
+          .reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
             parts = line.split(/\t/)
             h[parts.last] << parts.first.split(/ /)
             h
@@ -104,7 +104,7 @@ module Gitdocs
             author =  ' original' if id == '1'
             system("cd #{@root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
           end
-          system("cd #{@root} && git rm #{conflict}") or fail
+          system("cd #{@root} && git rm #{conflict}") || fail
         end
         push_changes
       elsif sh_string('git remote').nil? # no remote to pull from
@@ -136,16 +136,16 @@ module Gitdocs
           warn("There was a conflict in #{@root}, retrying", '')
         else
           error("BAD Could not push changes in #{@root}", out)
-          # TODO need to add a status on shares so that the push problem can be
+          # TODO: need to add a status on shares so that the push problem can be
           # displayed.
         end
       end
-    rescue => e
+    rescue
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       error("Unexpected error pushing changes in #{@root}")
-      # TODO get logging and/or put the error message into a status field in the database
+      # TODO: get logging and/or put the error message into a status field in the database
     end
 
     def get_latest_changes
@@ -177,23 +177,21 @@ module Gitdocs
     # file_meta("path/to/file")
     #  => { :author => "Nick", :size => 1000, :modified => ... }
     def file_meta(file)
-      result = {}
       file = file.gsub(%r{^/}, '')
       full_path = File.expand_path(file, @root)
       log_result = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
-      result =  {} unless File.exist?(full_path) && log_result
       author, modified = log_result.split('|')
       modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
       size = if File.directory?(full_path)
-               Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
-                 File.symlink?(file) ? size : size += File.size(file)
-               end
-             else
-               File.symlink?(full_path) ? 0 : File.size(full_path)
-             end
+        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
+          File.symlink?(file) ? size : size += File.size(file)
+        end
+      else
+        File.symlink?(full_path) ? 0 : File.size(full_path)
+      end
       size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
-      result = { author: author, size: size, modified: modified }
-      result
+
+      { author: author, size: size, modified: modified }
     end
 
     # Returns the revisions available for a particular file

@@ -26,23 +26,24 @@ class MiniTest::Spec
     end
     pids = sub_paths.map do |(path, conf_path)|
       fork do
-      unless ENV['DEBUG']
-        STDOUT.reopen(File.open('/dev/null', 'w'))
-        STDERR.reopen(File.open('/dev/null', 'w'))
-      end
-      begin
-        puts 'RUNNING!'
-        Gitdocs.start(config_path: conf_path) do |conf|
-          conf.global.update_attributes(load_browser_on_startup: false, start_web_frontend: false)
-          conf.add_path(path, polling_interval: 0.1, notification: false)
+        unless ENV['DEBUG']
+          STDOUT.reopen(File.open('/dev/null', 'w'))
+          STDERR.reopen(File.open('/dev/null', 'w'))
         end
-      rescue
-        puts 'RATHER BAD ~~~~~'
-        puts $ERROR_INFO.message
-        puts $ERROR_INFO.backtrace.join("\n  ")
+        begin
+          puts 'RUNNING!'
+          Gitdocs.start(config_path: conf_path) do |conf|
+            conf.global.update_attributes(load_browser_on_startup: false, start_web_frontend: false)
+            conf.add_path(path, polling_interval: 0.1, notification: false)
+          end
+        rescue
+          puts 'RATHER BAD ~~~~~'
+          puts $ERROR_INFO.message
+          puts $ERROR_INFO.backtrace.join("\n  ")
         end
       end
     end
+
     begin
       sleep 1
       yield sub_paths.map { |sp| sp.first }
