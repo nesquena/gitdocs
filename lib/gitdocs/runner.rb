@@ -12,9 +12,9 @@ module Gitdocs
 
     def initialize(share)
       @share = share
-      @root  = share.path.sub(%r{/+$},'') if share.path
+      @root  = share.path.sub(%r{/+$}, '') if share.path
       @polling_interval = share.polling_interval
-      @icon = File.expand_path("../../img/icon.png", __FILE__)
+      @icon = File.expand_path('../../img/icon.png', __FILE__)
     end
 
     SearchResult = Struct.new(:file, :context)
@@ -23,7 +23,7 @@ module Gitdocs
 
       results = []
       if result_test = sh_string("git grep -i #{ShellTools.escape(term)}")
-        result_test.scan(/(.*?):([^\n]*)/) do |(file, context)| 
+        result_test.scan(/(.*?):([^\n]*)/) do |(file, context)|
           if result = results.find { |s| s.file == file }
             result.context += ' ... ' + context
           else
@@ -40,41 +40,41 @@ module Gitdocs
       @show_notifications = @share.notification
       @current_remote     = @share.remote_name
       @current_branch     = @share.branch_name
-      @current_revision   = sh_string("git rev-parse HEAD")
+      @current_revision   = sh_string('git rev-parse HEAD')
       Guard::Notifier.turn_on if @show_notifications
 
       mutex = Mutex.new
 
-      info("Running gitdocs!", "Running gitdocs in `#{@root}'")
+      info('Running gitdocs!', "Running gitdocs in `#{@root}'")
 
       # Pull changes from remote repository
       syncer = proc do
         EM.defer(proc do
           mutex.synchronize { sync_changes }
         end, proc do
-          EM.add_timer(@polling_interval) {
+          EM.add_timer(@polling_interval) do
             syncer.call
-          }
+          end
         end)
       end
       syncer.call
       # Listen for changes in local repository
 
-      EM.defer(proc{
-        listener = Guard::Listener.select_and_init(@root, :watch_all_modifications => true)
-        listener.on_change { |directories|
+      EM.defer(proc do
+        listener = Guard::Listener.select_and_init(@root, watch_all_modifications: true)
+        listener.on_change do |directories|
           directories.uniq!
-          directories.delete_if {|d| d =~ /\/\.git/}
+          directories.delete_if { |d| d =~ /\/\.git/ }
           unless directories.empty?
             EM.next_tick do
-              EM.defer(proc {
+              EM.defer(proc do
                 mutex.synchronize { push_changes }
-              }, proc {} )
+              end, proc {})
             end
           end
-        }
+        end
         listener.start
-      }, proc{EM.stop_reactor})
+      end, proc { EM.stop_reactor })
     end
 
     def clear_state
@@ -86,36 +86,36 @@ module Gitdocs
       if status.success?
         changes = get_latest_changes
         unless changes.empty?
-          author_list = changes.inject(Hash.new{|h, k| h[k] = 0}) {|h, c| h[c['author']] += 1; h}.to_a.sort{|a,b| b[1] <=> a[1]}.map{|(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})"}.join("\n")
+          author_list = changes.reduce(Hash.new { |h, k| h[k] = 0 }) { |h, c| h[c['author']] += 1; h }.to_a.sort { |a, b| b[1] <=> a[1] }.map { |(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})" }.join("\n")
           info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "In `#{@root}':\n#{author_list}")
         end
         push_changes
       elsif out[/CONFLICT/]
-        conflicted_files = sh("git ls-files -u --full-name -z").split("\0").
-          inject(Hash.new{|h, k| h[k] = []}) {|h, line|
+        conflicted_files = sh('git ls-files -u --full-name -z').split("\0").
+          reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
             parts = line.split(/\t/)
             h[parts.last] << parts.first.split(/ /)
             h
-          }
-        warn("There were some conflicts", "#{conflicted_files.keys.map{|f| "* #{f}"}.join("\n")}")
+          end
+        warn('There were some conflicts', "#{conflicted_files.keys.map { |f| "* #{f}" }.join("\n")}")
         conflicted_files.each do |conflict, ids|
           conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
           ids.each do |(mode, sha, id)|
-            author =  " original" if id == "1"
+            author =  ' original' if id == '1'
             system("cd #{@root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
           end
-          system("cd #{@root} && git rm #{conflict}") or raise
+          system("cd #{@root} && git rm #{conflict}") or fail
         end
         push_changes
-      elsif sh_string("git remote").nil? # no remote to pull from
+      elsif sh_string('git remote').nil? # no remote to pull from
         # Do nothing, no remote repo yet
       else
-        error("There was a problem synchronizing this gitdoc", "A problem occurred in #{@root}:\n#{out}")
+        error('There was a problem synchronizing this gitdoc', "A problem occurred in #{@root}:\n#{out}")
       end
     end
 
     def push_changes
-      message_file = File.expand_path(".gitmessage~", @root)
+      message_file = File.expand_path('.gitmessage~', @root)
       if File.exist? message_file
         message = File.read message_file
         File.delete message_file
@@ -124,7 +124,7 @@ module Gitdocs
       end
       sh 'find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;'
       sh 'git add .'
-      sh "git commit -a -m #{ShellTools.escape(message)}" unless sh("git status -s").strip.empty?
+      sh "git commit -a -m #{ShellTools.escape(message)}" unless sh('git status -s').strip.empty?
       if @current_revision.nil? || sh('git status')[/branch is ahead/]
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
@@ -133,11 +133,11 @@ module Gitdocs
         elsif @current_revision.nil?
           # ignorable
         elsif out[/\[rejected\]/]
-          warn("There was a conflict in #{@root}, retrying", "")
+          warn("There was a conflict in #{@root}, retrying", '')
         else
           error("BAD Could not push changes in #{@root}", out)
-          #TODO need to add a status on shares so that the push problem can be
-          #displayed.
+          # TODO need to add a status on shares so that the push problem can be
+          # displayed.
         end
       end
     rescue => e
@@ -145,7 +145,7 @@ module Gitdocs
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       error("Unexpected error pushing changes in #{@root}")
-      #TODO get logging and/or put the error message into a status field in the database
+      # TODO get logging and/or put the error message into a status field in the database
     end
 
     def get_latest_changes
@@ -158,7 +158,7 @@ module Gitdocs
           Yajl::Parser.new.parse(out) do |obj|
             lines << obj
           end
-          @current_revision = sh("git rev-parse HEAD").strip
+          @current_revision = sh('git rev-parse HEAD').strip
           lines
         end
       else
@@ -170,7 +170,7 @@ module Gitdocs
     # Returns the list of files in a given directory
     # dir_files("some/dir") => [<Docfile>, <Docfile>]
     def dir_files(dir_path)
-      Dir[File.join(dir_path, "*")].to_a.map { |path| Docfile.new(path) }
+      Dir[File.join(dir_path, '*')].to_a.map { |path| Docfile.new(path) }
     end
 
     # Returns file meta data based on relative file path
@@ -182,17 +182,17 @@ module Gitdocs
       full_path = File.expand_path(file, @root)
       log_result = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
       result =  {} unless File.exist?(full_path) && log_result
-      author, modified = log_result.split("|")
+      author, modified = log_result.split('|')
       modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
       size = if File.directory?(full_path)
-               Dir[File.join(full_path, '**', '*')].inject(0) do |size, file|
+               Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
                  File.symlink?(file) ? size : size += File.size(file)
                end
              else
                File.symlink?(full_path) ? 0 : File.size(full_path)
              end
       size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
-      result = { :author => author, :size => size, :modified => modified }
+      result = { author: author, size: size, modified: modified }
       result
     end
 
@@ -202,9 +202,9 @@ module Gitdocs
       file = file.gsub(%r{^/}, '')
       output = sh_string("git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
       output.to_s.split("\n").map do |log_result|
-        commit, subject, author, date = log_result.split("|")
+        commit, subject, author, date = log_result.split('|')
         date = Time.parse(date.sub(' ', 'T')).utc.iso8601
-        { :commit => commit, :subject => subject, :author => author, :date => date }
+        { commit: commit, subject: subject, author: author, date: date }
       end
     end
 
@@ -220,7 +220,7 @@ module Gitdocs
 
     # Revert a file to a particular revision
     def file_revert(file, ref)
-      if file_revisions(file).map {|r| r[:commit]}.include? ref
+      if file_revisions(file).map { |r| r[:commit] }.include? ref
         file = file.gsub(%r{^/}, '')
         full_path = File.expand_path(file, @root)
         content = File.read(file_revision_at(file, ref))
@@ -229,41 +229,41 @@ module Gitdocs
     end
 
     def valid?
-      out, status = sh_with_code "git status"
+      out, status = sh_with_code 'git status'
       @root.present? && status.success?
     end
 
     def warn(title, msg)
       if @show_notifications
-        Guard::Notifier.notify(msg, :title => title)
+        Guard::Notifier.notify(msg, title: title)
       else
         Kernel.warn("#{title}: #{msg}")
       end
-    rescue #Prevent StandardErrors from stopping the daemon.
+    rescue # Prevent StandardErrors from stopping the daemon.
     end
 
     def info(title, msg)
       if @show_notifications
-        Guard::Notifier.notify(msg, :title => title, :image => @icon)
+        Guard::Notifier.notify(msg, title: title, image: @icon)
       else
         puts("#{title}: #{msg}")
       end
-    rescue #Prevent StandardErrors from stopping the daemon.
+    rescue # Prevent StandardErrors from stopping the daemon.
     end
 
     def error(title, msg)
       if @show_notifications
-        Guard::Notifier.notify(msg, :title => title, :image => :failure)
+        Guard::Notifier.notify(msg, title: title, image: :failure)
       else
         Kernel.warn("#{title}: #{msg}")
       end
-    rescue #Prevent StandardErrors from stopping the daemon.
+    rescue # Prevent StandardErrors from stopping the daemon.
     end
 
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-    def sh_string(cmd, default=nil)
+    def sh_string(cmd, default = nil)
       val = sh(cmd).strip rescue nil
-      (val.nil? || val.empty?) ? default : val
+      val.nil? || val.empty? ? default : val
     end
 
     # Run in shell, return both status and output
