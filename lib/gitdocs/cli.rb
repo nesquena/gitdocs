@@ -77,6 +77,7 @@ module Gitdocs
     def status
       say "GitDoc v#{VERSION}"
       say "Running: #{running?}"
+      say "File System Watch Method: #{file_system_watch_method}"
       say 'Watching paths:'
       say config.shares.map { |s| "  - #{s.path}" }.join("\n")
     end
@@ -130,6 +131,24 @@ module Gitdocs
 
       def pid_path
         '/tmp/gitdocs.pid'
+      end
+
+      # @return [Symbol] to indicate how the file system is being watched
+      def file_system_watch_method
+        if Guard::Listener.mac?
+          begin
+            return :notification if Guard::Listener::Darwin.usable?
+          rescue NameError ; end
+        elsif Guard::Listener.linux?
+          begin
+            return :notification if Guard::Listener::Linux.usable?
+          rescue NameError ; end
+        elsif Guard::Listener.windows?
+          begin
+            return :notification if Guard::Listener::Windows.usable?
+          rescue NameError ; end
+        end
+        :polling
       end
     end
   end
