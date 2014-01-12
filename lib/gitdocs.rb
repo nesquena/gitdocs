@@ -15,12 +15,11 @@ require 'gitdocs/docfile'
 require 'gitdocs/rendering'
 
 module Gitdocs
-
   DEBUG = ENV['DEBUG']
 
   # Gitdocs.start(:config_root => "...", :debug => true)
-  def self.start(options={}, &blk)
-    options = { :debug => DEBUG, :config_root => nil }.merge(options)
+  def self.start(options = {}, &blk)
+    options = { debug: DEBUG, config_root: nil }.merge(options)
     @manager.stop if @manager
     @manager = Manager.new(options[:config_root], options[:debug], &blk)
     @manager.start(options[:port])

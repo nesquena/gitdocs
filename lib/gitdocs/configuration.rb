@@ -6,14 +6,14 @@ module Gitdocs
     attr_reader :config_root
 
     def initialize(config_root = nil)
-      @config_root = config_root || File.expand_path(".gitdocs", ENV["HOME"])
+      @config_root = config_root || File.expand_path('.gitdocs', ENV['HOME'])
       FileUtils.mkdir_p(@config_root)
       ActiveRecord::Base.establish_connection(
-        :adapter => 'sqlite3',
-        :database => ENV["TEST"] ? ':memory:' : File.join(@config_root, 'config.db')
+        adapter: 'sqlite3',
+        database: ENV['TEST'] ? ':memory:' : File.join(@config_root, 'config.db')
       )
-      ActiveRecord::Migrator.migrate(File.expand_path("../migration", __FILE__))
-      import_old_shares unless ENV["TEST"]
+      ActiveRecord::Migrator.migrate(File.expand_path('../migration', __FILE__))
+      import_old_shares unless ENV['TEST']
     end
 
     class Share < ActiveRecord::Base
@@ -21,14 +21,14 @@ module Gitdocs
 
       def available_remotes
         repo = Grit::Repo.new(path)
-        repo.remotes.map{|r| r.name}
+        repo.remotes.map { |r| r.name }
       rescue
         nil
       end
 
       def available_branches
         repo = Grit::Repo.new(path)
-        repo.heads.map{|r| r.name}
+        repo.heads.map { |r| r.name }
       rescue
         nil
       end
@@ -39,15 +39,15 @@ module Gitdocs
     end
 
     def add_path(path, opts = nil)
-      path = self.normalize_path(path)
-      path_opts = {:path => path}
+      path = normalize_path(path)
+      path_opts = { path: path }
       path_opts.merge!(opts) if opts
       Share.new(path_opts).save!
     end
 
     def remove_path(path)
-      path = self.normalize_path(path)
-      Share.where(:path => path).destroy_all
+      path = normalize_path(path)
+      Share.where(path: path).destroy_all
     end
 
     def clear
@@ -59,7 +59,7 @@ module Gitdocs
     end
 
     def global
-      raise if Config.all.size > 1
+      fail if Config.all.size > 1
       Config.create! if Config.all.empty?
       Config.all.first
     end
@@ -69,6 +69,7 @@ module Gitdocs
     end
 
     private
+
     def import_old_shares
       full_path = File.expand_path('paths', config_root)
       if File.exist?(full_path)

@@ -48,15 +48,15 @@ module Gitdocs
         retry
       end
     rescue Exception => e # Report all errors in log
-      self.log(e.class.inspect + " - " + e.inspect + " - " + e.message.inspect, :error)
-      self.log(e.backtrace.join("\n"), :error)
+      log(e.class.inspect + ' - ' + e.inspect + ' - ' + e.message.inspect, :error)
+      log(e.backtrace.join("\n"), :error)
 
-      #HACK duplicating the error notification code from the Runner
+      # HACK: duplicating the error notification code from the Runner
       begin
         title = 'Unexpected exit'
         msg   = 'Something went wrong. Please see the log for details.'
 
-        Guard::Notifier.notify(msg, :title => title, :image => :failure)
+        Guard::Notifier.notify(msg, title: title, image: :failure)
         Kernel.warn("#{title}: #{msg}")
       rescue
         # do nothing, This contain any exceptions which might be thrown by
@@ -65,12 +65,12 @@ module Gitdocs
 
       raise
     ensure
-      self.log("Gitdocs is terminating...goodbye\n\n")
+      log("Gitdocs is terminating...goodbye\n\n")
     end
 
     def restart
       Thread.new do
-        Thread.main.raise Restart, "restarting ... "
+        Thread.main.raise Restart, 'restarting ... '
         sleep 0.1 while EM.reactor_running?
         start
       end
@@ -82,7 +82,7 @@ module Gitdocs
 
     # Logs and outputs to file or stdout based on debugging state
     # log("message")
-    def log(msg, level=:info)
+    def log(msg, level = :info)
       @debug ? puts(msg) : @logger.send(level, msg)
     end
   end
