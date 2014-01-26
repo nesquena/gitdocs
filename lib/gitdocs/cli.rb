@@ -9,6 +9,7 @@ module Gitdocs
     desc 'start', 'Starts a daemonized gitdocs process'
     method_option :debug, type: :boolean, aliases: '-D'
     method_option :port, type: :string, aliases: '-p'
+    method_option :pid, type: :string, aliases: '-P'
     def start
       unless stopped?
         say 'Gitdocs is already running, please use restart', :red
@@ -28,6 +29,7 @@ module Gitdocs
       end
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'stop', 'Stops the gitdocs process'
     def stop
       unless running?
@@ -39,12 +41,14 @@ module Gitdocs
       say 'Stopped gitdocs', :red
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'restart', 'Restarts the gitdocs process'
     def restart
       stop
       start
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'add PATH', 'Adds a path to gitdocs'
     def add(path)
       config.add_path(path)
@@ -52,6 +56,7 @@ module Gitdocs
       restart if running?
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'rm PATH', 'Removes a path from gitdocs'
     def rm(path)
       config.remove_path(path)
@@ -65,6 +70,7 @@ module Gitdocs
       say 'Cleared paths from gitdocs'
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
     def create(path, remote)
       FileUtils.mkdir_p(File.dirname(path))
@@ -73,6 +79,7 @@ module Gitdocs
       say "Created #{path} path for gitdoc"
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'status', 'Retrieve gitdocs status'
     def status
       say "GitDoc v#{VERSION}"
@@ -95,10 +102,10 @@ module Gitdocs
       Launchy.open("http://localhost:#{web_port}/")
     end
 
-    desc 'config', 'Configuration options for gitdocs'
-    def config
-      # TODO: make this work
-    end
+    # TODO: make this work
+    #desc 'config', 'Configuration options for gitdocs'
+    #def config
+    #end
 
     desc 'help', 'Prints out the help'
     def help(task = nil, subcommand = false)
@@ -113,7 +120,7 @@ module Gitdocs
           'gitdocs',
           debug:     false,
           daemonize: true,
-          pid_path:  pid_path
+          pid_path: pid_path
         )
       end
 
@@ -130,7 +137,7 @@ module Gitdocs
       end
 
       def pid_path
-        '/tmp/gitdocs.pid'
+        options[:pid] || '/tmp/gitdocs.pid'
       end
 
       # @return [Symbol] to indicate how the file system is being watched
