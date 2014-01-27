@@ -140,11 +140,11 @@ module Gitdocs
           # displayed.
         end
       end
-    rescue
+    rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      error("Unexpected error pushing changes in #{@root}")
+      error("Unexpected error pushing changes in #{@root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
