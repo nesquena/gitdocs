@@ -1,7 +1,9 @@
 require File.expand_path('../test_helper', __FILE__)
 
+
 describe 'gitdocs configuration' do
   before do
+    ENV['TEST'] = 'true'
     ShellTools.capture { @config = Gitdocs::Configuration.new('/tmp/gitdocs') }
   end
 

@@ -1,6 +1,8 @@
 require File.expand_path('../test_helper', __FILE__)
 
 describe 'gitdocs runner' do
+  before { ENV['TEST'] = 'true' }
+
   it 'should clone files' do
     with_clones(3) do |clone1, clone2, clone3|
       File.open(File.join(clone1, 'test'), 'w') { |f| f << 'testing' }
