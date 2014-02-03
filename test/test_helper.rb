@@ -1,4 +1,3 @@
-ENV['TEST'] = 'true'
 require 'rubygems'
 require 'minitest/autorun'
 $LOAD_PATH.unshift File.expand_path('../../lib')

@@ -43,4 +43,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'fakeweb'
   s.add_development_dependency 'metric_fu'
+  s.add_development_dependency 'aruba'
 end
