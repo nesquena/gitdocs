@@ -4,6 +4,7 @@ require 'dante'
 require 'socket'
 require 'shell_tools'
 require 'guard'
+require 'rugged'
 
 require 'gitdocs/version'
 require 'gitdocs/configuration'
