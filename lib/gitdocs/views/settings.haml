@@ -25,12 +25,12 @@
         %dd
           %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
 
-      - if share.available_remotes
+      - if Gitdocs::Repository.new(share).available_remotes
         %dl
           %dt Remote
           %dd
             %select{:name=>"share[#{idx}][remote_branch]"}
-              - share.available_remotes.each do |remote|
+              - Gitdocs::Repository.new(share).available_remotes.each do |remote|
                 %option{:value => remote, :selected => remote == "#{share.remote_name}/#{share.branch_name}" ? 'selected' : nil}
                   = remote
       - else

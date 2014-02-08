@@ -4,6 +4,7 @@ require 'dante'
 require 'socket'
 require 'shell_tools'
 require 'guard'
+require 'grit'
 require 'rugged'
 
 require 'gitdocs/version'
@@ -15,6 +16,7 @@ require 'gitdocs/manager'
 require 'gitdocs/docfile'
 require 'gitdocs/rendering'
 require 'gitdocs/notifier'
+require 'gitdocs/repository'
 
 module Gitdocs
   DEBUG = ENV['DEBUG']
