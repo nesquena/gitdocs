@@ -14,7 +14,8 @@ module Gitdocs
       @share = share
       @root  = share.path.sub(%r{/+$}, '') if share.path
       @polling_interval = share.polling_interval
-      @icon = File.expand_path('../../img/icon.png', __FILE__)
+      @notifier         = Gitdocs::Notifier.new(@share.notification)
+      @repository       = Gitdocs::Repository.new(share)
     end
 
     SearchResult = Struct.new(:file, :context)
@@ -35,17 +36,15 @@ module Gitdocs
     end
 
     def run
-      return false unless self.valid?
+      return false unless @repository.valid?
 
-      @show_notifications = @share.notification
       @current_remote     = @share.remote_name
       @current_branch     = @share.branch_name
       @current_revision   = sh_string('git rev-parse HEAD')
-      Guard::Notifier.turn_on if @show_notifications
 
       mutex = Mutex.new
 
-      info('Running gitdocs!', "Running gitdocs in `#{@root}'")
+      @notifier.info('Running gitdocs!', "Running gitdocs in '#{@root}'")
 
       # Pull changes from remote repository
       syncer = proc do
@@ -87,7 +86,10 @@ module Gitdocs
         changes = get_latest_changes
         unless changes.empty?
           author_list = changes.reduce(Hash.new { |h, k| h[k] = 0 }) { |h, c| h[c['author']] += 1; h }.to_a.sort { |a, b| b[1] <=> a[1] }.map { |(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})" }.join("\n")
-          info("Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}", "In `#{@root}':\n#{author_list}")
+          @notifier.info(
+            "Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}",
+            "In '#{@root}':\n#{author_list}"
+          )
         end
         push_changes
       elsif out[/CONFLICT/]
@@ -97,7 +99,10 @@ module Gitdocs
             h[parts.last] << parts.first.split(/ /)
             h
           end
-        warn('There were some conflicts', "#{conflicted_files.keys.map { |f| "* #{f}" }.join("\n")}")
+        @notifier.warn(
+          'There were some conflicts',
+          "#{conflicted_files.keys.map { |f| "* #{f}" }.join("\n")}"
+        )
         conflicted_files.each do |conflict, ids|
           conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
           ids.each do |(mode, sha, id)|
@@ -110,7 +115,10 @@ module Gitdocs
       elsif sh_string('git remote').nil? # no remote to pull from
         # Do nothing, no remote repo yet
       else
-        error('There was a problem synchronizing this gitdoc', "A problem occurred in #{@root}:\n#{out}")
+        @notifier.error(
+          'There was a problem synchronizing this gitdoc',
+          "A problem occurred in #{@root}:\n#{out}"
+        )
       end
     end
 
@@ -129,13 +137,16 @@ module Gitdocs
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
           changes = get_latest_changes
-          info("Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}", "`#{@root}' has been pushed")
+          @notifier.info(
+            "Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}",
+            "'#{@root}' has been pushed"
+          )
         elsif @current_revision.nil?
           # ignorable
         elsif out[/\[rejected\]/]
-          warn("There was a conflict in #{@root}, retrying", '')
+          @notifier.warn("There was a conflict in #{@root}, retrying", '')
         else
-          error("BAD Could not push changes in #{@root}", out)
+          @notifier.error("BAD Could not push changes in #{@root}", out)
           # TODO: need to add a status on shares so that the push problem can be
           # displayed.
         end
@@ -144,7 +155,7 @@ module Gitdocs
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      error("Unexpected error pushing changes in #{@root}", "#{e}")
+      @notifier.error("Unexpected error pushing changes in #{@root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
@@ -224,38 +235,6 @@ module Gitdocs
         content = File.read(file_revision_at(file, ref))
         File.open(full_path, 'w') { |f| f.puts content }
       end
-    end
-
-    def valid?
-      out, status = sh_with_code 'git status'
-      @root.present? && status.success?
-    end
-
-    def warn(title, msg)
-      if @show_notifications
-        Guard::Notifier.notify(msg, title: title)
-      else
-        Kernel.warn("#{title}: #{msg}")
-      end
-    rescue # Prevent StandardErrors from stopping the daemon.
-    end
-
-    def info(title, msg)
-      if @show_notifications
-        Guard::Notifier.notify(msg, title: title, image: @icon)
-      else
-        puts("#{title}: #{msg}")
-      end
-    rescue # Prevent StandardErrors from stopping the daemon.
-    end
-
-    def error(title, msg)
-      if @show_notifications
-        Guard::Notifier.notify(msg, title: title, image: :failure)
-      else
-        Kernel.warn("#{title}: #{msg}")
-      end
-    rescue # Prevent StandardErrors from stopping the daemon.
     end
 
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
