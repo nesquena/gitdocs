@@ -72,4 +72,11 @@ class Gitdocs::Repository
     return nil unless valid?
     Rugged::Branch.each_name(@rugged, :local).sort
   end
+
+  # @return [String] oid of the HEAD of the working directory
+  def current_oid
+    @rugged.head.target
+  rescue Rugged::ReferenceError
+    nil
+  end
 end

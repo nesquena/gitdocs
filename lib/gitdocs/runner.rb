@@ -38,9 +38,9 @@ module Gitdocs
     def run
       return false unless @repository.valid?
 
-      @current_remote     = @share.remote_name
-      @current_branch     = @share.branch_name
-      @current_revision   = sh_string('git rev-parse HEAD')
+      @current_remote       = @share.remote_name
+      @current_branch       = @share.branch_name
+      @last_synced_revision = @repository.current_oid
 
       mutex = Mutex.new
 
@@ -133,7 +133,7 @@ module Gitdocs
       sh 'find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;'
       sh 'git add .'
       sh "git commit -a -m #{ShellTools.escape(message)}" unless sh('git status -s').strip.empty?
-      if @current_revision.nil? || sh('git status')[/branch is ahead/]
+      if @last_synced_revision.nil? || sh('git status')[/branch is ahead/]
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
           changes = get_latest_changes
@@ -141,7 +141,7 @@ module Gitdocs
             "Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}",
             "'#{@root}' has been pushed"
           )
-        elsif @current_revision.nil?
+        elsif @last_synced_revision.nil?
           # ignorable
         elsif out[/\[rejected\]/]
           @notifier.warn("There was a conflict in #{@root}, retrying", '')
@@ -160,8 +160,8 @@ module Gitdocs
     end
 
     def get_latest_changes
-      if @current_revision
-        out = sh "git log #{@current_revision}.. --pretty='format:{\"commit\": \"%H\",%n  \"author\": \"%an <%ae>\",%n  \"date\": \"%ad\",%n  \"message\": \"%s\"%n}'"
+      if @last_synced_revision
+        out = sh "git log #{@last_synced_revision}.. --pretty='format:{\"commit\": \"%H\",%n  \"author\": \"%an <%ae>\",%n  \"date\": \"%ad\",%n  \"message\": \"%s\"%n}'"
         if out.empty?
           []
         else
@@ -169,7 +169,7 @@ module Gitdocs
           Yajl::Parser.new.parse(out) do |obj|
             lines << obj
           end
-          @current_revision = sh('git rev-parse HEAD').strip
+          @last_synced_revision = @repository.current_oid
           lines
         end
       else

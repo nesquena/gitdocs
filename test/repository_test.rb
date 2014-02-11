@@ -90,4 +90,22 @@ describe Gitdocs::Repository do
       it { subject.must_equal [] }
     end
   end
+
+  describe '#current_oid' do
+    subject { repository.current_oid }
+    let(:path_or_share) { local_repo_path }
+
+    describe 'no commits' do
+      it { subject.must_equal nil }
+    end
+
+    describe 'has commits' do
+      before do
+        File.write(File.join(local_repo_path, 'touch_me'), "")
+        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'Initial commit'`
+        @head_oid = `cd #{local_repo_path} ; git rev-parse HEAD`.strip
+      end
+      it { subject.must_equal @head_oid }
+    end
+  end
 end
