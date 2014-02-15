@@ -79,4 +79,23 @@ class Gitdocs::Repository
   rescue Rugged::ReferenceError
     nil
   end
+
+  # Get the count of commits by author from the head to the specified oid.
+  #
+  # @param [String] last_oid
+  #
+  # @return [Hash<String, Int>]
+  def author_count(last_oid)
+    walker = Rugged::Walker.new(@rugged)
+    walker.push(@rugged.head.target)
+    walker.hide(last_oid) if last_oid
+    walker.inject(Hash.new(0)) do |result, commit|
+      result["#{commit.author[:name]} <#{commit.author[:email]}>"] += 1
+      result
+    end
+  rescue Rugged::ReferenceError
+    {}
+  rescue Rugged::OdbError
+    {}
+  end
 end

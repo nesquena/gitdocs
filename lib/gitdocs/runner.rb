@@ -83,11 +83,11 @@ module Gitdocs
     def sync_changes
       out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
       if status.success?
-        changes = get_latest_changes
-        unless changes.empty?
-          author_list = changes.reduce(Hash.new { |h, k| h[k] = 0 }) { |h, c| h[c['author']] += 1; h }.to_a.sort { |a, b| b[1] <=> a[1] }.map { |(name, count)| "* #{name} (#{count} change#{count == 1 ? '' : 's'})" }.join("\n")
+        author_change_count = latest_author_count
+        unless author_change_count.empty?
+          author_list = author_change_count.map { |author, count| "* #{author} (#{change_count(count)})" }.join("\n")
           @notifier.info(
-            "Updated with #{changes.size} change#{changes.size == 1 ? '' : 's'}",
+            "Updated with #{change_count(author_change_count)}",
             "In '#{@root}':\n#{author_list}"
           )
         end
@@ -136,9 +136,8 @@ module Gitdocs
       if @last_synced_revision.nil? || sh('git status')[/branch is ahead/]
         out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
         if code.success?
-          changes = get_latest_changes
           @notifier.info(
-            "Pushed #{changes.size} change#{changes.size == 1 ? '' : 's'}",
+            "Pushed #{change_count(latest_author_count)}",
             "'#{@root}' has been pushed"
           )
         elsif @last_synced_revision.nil?
@@ -159,23 +158,6 @@ module Gitdocs
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
-    def get_latest_changes
-      if @last_synced_revision
-        out = sh "git log #{@last_synced_revision}.. --pretty='format:{\"commit\": \"%H\",%n  \"author\": \"%an <%ae>\",%n  \"date\": \"%ad\",%n  \"message\": \"%s\"%n}'"
-        if out.empty?
-          []
-        else
-          lines = []
-          Yajl::Parser.new.parse(out) do |obj|
-            lines << obj
-          end
-          @last_synced_revision = @repository.current_oid
-          lines
-        end
-      else
-        []
-      end
-    end
 
     IGNORED_FILES = ['.gitignore']
     # Returns the list of files in a given directory
@@ -247,6 +229,30 @@ module Gitdocs
     # @see #sh
     def sh_with_code(cmd)
       ShellTools.sh_with_code(cmd, @root)
+    end
+
+    ############################################################################
+    private
+
+    # Update the author count for the last synced changes, and then update the
+    # last synced revision id.
+    #
+    # @return [Hash<String,Int]
+    def latest_author_count
+      last_oid = @last_synced_revision
+      @last_synced_revision = @repository.current_oid
+
+      @repository.author_count(last_oid)
+    end
+
+    def change_count(count_or_hash)
+      count = if count_or_hash.respond_to?(:values)
+        count_or_hash .values.reduce(:+)
+      else
+        count_or_hash
+      end
+
+      "#{count} change#{count == 1 ? '' : 's'}"
     end
   end
 end

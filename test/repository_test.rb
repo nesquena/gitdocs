@@ -3,6 +3,9 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe Gitdocs::Repository do
   let(:local_repo_path) { 'tmp/unit/local' }
+  let(:author1)         { 'Art T. Fish <afish@example.com>' }
+  let(:author2)         { 'A U Thor <author@example.com>' }
+
   before do
     FileUtils.rm_rf('tmp/unit')
     FileUtils.mkdir_p(local_repo_path)
@@ -102,10 +105,54 @@ describe Gitdocs::Repository do
     describe 'has commits' do
       before do
         File.write(File.join(local_repo_path, 'touch_me'), "")
-        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'Initial commit'`
+        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'commit' --author='#{author1}'`
         @head_oid = `cd #{local_repo_path} ; git rev-parse HEAD`.strip
       end
       it { subject.must_equal @head_oid }
+    end
+  end
+
+  describe '#author_count' do
+    subject { repository.author_count(last_oid) }
+
+    let(:path_or_share) { local_repo_path }
+
+    describe 'no commits' do
+      let(:last_oid) { nil }
+      it { subject.must_equal({}) }
+    end
+
+    describe 'commits' do
+      before do
+        File.write(File.join(local_repo_path, 'touch_me'), 'first')
+        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'initial commit' --author='#{author1}'`
+
+        @intermediate_oid = `cd #{local_repo_path} ; git rev-parse HEAD`.strip
+
+        File.write(File.join(local_repo_path, 'touch_me'), 'second')
+        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author1}'`
+
+        File.write(File.join(local_repo_path, 'touch_me'), 'third')
+        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author2}'`
+
+        File.write(File.join(local_repo_path, 'touch_me'), 'fourth')
+        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author1}'`
+      end
+
+      describe 'all' do
+        let(:last_oid) { nil }
+        it { subject.must_equal({ author1 => 3, author2 => 1 }) }
+      end
+
+      describe 'some' do
+        let(:last_oid) { @intermediate_oid }
+        it { subject.must_equal({ author1 => 2, author2 => 1 }) }
+      end
+
+      describe 'missing oid' do
+        let(:last_oid) { 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  }
+        it { subject.must_equal({}) }
+      end
     end
   end
 end
