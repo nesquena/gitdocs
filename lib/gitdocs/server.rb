@@ -100,7 +100,7 @@ module Gitdocs
                 FileUtils.mkdir_p(expanded_path)
                 redirect!  '/' + idx.to_s + file_path
               elsif File.directory?(expanded_path) # list directory
-                contents =  gd.dir_files(expanded_path)
+                contents =  Dir[File.join(expanded_path, '*')].map { |x| Docfile.new(x) }
                 rendered_readme = nil
                 if readme = Dir[File.expand_path('README.{md}', expanded_path)].first
                   rendered_readme = '<h3>' + File.basename(readme) + '</h3><div class="tilt">' + render(readme) + '</div>'

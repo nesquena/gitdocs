@@ -158,14 +158,6 @@ module Gitdocs
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
-
-    IGNORED_FILES = ['.gitignore']
-    # Returns the list of files in a given directory
-    # dir_files("some/dir") => [<Docfile>, <Docfile>]
-    def dir_files(dir_path)
-      Dir[File.join(dir_path, '*')].to_a.map { |path| Docfile.new(path) }
-    end
-
     # Returns file meta data based on relative file path
     # file_meta("path/to/file")
     #  => { :author => "Nick", :size => 1000, :modified => ... }
