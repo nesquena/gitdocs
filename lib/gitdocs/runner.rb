@@ -158,59 +158,6 @@ module Gitdocs
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
-    # Returns file meta data based on relative file path
-    # file_meta("path/to/file")
-    #  => { :author => "Nick", :size => 1000, :modified => ... }
-    def file_meta(file)
-      file = file.gsub(%r{^/}, '')
-      full_path = File.expand_path(file, @root)
-      log_result = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
-      author, modified = log_result.split('|')
-      modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
-      size = if File.directory?(full_path)
-        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
-          File.symlink?(file) ? size : size += File.size(file)
-        end
-      else
-        File.symlink?(full_path) ? 0 : File.size(full_path)
-      end
-      size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
-
-      { author: author, size: size, modified: modified }
-    end
-
-    # Returns the revisions available for a particular file
-    # file_revisions("README")
-    def file_revisions(file)
-      file = file.gsub(%r{^/}, '')
-      output = sh_string("git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
-      output.to_s.split("\n").map do |log_result|
-        commit, subject, author, date = log_result.split('|')
-        date = Time.parse(date.sub(' ', 'T')).utc.iso8601
-        { commit: commit, subject: subject, author: author, date: date }
-      end
-    end
-
-    # Returns the temporary path of a particular revision of a file
-    # file_revision_at("README", "a4c56h") => "/tmp/some/path/README"
-    def file_revision_at(file, ref)
-      file = file.gsub(%r{^/}, '')
-      content = sh_string("git show #{ref}:#{ShellTools.escape(file)}")
-      tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
-      File.open(tmp_path, 'w') { |f| f.puts content }
-      tmp_path
-    end
-
-    # Revert a file to a particular revision
-    def file_revert(file, ref)
-      if file_revisions(file).map { |r| r[:commit] }.include? ref
-        file = file.gsub(%r{^/}, '')
-        full_path = File.expand_path(file, @root)
-        content = File.read(file_revision_at(file, ref))
-        File.open(full_path, 'w') { |f| f.puts content }
-      end
-    end
-
     # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
     def sh_string(cmd, default = nil)
       val = sh(cmd).strip rescue nil

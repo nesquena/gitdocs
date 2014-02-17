@@ -66,6 +66,20 @@ describe Gitdocs::Repository do
     end
   end
 
+  describe '#root' do
+    subject { repository.root }
+
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_be_nil }
+    end
+
+    describe 'when valid' do
+      let(:path_or_share) { local_repo_path }
+      it { subject.must_equal File.expand_path(local_repo_path) }
+    end
+  end
+
   describe '#available_remotes' do
     subject { repository.available_remotes }
 
@@ -94,6 +108,13 @@ describe Gitdocs::Repository do
     end
   end
 
+  def write_and_commit(filename, content, commit_msg, author)
+    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    File.write(File.join(local_repo_path, filename), content)
+    `cd #{local_repo_path} ; git add #{filename}; git commit -m '#{commit_msg}' --author='#{author}'`
+    `cd #{local_repo_path} ; git rev-parse HEAD`.strip
+  end
+
   describe '#current_oid' do
     subject { repository.current_oid }
     let(:path_or_share) { local_repo_path }
@@ -103,11 +124,7 @@ describe Gitdocs::Repository do
     end
 
     describe 'has commits' do
-      before do
-        File.write(File.join(local_repo_path, 'touch_me'), "")
-        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'commit' --author='#{author1}'`
-        @head_oid = `cd #{local_repo_path} ; git rev-parse HEAD`.strip
-      end
+      before { @head_oid = write_and_commit('touch_me', '', 'commit', author1) }
       it { subject.must_equal @head_oid }
     end
   end
@@ -124,19 +141,10 @@ describe Gitdocs::Repository do
 
     describe 'commits' do
       before do
-        File.write(File.join(local_repo_path, 'touch_me'), 'first')
-        `cd #{local_repo_path} ; git add touch_me ; git commit -m 'initial commit' --author='#{author1}'`
-
-        @intermediate_oid = `cd #{local_repo_path} ; git rev-parse HEAD`.strip
-
-        File.write(File.join(local_repo_path, 'touch_me'), 'second')
-        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author1}'`
-
-        File.write(File.join(local_repo_path, 'touch_me'), 'third')
-        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author2}'`
-
-        File.write(File.join(local_repo_path, 'touch_me'), 'fourth')
-        `cd #{local_repo_path} ; git commit -a -m 'commit' --author='#{author1}'`
+        @intermediate_oid = write_and_commit('touch_me', 'first', 'initial commit', author1)
+        write_and_commit('touch_me', 'second', 'commit', author1)
+        write_and_commit('touch_me', 'third', 'commit', author2)
+        write_and_commit('touch_me', 'fourth', 'commit', author1)
       end
 
       describe 'all' do
@@ -153,6 +161,109 @@ describe Gitdocs::Repository do
         let(:last_oid) { 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  }
         it { subject.must_equal({}) }
       end
+    end
+  end
+
+  describe '#file_meta' do
+    subject { repository.file_meta(file_name) }
+
+    let(:path_or_share) { local_repo_path }
+
+    before do
+      write_and_commit('directory0/file0', '', 'initial commit', author1)
+      write_and_commit('directory/file1', 'foo', 'commit1', author1)
+      write_and_commit('directory/file2', 'bar', 'commit2', author2)
+      write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    end
+
+    describe 'on a file' do
+      describe 'of size zero' do
+        let(:file_name) { 'directory0/file0' }
+        it { subject[:author].must_equal 'Art T. Fish' }
+        it { subject[:size].must_equal -1 }
+        it { subject[:modified].wont_be_nil }
+      end
+
+      describe 'of non-zero size' do
+        let(:file_name) { 'directory/file1' }
+        it { subject[:author].must_equal 'Art T. Fish' }
+        it { subject[:size].must_equal 3 }
+        it { subject[:modified].wont_be_nil }
+      end
+    end
+
+    describe 'on a directory' do
+      describe 'of size zero' do
+        let(:file_name) { 'directory0' }
+        it { subject[:author].must_equal 'Art T. Fish' }
+        it { subject[:size].must_equal -1 }
+        it { subject[:modified].wont_be_nil }
+      end
+
+      describe 'of non-zero size' do
+        let(:file_name) { 'directory' }
+        it { subject[:author].must_equal 'A U Thor' }
+        it { subject[:size].must_equal 7 }
+        it { subject[:modified].wont_be_nil }
+      end
+    end
+  end
+
+  describe '#file_revisions' do
+    subject { repository.file_revisions('directory') }
+
+    let(:path_or_share) { local_repo_path }
+
+    before do
+      write_and_commit('directory0/file0', '', 'initial commit', author1)
+      @commit1 = write_and_commit('directory/file1', 'foo', 'commit1', author1)
+      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
+      @commit3 = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    end
+
+    it { subject.length.must_equal 3 }
+    it { subject.map { |x| x[:author] }.must_equal ['A U Thor', 'A U Thor', 'Art T. Fish'] }
+    it { subject.map { |x| x[:commit] }.must_equal [@commit3[0, 7], @commit2[0, 7], @commit1[0, 7]] }
+    it { subject.map { |x| x[:subject] }.must_equal ['commit3', 'commit2', 'commit1'] }
+  end
+
+  describe '#file_revision_at' do
+    subject { repository.file_revision_at('directory/file2', @commit) }
+
+    let(:path_or_share) { local_repo_path }
+
+    before do
+      write_and_commit('directory0/file0', '', 'initial commit', author1)
+      write_and_commit('directory/file1', 'foo', 'commit1', author1)
+      write_and_commit('directory/file2', 'bar', 'commit2', author2)
+      @commit = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    end
+
+    it { subject.must_equal '/tmp/file2' }
+    it { File.read(subject).must_equal "beef\n" }
+  end
+
+  describe '#file_revert' do
+    subject { repository.file_revert('directory/file2', ref) }
+
+    let(:path_or_share) { local_repo_path }
+    let(:file_name) { File.join(local_repo_path, 'directory', 'file2') }
+
+    before do
+      @commit0 = write_and_commit('directory0/file0', '', 'initial commit', author1)
+      write_and_commit('directory/file1', 'foo', 'commit1', author1)
+      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
+      write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    end
+
+    describe 'file does not include the revision' do
+      let(:ref) { @commit0 }
+      it { subject ; File.read(file_name).must_equal 'beef' }
+    end
+
+    describe 'file does include the revision' do
+      let(:ref) { @commit2 }
+      it { subject ; File.read(file_name).must_equal "bar\n" }
     end
   end
 end
