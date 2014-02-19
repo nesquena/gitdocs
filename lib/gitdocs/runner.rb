@@ -2,7 +2,7 @@ module Gitdocs
   class Runner
     include ShellTools
 
-    attr_reader :root, :listener
+    attr_reader :listener
 
     def self.start_all(shares)
       runners = shares.map { |share| Runner.new(share) }
@@ -12,10 +12,13 @@ module Gitdocs
 
     def initialize(share)
       @share = share
-      @root  = share.path.sub(%r{/+$}, '') if share.path
       @polling_interval = share.polling_interval
       @notifier         = Gitdocs::Notifier.new(@share.notification)
       @repository       = Gitdocs::Repository.new(share)
+    end
+
+    def root
+      @repository.root
     end
 
     SearchResult = Struct.new(:file, :context)
@@ -44,7 +47,7 @@ module Gitdocs
 
       mutex = Mutex.new
 
-      @notifier.info('Running gitdocs!', "Running gitdocs in '#{@root}'")
+      @notifier.info('Running gitdocs!', "Running gitdocs in '#{root}'")
 
       # Pull changes from remote repository
       syncer = proc do
@@ -60,7 +63,7 @@ module Gitdocs
       # Listen for changes in local repository
 
       EM.defer(proc do
-        listener = Guard::Listener.select_and_init(@root, watch_all_modifications: true)
+        listener = Guard::Listener.select_and_init(root, watch_all_modifications: true)
         listener.on_change do |directories|
           directories.uniq!
           directories.delete_if { |d| d =~ /\/\.git/ }
@@ -88,7 +91,7 @@ module Gitdocs
           author_list = author_change_count.map { |author, count| "* #{author} (#{change_count(count)})" }.join("\n")
           @notifier.info(
             "Updated with #{change_count(author_change_count)}",
-            "In '#{@root}':\n#{author_list}"
+            "In '#{root}':\n#{author_list}"
           )
         end
         push_changes
@@ -107,9 +110,9 @@ module Gitdocs
           conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
           ids.each do |(mode, sha, id)|
             author =  ' original' if id == '1'
-            system("cd #{@root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
+            system("cd #{root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
           end
-          system("cd #{@root} && git rm #{conflict}") || fail
+          system("cd #{root} && git rm #{conflict}") || fail
         end
         push_changes
       elsif sh_string('git remote').nil? # no remote to pull from
@@ -117,13 +120,13 @@ module Gitdocs
       else
         @notifier.error(
           'There was a problem synchronizing this gitdoc',
-          "A problem occurred in #{@root}:\n#{out}"
+          "A problem occurred in #{root}:\n#{out}"
         )
       end
     end
 
     def push_changes
-      message_file = File.expand_path('.gitmessage~', @root)
+      message_file = File.expand_path('.gitmessage~', root)
       if File.exist? message_file
         message = File.read message_file
         File.delete message_file
@@ -138,14 +141,14 @@ module Gitdocs
         if code.success?
           @notifier.info(
             "Pushed #{change_count(latest_author_count)}",
-            "'#{@root}' has been pushed"
+            "'#{root}' has been pushed"
           )
         elsif @last_synced_revision.nil?
           # ignorable
         elsif out[/\[rejected\]/]
-          @notifier.warn("There was a conflict in #{@root}, retrying", '')
+          @notifier.warn("There was a conflict in #{root}, retrying", '')
         else
-          @notifier.error("BAD Could not push changes in #{@root}", out)
+          @notifier.error("BAD Could not push changes in #{root}", out)
           # TODO: need to add a status on shares so that the push problem can be
           # displayed.
         end
@@ -154,7 +157,7 @@ module Gitdocs
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      @notifier.error("Unexpected error pushing changes in #{@root}", "#{e}")
+      @notifier.error("Unexpected error pushing changes in #{root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
@@ -167,7 +170,7 @@ module Gitdocs
     # Run in shell, return both status and output
     # @see #sh
     def sh_with_code(cmd)
-      ShellTools.sh_with_code(cmd, @root)
+      ShellTools.sh_with_code(cmd, root)
     end
 
     ############################################################################
