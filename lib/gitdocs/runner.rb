@@ -2,8 +2,6 @@ module Gitdocs
   class Runner
     include ShellTools
 
-    attr_reader :listener
-
     def self.start_all(shares)
       runners = shares.map { |share| Runner.new(share) }
       runners.each(&:run)
