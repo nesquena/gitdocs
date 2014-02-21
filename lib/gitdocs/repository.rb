@@ -112,7 +112,7 @@ class Gitdocs::Repository
   def file_meta(file)
     file = file.gsub(%r{^/}, '')
     full_path = File.expand_path(file, root)
-    log_result = sh_string("cd #{root} ; git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
+    log_result = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
     author, modified = log_result.split('|')
     modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
     size = if File.directory?(full_path)
@@ -131,7 +131,7 @@ class Gitdocs::Repository
   # file_revisions("README")
   def file_revisions(file)
     file = file.gsub(%r{^/}, '')
-    output = sh_string("cd #{root} ; git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
+    output = sh_string("git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
     output.to_s.split("\n").map do |log_result|
       commit, subject, author, date = log_result.split('|')
       date = Time.parse(date.sub(' ', 'T')).utc.iso8601
@@ -143,7 +143,7 @@ class Gitdocs::Repository
   # file_revision_at("README", "a4c56h") => "/tmp/some/path/README"
   def file_revision_at(file, ref)
     file = file.gsub(%r{^/}, '')
-    content = sh_string("cd #{root} ; git show #{ref}:#{ShellTools.escape(file)}")
+    content = sh_string("git show #{ref}:#{ShellTools.escape(file)}")
     tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
     File.open(tmp_path, 'w') { |f| f.puts content }
     tmp_path
@@ -164,7 +164,7 @@ class Gitdocs::Repository
 
   # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
   def sh_string(cmd, default = nil)
-    val = sh(cmd).strip rescue nil
+    val = sh("cd #{root} ; #{cmd}").strip rescue nil
     val.nil? || val.empty? ? default : val
   end
 end
