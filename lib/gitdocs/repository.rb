@@ -55,6 +55,46 @@ class Gitdocs::Repository
     fail("Unable to clone into #{path} because of #{e.err}")
   end
 
+  RepoDescriptor = Struct.new(:name, :index)
+
+  # Search across multiple repositories
+  #
+  # @param [String] term
+  # @param [Array<Repository>} repositories
+  #
+  # @return [Hash<RepoDescriptor, Array<SearchResult>>]
+  def self.search(term, repositories)
+    results = {}
+    repositories.each_with_index do |repository, index|
+      descriptor = RepoDescriptor.new(repository.root, index)
+      results[descriptor] = repository.search(term)
+    end
+    results.delete_if { |key, value| value.empty? }
+  end
+
+  SearchResult = Struct.new(:file, :context)
+
+  # Search a single repository
+  #
+  # @param [String] term
+  #
+  # @return [Array<SearchResult>]
+  def search(term)
+    return [] if term.empty?
+
+    results = []
+    if result_test = sh_string("git grep -i #{ShellTools.escape(term)}")
+      result_test.scan(/(.*?):([^\n]*)/) do |(file, context)|
+        if result = results.find { |s| s.file == file }
+          result.context += ' ... ' + context
+        else
+          results << SearchResult.new(file, context)
+        end
+      end
+    end
+    results
+  end
+
   # @return [String]
   def root
     return nil unless valid?

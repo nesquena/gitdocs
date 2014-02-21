@@ -15,6 +15,9 @@ describe Gitdocs::Repository do
   end
 
   let(:repository) { Gitdocs::Repository.new(path_or_share) }
+  # Default path for the repository object, which can be overridden by the
+  # tests when necessary.
+  let(:path_or_share) { local_repo_path }
 
   describe 'initialize' do
     subject { repository }
@@ -35,7 +38,6 @@ describe Gitdocs::Repository do
     end
 
     describe 'with a string path that is a repository' do
-      let(:path_or_share) { local_repo_path }
       it { subject.must_be_kind_of Gitdocs::Repository }
       it { subject.valid?.must_equal true }
       it { subject.invalid_reason.must_be_nil }
@@ -66,6 +68,60 @@ describe Gitdocs::Repository do
     end
   end
 
+  describe '.search' do
+    subject { Gitdocs::Repository.search('term', repositories) }
+
+    let(:repositories) { Array.new(4, stub(root: 'root')) }
+    before do
+      repositories[0].expects(:search).with('term').returns(:result1)
+      repositories[1].expects(:search).with('term').returns(:result2)
+      repositories[2].expects(:search).with('term').returns(:result3)
+      repositories[3].expects(:search).with('term').returns([])
+    end
+
+    it do
+      subject.must_equal({
+        Gitdocs::Repository::RepoDescriptor.new('root', 1) => :result3,
+        Gitdocs::Repository::RepoDescriptor.new('root', 2) => :result2,
+        Gitdocs::Repository::RepoDescriptor.new('root', 3) => :result1
+      })
+    end
+  end
+
+  describe '#search' do
+    subject { repository.search(term) }
+
+    describe 'empty term' do
+      let(:term) { '' }
+      it { subject.must_equal [] }
+    end
+
+    describe 'nothing found' do
+      let(:term) { 'foo' }
+      before do
+        write_and_commit('file1', 'bar', 'commit', author1)
+        write_and_commit('file2', 'beef', 'commit', author1)
+      end
+      it { subject.must_equal [] }
+    end
+
+
+    describe 'term found' do
+      let(:term) { 'foo' }
+      before do
+        write_and_commit('file1', 'foo', 'commit', author1)
+        write_and_commit('file2', 'beef', 'commit', author1)
+        write_and_commit('file3', 'foobar', 'commit', author1)
+      end
+      it do
+        subject.must_equal([
+          Gitdocs::Repository::SearchResult.new('file1', 'foo'),
+          Gitdocs::Repository::SearchResult.new('file3', 'foobar')
+        ])
+      end
+    end
+  end
+
   describe '#root' do
     subject { repository.root }
 
@@ -75,7 +131,6 @@ describe Gitdocs::Repository do
     end
 
     describe 'when valid' do
-      let(:path_or_share) { local_repo_path }
       it { subject.must_equal File.expand_path(local_repo_path) }
     end
   end
@@ -89,7 +144,6 @@ describe Gitdocs::Repository do
     end
 
     describe 'when valid' do
-      let(:path_or_share) { local_repo_path }
       it { subject.must_equal [] }
     end
   end
@@ -103,21 +157,12 @@ describe Gitdocs::Repository do
     end
 
     describe 'when valid' do
-      let(:path_or_share) { local_repo_path }
       it { subject.must_equal [] }
     end
   end
 
-  def write_and_commit(filename, content, commit_msg, author)
-    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
-    File.write(File.join(local_repo_path, filename), content)
-    `cd #{local_repo_path} ; git add #{filename}; git commit -m '#{commit_msg}' --author='#{author}'`
-    `cd #{local_repo_path} ; git rev-parse HEAD`.strip
-  end
-
   describe '#current_oid' do
     subject { repository.current_oid }
-    let(:path_or_share) { local_repo_path }
 
     describe 'no commits' do
       it { subject.must_equal nil }
@@ -131,8 +176,6 @@ describe Gitdocs::Repository do
 
   describe '#author_count' do
     subject { repository.author_count(last_oid) }
-
-    let(:path_or_share) { local_repo_path }
 
     describe 'no commits' do
       let(:last_oid) { nil }
@@ -166,8 +209,6 @@ describe Gitdocs::Repository do
 
   describe '#file_meta' do
     subject { repository.file_meta(file_name) }
-
-    let(:path_or_share) { local_repo_path }
 
     before do
       write_and_commit('directory0/file0', '', 'initial commit', author1)
@@ -212,8 +253,6 @@ describe Gitdocs::Repository do
   describe '#file_revisions' do
     subject { repository.file_revisions('directory') }
 
-    let(:path_or_share) { local_repo_path }
-
     before do
       write_and_commit('directory0/file0', '', 'initial commit', author1)
       @commit1 = write_and_commit('directory/file1', 'foo', 'commit1', author1)
@@ -230,8 +269,6 @@ describe Gitdocs::Repository do
   describe '#file_revision_at' do
     subject { repository.file_revision_at('directory/file2', @commit) }
 
-    let(:path_or_share) { local_repo_path }
-
     before do
       write_and_commit('directory0/file0', '', 'initial commit', author1)
       write_and_commit('directory/file1', 'foo', 'commit1', author1)
@@ -246,7 +283,6 @@ describe Gitdocs::Repository do
   describe '#file_revert' do
     subject { repository.file_revert('directory/file2', ref) }
 
-    let(:path_or_share) { local_repo_path }
     let(:file_name) { File.join(local_repo_path, 'directory', 'file2') }
 
     before do
@@ -266,4 +302,17 @@ describe Gitdocs::Repository do
       it { subject ; File.read(file_name).must_equal "bar\n" }
     end
   end
+
+  ##############################################################################
+
+  private
+
+  def write_and_commit(filename, content, commit_msg, author)
+    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    File.write(File.join(local_repo_path, filename), content)
+    `cd #{local_repo_path} ; git add #{filename}; git commit -m '#{commit_msg}' --author='#{author}'`
+    `cd #{local_repo_path} ; git rev-parse HEAD`.strip
+  end
+
+
 end
