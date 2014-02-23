@@ -65,8 +65,19 @@ module Gitdocs
     end
 
     def sync_changes
-      out, status = sh_with_code("git fetch --all && git merge #{@current_remote}/#{@current_branch}")
-      if status.success?
+      result = @repository.pull
+
+      return if result.nil? || result == :no_remote
+
+      if result.kind_of?(String)
+        @notifier.error(
+          'There was a problem synchronizing this gitdoc',
+          "A problem occurred in #{root}:\n#{result}"
+        )
+        return
+      end
+
+      if result == :ok
         author_change_count = latest_author_count
         unless author_change_count.empty?
           author_list = author_change_count.map { |author, count| "* #{author} (#{change_count(count)})" }.join("\n")
@@ -75,35 +86,15 @@ module Gitdocs
             "In '#{root}':\n#{author_list}"
           )
         end
-        push_changes
-      elsif out[/CONFLICT/]
-        conflicted_files = sh('git ls-files -u --full-name -z').split("\0")
-          .reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
-            parts = line.split(/\t/)
-            h[parts.last] << parts.first.split(/ /)
-            h
-          end
+      else
+        #assert result.kind_of?(Array)
         @notifier.warn(
           'There were some conflicts',
-          "#{conflicted_files.keys.map { |f| "* #{f}" }.join("\n")}"
-        )
-        conflicted_files.each do |conflict, ids|
-          conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
-          ids.each do |(mode, sha, id)|
-            author =  ' original' if id == '1'
-            system("cd #{root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
-          end
-          system("cd #{root} && git rm #{conflict}") || fail
-        end
-        push_changes
-      elsif sh_string('git remote').nil? # no remote to pull from
-        # Do nothing, no remote repo yet
-      else
-        @notifier.error(
-          'There was a problem synchronizing this gitdoc',
-          "A problem occurred in #{root}:\n#{out}"
+          result.map { |f| "* #{f}" }.join("\n")
         )
       end
+
+      push_changes
     end
 
     def push_changes
@@ -142,12 +133,6 @@ module Gitdocs
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
-    # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-    def sh_string(cmd, default = nil)
-      val = sh(cmd).strip rescue nil
-      val.nil? || val.empty? ? default : val
-    end
-
     # Run in shell, return both status and output
     # @see #sh
     def sh_with_code(cmd)
@@ -160,7 +145,7 @@ module Gitdocs
     # Update the author count for the last synced changes, and then update the
     # last synced revision id.
     #
-    # @return [Hash<String,Int]
+    # @return [Hash<String,Int>]
     def latest_author_count
       last_oid = @last_synced_revision
       @last_synced_revision = @repository.current_oid

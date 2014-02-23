@@ -22,6 +22,8 @@ class Gitdocs::Repository
     path = path_or_share
     if path_or_share.respond_to?(:path)
       path = path_or_share.path
+      @remote_name = path_or_share.remote_name
+      @branch_name = path_or_share.branch_name
     end
 
     @rugged         = Rugged::Repository.new(path)
@@ -127,6 +129,49 @@ class Gitdocs::Repository
     nil
   end
 
+  # Fetch and merge the repository
+  #
+  # @raise [RuntimeError] if there is a problem processing conflicted files
+  #
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [String] if there is an error return the message
+  # @return [Array<String>] if there is a conflict return the Array of
+  #   conflicted file names
+  # @return [:ok] if pulled and merged with no errors or conflicts
+  def pull
+    return nil unless valid?
+    return :no_remote unless sh_string('git remote')
+
+    out, status = sh_with_code("git fetch --all 2>/dev/null && git merge #{@remote_name}/#{@branch_name} 2>/dev/null")
+
+    if status.success?
+      :ok
+    elsif out[/CONFLICT/]
+      # Find the conflicted files
+      conflicted_files = sh('git ls-files -u --full-name -z').split("\0")
+        .reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
+          parts = line.split(/\t/)
+          h[parts.last] << parts.first.split(/ /)
+          h
+        end
+
+      # Mark the conflicted files
+      conflicted_files.each do |conflict, ids|
+        conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
+        ids.each do |(mode, sha, id)|
+          author =  ' original' if id == '1'
+          system("cd #{root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
+        end
+        system("cd #{root} && git rm --quiet #{conflict} >/dev/null 2>/dev/null") || fail
+      end
+
+      conflicted_files.keys
+    else
+      out #return the output on error
+    end
+  end
+
   # Get the count of commits by author from the head to the specified oid.
   #
   # @param [String] last_oid
@@ -206,5 +251,11 @@ class Gitdocs::Repository
   def sh_string(cmd, default = nil)
     val = sh("cd #{root} ; #{cmd}").strip rescue nil
     val.nil? || val.empty? ? default : val
+  end
+
+  # Run in shell, return both status and output
+  # @see #sh
+  def sh_with_code(cmd)
+    ShellTools.sh_with_code(cmd, root)
   end
 end

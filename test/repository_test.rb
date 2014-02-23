@@ -44,10 +44,16 @@ describe Gitdocs::Repository do
     end
 
     describe 'with a share that is a repository' do
-      let(:path_or_share) { stub(path: local_repo_path) }
+      let(:path_or_share) { stub(
+        path:        local_repo_path,
+        remote_name: 'remote',
+        branch_name: 'branch'
+      ) }
       it { subject.must_be_kind_of Gitdocs::Repository }
       it { subject.valid?.must_equal true }
       it { subject.invalid_reason.must_be_nil }
+      it { subject.instance_variable_get(:@branch_name).must_equal 'branch' }
+      it { subject.instance_variable_get(:@remote_name).must_equal 'remote' }
     end
   end
 
@@ -171,6 +177,90 @@ describe Gitdocs::Repository do
     describe 'has commits' do
       before { @head_oid = write_and_commit('touch_me', '', 'commit', author1) }
       it { subject.must_equal @head_oid }
+    end
+  end
+
+  describe '#pull' do
+    subject { repository.pull }
+
+    let(:path_or_share) { stub(
+      path:        local_repo_path,
+      remote_name: 'origin',
+      branch_name: 'master'
+    ) }
+
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_be_nil }
+    end
+
+    describe 'when there is no remote' do
+      it { subject.must_equal :no_remote }
+    end
+
+    describe 'when there is an error' do
+      before do
+        Rugged::Remote.add(
+            Rugged::Repository.new(local_repo_path),
+            'origin',
+            'file:///bad/remote'
+        )
+      end
+      it { subject.must_equal "Fetching origin\n" }
+    end
+
+    describe 'with a valid remote' do
+      let(:remote_repo)      { Rugged::Repository.init_at('tmp/unit/remote', :bare) }
+      let(:local_repo)       { Rugged::Repository.new(local_repo_path) }
+
+      before do
+        bare_commit(
+          remote_repo,
+          'file1', 'foobar',
+          'initial commit',
+          'author@example.com', 'A U Thor'
+        )
+
+        FileUtils.rm_rf(local_repo_path)
+        Rugged::Repository.clone_at(remote_repo.path, local_repo_path)
+      end
+
+      describe 'when there is nothing to pull' do
+        it { subject.must_equal :ok }
+      end
+
+      describe 'when there is a conflict' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file1', 'dead',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+          write_and_commit('file1', 'beef', 'conflict commit', author1)
+        end
+
+        it { subject.must_equal ['file1'] }
+        it { subject ; commit_count(local_repo).must_equal 2 }
+        it { subject ; local_repo_files.count.must_equal 3 }
+        it { subject ; local_repo_files.must_include 'file1 (f6ea049 original)' }
+        it { subject ; local_repo_files.must_include 'file1 (18ed963)' }
+        it { subject ; local_repo_files.must_include 'file1 (7bfce5c)' }
+      end
+
+      describe 'when new commits are pulled and merged' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file2', 'deadbeef',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+        end
+        it { subject.must_equal :ok }
+        it { subject ; File.exists?(File.join(local_repo_path, 'file2')).must_equal true }
+        it { subject ; commit_count(local_repo).must_equal 2 }
+      end
     end
   end
 
@@ -314,5 +404,33 @@ describe Gitdocs::Repository do
     `cd #{local_repo_path} ; git rev-parse HEAD`.strip
   end
 
+  def bare_commit(repo, filename, content, message, email, name)
+    index = Rugged::Index.new
+    index.add(
+      path: filename,
+      oid:  repo.write(content, :blob),
+      mode: 0100644
+    )
 
+    Rugged::Commit.create(remote_repo, {
+      tree:       index.write_tree(repo),
+      author:     { email: email, name: name, time: Time.now },
+      committer:  { email: email, name: name, time: Time.now },
+      message:    message,
+      parents:    repo.empty? ? [] : [ repo.head.target ].compact,
+      update_ref: 'HEAD'
+    })
+  end
+
+  def commit_count(repo)
+    walker = Rugged::Walker.new(repo)
+    walker.push(repo.head.target)
+    walker.count
+  end
+
+  def local_repo_files
+    Dir.chdir(local_repo_path) do
+      Dir.glob('*')
+    end
+  end
 end
