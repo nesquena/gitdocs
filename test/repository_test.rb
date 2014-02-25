@@ -18,6 +18,9 @@ describe Gitdocs::Repository do
   # Default path for the repository object, which can be overridden by the
   # tests when necessary.
   let(:path_or_share) { local_repo_path }
+  let(:remote_repo)   { Rugged::Repository.init_at('tmp/unit/remote', :bare) }
+  let(:local_repo)    { Rugged::Repository.new(local_repo_path) }
+
 
   describe 'initialize' do
     subject { repository }
@@ -210,20 +213,7 @@ describe Gitdocs::Repository do
     end
 
     describe 'with a valid remote' do
-      let(:remote_repo)      { Rugged::Repository.init_at('tmp/unit/remote', :bare) }
-      let(:local_repo)       { Rugged::Repository.new(local_repo_path) }
-
-      before do
-        bare_commit(
-          remote_repo,
-          'file1', 'foobar',
-          'initial commit',
-          'author@example.com', 'A U Thor'
-        )
-
-        FileUtils.rm_rf(local_repo_path)
-        Rugged::Repository.clone_at(remote_repo.path, local_repo_path)
-      end
+      before { create_local_repo_with_remote }
 
       describe 'when there is nothing to pull' do
         it { subject.must_equal :ok }
@@ -260,6 +250,121 @@ describe Gitdocs::Repository do
         it { subject.must_equal :ok }
         it { subject ; File.exists?(File.join(local_repo_path, 'file2')).must_equal true }
         it { subject ; commit_count(local_repo).must_equal 2 }
+      end
+    end
+  end
+
+  describe '#push' do
+    subject { repository.push(last_oid, 'message') }
+
+    let(:path_or_share) { stub(
+      path:        local_repo_path,
+      remote_name: 'origin',
+      branch_name: 'master'
+    ) }
+
+    describe 'when invalid' do
+      let(:last_oid)      { nil }
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_be_nil }
+    end
+
+    describe 'when no remote' do
+      let(:last_oid) { nil }
+      it { subject.must_equal :no_remote }
+    end
+
+    describe 'remote exists' do
+      before { create_local_repo_with_remote }
+
+      describe 'last sync is nil' do
+        let(:last_oid) { nil }
+
+        describe 'and there is an error on push' do
+          # Force an error to occur in the push
+          before { repository.instance_variable_set(:@branch_name, 'missing') }
+          it { subject.must_equal :nothing }
+        end
+
+        describe 'and there is a conflicted file to push' do
+          before do
+            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+            write('file1', 'beef')
+          end
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject.must_equal :nothing }
+        end
+
+        describe 'and there is an empty directory to push' do
+          before { FileUtils.mkdir_p(File.join(local_repo_path, 'directory')) }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+        end
+
+        describe 'and there is an existing file update to push' do
+          before { write('file1', 'deadbeef') }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+        end
+
+        describe 'and there is a new file to push' do
+          before { write('file2', 'foobar') }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
+        end
+      end
+
+      describe 'last sync is not nil' do
+        let(:last_oid) { 'oid' }
+
+        describe 'and this is an error on the push' do
+          before do
+            write('file2', 'foobar')
+            # Force an error to occur in the push
+            repository.instance_variable_set(:@branch_name, 'missing')
+          end
+          it { subject.must_be_kind_of String }
+        end
+
+        describe 'and this is nothing to push' do
+          it { subject.must_equal :nothing }
+        end
+
+        describe 'and there is a conflicted commit to push' do
+          before do
+            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+            write('file1', 'beef')
+          end
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject.must_equal :conflict }
+        end
+
+        describe 'and there is a commit to push' do
+          before { write('file2', 'foobar') }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
+        end
       end
     end
   end
@@ -397,6 +502,24 @@ describe Gitdocs::Repository do
 
   private
 
+  def create_local_repo_with_remote
+    bare_commit(
+      remote_repo,
+      'file1', 'foobar',
+      'initial commit',
+      'author@example.com', 'A U Thor'
+    )
+    FileUtils.rm_rf(local_repo_path)
+    repo = Rugged::Repository.clone_at(remote_repo.path, local_repo_path)
+    repo.config['user.email'] = 'afish@example.com'
+    repo.config['user.name']  = 'Art T. Fish'
+  end
+
+  def write(filename, content)
+    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    File.write(File.join(local_repo_path, filename), content)
+  end
+
   def write_and_commit(filename, content, commit_msg, author)
     FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
     File.write(File.join(local_repo_path, filename), content)
@@ -426,6 +549,16 @@ describe Gitdocs::Repository do
     walker = Rugged::Walker.new(repo)
     walker.push(repo.head.target)
     walker.count
+  end
+
+  def head_commit(repo)
+    walker = Rugged::Walker.new(repo)
+    walker.push(repo.head.target)
+    walker.first
+  end
+
+  def head_tree_files(repo)
+    head_commit(repo).tree.map { |x| x[:name] }
   end
 
   def local_repo_files

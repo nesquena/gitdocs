@@ -1,7 +1,5 @@
 module Gitdocs
   class Runner
-    include ShellTools
-
     def self.start_all(shares)
       runners = shares.map { |share| Runner.new(share) }
       runners.each(&:run)
@@ -22,8 +20,6 @@ module Gitdocs
     def run
       return false unless @repository.valid?
 
-      @current_remote       = @share.remote_name
-      @current_branch       = @share.branch_name
       @last_synced_revision = @repository.current_oid
 
       mutex = Mutex.new
@@ -99,44 +95,32 @@ module Gitdocs
 
     def push_changes
       message_file = File.expand_path('.gitmessage~', root)
-      if File.exist? message_file
-        message = File.read message_file
-        File.delete message_file
+      if File.exist?(message_file)
+        message = File.read(message_file)
+        File.delete(message_file)
       else
         message = 'Auto-commit from gitdocs'
       end
-      sh 'find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;'
-      sh 'git add .'
-      sh "git commit -a -m #{ShellTools.escape(message)}" unless sh('git status -s').strip.empty?
-      if @last_synced_revision.nil? || sh('git status')[/branch is ahead/]
-        out, code = sh_with_code("git push #{@current_remote} #{@current_branch}")
-        if code.success?
-          @notifier.info(
-            "Pushed #{change_count(latest_author_count)}",
-            "'#{root}' has been pushed"
-          )
-        elsif @last_synced_revision.nil?
-          # ignorable
-        elsif out[/\[rejected\]/]
-          @notifier.warn("There was a conflict in #{root}, retrying", '')
-        else
-          @notifier.error("BAD Could not push changes in #{root}", out)
-          # TODO: need to add a status on shares so that the push problem can be
-          # displayed.
-        end
+
+      result = @repository.push(@last_synced_revision, message)
+
+      return if result.nil? || result == :no_remote || result == :nothing
+      level, title, message = case result
+      when :ok       then [:info, "Pushed #{change_count(latest_author_count)}", "'#{root}' has been pushed"]
+      when :conflict then [:warn, "There was a conflict in #{root}, retrying", '']
+      else
+        # assert result.kind_of?(String)
+        [:error, "BAD Could not push changes in #{root}", result]
+        # TODO: need to add a status on shares so that the push problem can be
+        # displayed.
       end
+      @notifier.send(level, title, message)
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       @notifier.error("Unexpected error pushing changes in #{root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
-    end
-
-    # Run in shell, return both status and output
-    # @see #sh
-    def sh_with_code(cmd)
-      ShellTools.sh_with_code(cmd, root)
     end
 
     ############################################################################

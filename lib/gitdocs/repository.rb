@@ -143,7 +143,7 @@ class Gitdocs::Repository
     return nil unless valid?
     return :no_remote unless sh_string('git remote')
 
-    out, status = sh_with_code("git fetch --all 2>/dev/null && git merge #{@remote_name}/#{@branch_name} 2>/dev/null")
+    out, status = sh_with_code("cd #{root} ; git fetch --all 2>/dev/null && git merge #{@remote_name}/#{@branch_name} 2>/dev/null")
 
     if status.success?
       :ok
@@ -168,7 +168,39 @@ class Gitdocs::Repository
 
       conflicted_files.keys
     else
-      out #return the output on error
+      out # return the output on error
+    end
+  end
+
+  # Commit and push the repository
+  #
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [:nothing] if there was nothing to do
+  # @return [String] if there is an error return the message
+  # @return [:ok] if commited and pushed without errors or conflicts
+  def push(last_synced_oid, message='Auto-commit from gitdocs')
+    return nil unless valid?
+    return :no_remote unless sh_string('git remote')
+
+    #add and commit
+    sh_string('find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;')
+    sh_string('git add .')
+    sh_string("git commit -a -m #{ShellTools.escape(message)}") unless sh("cd #{root} ; git status -s").empty?
+
+    if last_synced_oid.nil? || sh_string('git status')[/branch is ahead/]
+      out, code = sh_with_code("git push #{@remote_name} #{@branch_name}")
+      if code.success?
+        :ok
+      elsif last_synced_oid.nil?
+        :nothing
+      elsif out[/\[rejected\]/]
+        :conflict
+      else
+        out # return the output on error
+      end
+    else
+      :nothing
     end
   end
 
