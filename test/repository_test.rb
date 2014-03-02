@@ -412,6 +412,11 @@ describe Gitdocs::Repository do
       write_and_commit('directory/file2', 'beef', 'commit3', author2)
     end
 
+    describe 'on a missing file' do
+      let(:file_name) { 'missing_file' }
+      it { assert_raises(RuntimeError) { subject } }
+    end
+
     describe 'on a file' do
       describe 'of size zero' do
         let(:file_name) { 'directory0/file0' }

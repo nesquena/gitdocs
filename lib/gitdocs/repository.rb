@@ -224,14 +224,28 @@ class Gitdocs::Repository
   end
 
   # Returns file meta data based on relative file path
-  # file_meta("path/to/file")
+  #
+  # @example
+  #  file_meta("path/to/file")
   #  => { :author => "Nick", :size => 1000, :modified => ... }
+  #
+  # @param [String] file relative path to file in repository
+  #
+  # @raise [RuntimeError] if the file is not found in any commits
+  #
+  # @return [Hash<Symbol=>String,Integer,Time>] the author, size and
+  #   modification date of the file
   def file_meta(file)
     file = file.gsub(%r{^/}, '')
+
+    walker = Rugged::Walker.new(@rugged)
+    walker.sorting(Rugged::SORT_DATE)
+    walker.push(@rugged.head.target)
+    commit = walker.find { |x| x.diff(paths: [file]).size > 0 }
+
+    fail "File #{file} not found" unless commit
+
     full_path = File.expand_path(file, root)
-    log_result = sh_string("git log --format='%aN|%ai' -n1 #{ShellTools.escape(file)}")
-    author, modified = log_result.split('|')
-    modified = Time.parse(modified.sub(' ', 'T')).utc.iso8601
     size = if File.directory?(full_path)
       Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
         File.symlink?(file) ? size : size += File.size(file)
@@ -241,38 +255,68 @@ class Gitdocs::Repository
     end
     size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
 
-    { author: author, size: size, modified: modified }
+    { author: commit.author[:name], size: size, modified: commit.author[:time] }
   end
 
   # Returns the revisions available for a particular file
-  # file_revisions("README")
+  #
+  # @example
+  #   file_revisions("README")
+  #
+  # @param [String] file
+  #
+  # @return [Array<Hash>]
   def file_revisions(file)
     file = file.gsub(%r{^/}, '')
-    output = sh_string("git log --format='%h|%s|%aN|%ai' -n100 #{ShellTools.escape(file)}")
-    output.to_s.split("\n").map do |log_result|
-      commit, subject, author, date = log_result.split('|')
-      date = Time.parse(date.sub(' ', 'T')).utc.iso8601
-      { commit: commit, subject: subject, author: author, date: date }
-    end
+    walker = Rugged::Walker.new(@rugged)
+    walker.sorting(Rugged::SORT_DATE)
+    walker.push(@rugged.head.target)
+    # Excluding the initial commit (without a parent) which keeps things
+    # consistent with the original behaviour.
+    # TODO: reconsider if this is the correct behaviour
+    walker.select{|x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
+      .first(100)
+      .map do |commit|
+        {
+          commit:  commit.oid[0, 7],
+          subject: commit.message.split("\n")[0],
+          author:  commit.author[:name],
+          date:    commit.author[:time]
+        }
+      end
   end
 
-  # Returns the temporary path of a particular revision of a file
-  # file_revision_at("README", "a4c56h") => "/tmp/some/path/README"
+  # Put the contents of the specified file revision into a temporary file
+  #
+  # @example
+  #   file_revision_at("README", "a4c56h")
+  #   => "/tmp/some/path/README"
+  #
+  # @param [String] file
+  # @param [String] ref
+  #
+  # @return [String] path of the temporary file
   def file_revision_at(file, ref)
     file = file.gsub(%r{^/}, '')
-    content = sh_string("git show #{ref}:#{ShellTools.escape(file)}")
+    content = @rugged.blob_at(ref, file).text
     tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
     File.open(tmp_path, 'w') { |f| f.puts content }
     tmp_path
   end
 
+  # Revert file to the specified ref
+  #
+  # @param [String] file
+  # @param [String] ref
   def file_revert(file, ref)
-    if file_revisions(file).map { |r| r[:commit] }.include? ref[0, 7]
-      file = file.gsub(%r{^/}, '')
-      full_path = File.expand_path(file, root)
-      content = File.read(file_revision_at(file, ref))
-      File.open(full_path, 'w') { |f| f.puts content }
-    end
+    file = file.gsub(%r{^/}, '')
+    blob = @rugged.blob_at(ref, file)
+    # Silently fail if the file/ref do not existing in the repository.
+    # Which is consistent with the original behaviour.
+    # TODO: should consider throwing an exception on this condition
+    return unless blob
+
+    File.open(File.expand_path(file, root), 'w') { |f| f.puts(blob.text) }
   end
 
   ##############################################################################
