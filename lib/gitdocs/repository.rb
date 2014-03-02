@@ -141,7 +141,7 @@ class Gitdocs::Repository
   # @return [:ok] if pulled and merged with no errors or conflicts
   def pull
     return nil unless valid?
-    return :no_remote unless sh_string('git remote')
+    return :no_remote unless has_remote?
 
     out, status = sh_with_code("cd #{root} ; git fetch --all 2>/dev/null && git merge #{@remote_name}/#{@branch_name} 2>/dev/null")
 
@@ -181,7 +181,7 @@ class Gitdocs::Repository
   # @return [:ok] if commited and pushed without errors or conflicts
   def push(last_synced_oid, message='Auto-commit from gitdocs')
     return nil unless valid?
-    return :no_remote unless sh_string('git remote')
+    return :no_remote unless has_remote?
 
     #add and commit
     sh_string('find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;')
@@ -210,8 +210,7 @@ class Gitdocs::Repository
   #
   # @return [Hash<String, Int>]
   def author_count(last_oid)
-    walker = Rugged::Walker.new(@rugged)
-    walker.push(@rugged.head.target)
+    walker = head_walker
     walker.hide(last_oid) if last_oid
     walker.inject(Hash.new(0)) do |result, commit|
       result["#{commit.author[:name]} <#{commit.author[:email]}>"] += 1
@@ -238,10 +237,7 @@ class Gitdocs::Repository
   def file_meta(file)
     file = file.gsub(%r{^/}, '')
 
-    walker = Rugged::Walker.new(@rugged)
-    walker.sorting(Rugged::SORT_DATE)
-    walker.push(@rugged.head.target)
-    commit = walker.find { |x| x.diff(paths: [file]).size > 0 }
+    commit = head_walker.find { |x| x.diff(paths: [file]).size > 0 }
 
     fail "File #{file} not found" unless commit
 
@@ -268,13 +264,10 @@ class Gitdocs::Repository
   # @return [Array<Hash>]
   def file_revisions(file)
     file = file.gsub(%r{^/}, '')
-    walker = Rugged::Walker.new(@rugged)
-    walker.sorting(Rugged::SORT_DATE)
-    walker.push(@rugged.head.target)
     # Excluding the initial commit (without a parent) which keeps things
     # consistent with the original behaviour.
     # TODO: reconsider if this is the correct behaviour
-    walker.select{|x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
+    head_walker.select{|x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
       .first(100)
       .map do |commit|
         {
@@ -322,6 +315,17 @@ class Gitdocs::Repository
   ##############################################################################
 
   private
+
+  def has_remote?
+    sh_string('git remote')
+  end
+
+  def head_walker
+    walker = Rugged::Walker.new(@rugged)
+    walker.sorting(Rugged::SORT_DATE)
+    walker.push(@rugged.head.target)
+    walker
+  end
 
   # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
   def sh_string(cmd, default = nil)
