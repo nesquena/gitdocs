@@ -44,6 +44,8 @@ describe Gitdocs::Repository do
       it { subject.must_be_kind_of Gitdocs::Repository }
       it { subject.valid?.must_equal true }
       it { subject.invalid_reason.must_be_nil }
+      it { subject.instance_variable_get(:@rugged).wont_be_nil }
+      it { subject.instance_variable_get(:@grit).wont_be_nil }
     end
 
     describe 'with a share that is a repository' do
@@ -55,6 +57,8 @@ describe Gitdocs::Repository do
       it { subject.must_be_kind_of Gitdocs::Repository }
       it { subject.valid?.must_equal true }
       it { subject.invalid_reason.must_be_nil }
+      it { subject.instance_variable_get(:@rugged).wont_be_nil }
+      it { subject.instance_variable_get(:@grit).wont_be_nil }
       it { subject.instance_variable_get(:@branch_name).must_equal 'branch' }
       it { subject.instance_variable_get(:@remote_name).must_equal 'remote' }
     end

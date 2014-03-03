@@ -27,6 +27,7 @@ class Gitdocs::Repository
     end
 
     @rugged         = Rugged::Repository.new(path)
+    @grit           = Grit::Repo.new(path)
     @invalid_reason = nil
   rescue Rugged::OSError
     @invalid_reason = :directory_missing
@@ -85,16 +86,22 @@ class Gitdocs::Repository
     return [] if term.empty?
 
     results = []
-    if result_test = sh_string("git grep -i #{ShellTools.escape(term)}")
-      result_test.scan(/(.*?):([^\n]*)/) do |(file, context)|
-        if result = results.find { |s| s.file == file }
-          result.context += ' ... ' + context
-        else
-          results << SearchResult.new(file, context)
-        end
+    options = { raise: true, bare: false, chdir: root, ignore_case: true }
+    @grit.git.grep(options, term).scan(/(.*?):([^\n]*)/) do |(file, context)|
+      if result = results.find { |s| s.file == file }
+        result.context += ' ... ' + context
+      else
+        results << SearchResult.new(file, context)
       end
     end
     results
+  rescue Grit::Git::GitTimeout => e
+    # TODO: add logging to record the error details
+    []
+  rescue Grit::Git::CommandFailed => e
+    # TODO: add logging to record the error details if they are not just
+      # nothing found
+    []
   end
 
   # @return [String]
