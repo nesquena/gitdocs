@@ -151,9 +151,6 @@ module Gitdocs
         begin
           TCPSocket.open('127.0.0.1', @port).close
           @manager.log('Web server running!')
-          if !restarting && @manager.config.global.load_browser_on_startup
-            Launchy.open("http://localhost:#{@port}/")
-          end
         rescue Errno::ECONNREFUSED
           sleep 0.2
           i += 1
