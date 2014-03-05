@@ -176,6 +176,7 @@ We also have had several contributors:
   * [Chris Kempson](https://github.com/ChrisKempson) - Encoding issues
   * [Evan Tatarka](https://github.com/evant) - Front-end style fixes
   * [Kale Worsley](https://github.com/kaleworsley) - Custom commit msgs, revert revisions, front-end cleanup
+  * [Andrew Sullivan Cant](https://github.com/acant) - Major improvements, grit support, more
 
 Gitdocs is still a young project with a lot of opportunity for contributions. Patches welcome!
 
