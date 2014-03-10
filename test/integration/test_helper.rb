@@ -79,16 +79,16 @@ module Helper
 
   # @return [String] the absolute path for the repository
   def git_init_local(path = 'local')
-    run_simple("git init #{path}")
-    assert_success(true)
-    abs_current_dir(path)
+    abs_path = abs_current_dir(path)
+    Rugged::Repository.init_at(abs_path)
+    abs_path
   end
 
   # @return [String] the absolute path for the repository
   def git_init_remote(path = 'remote')
-    run_simple("git init #{path} --bare")
-    assert_success(true)
-    abs_current_dir(path)
+    abs_path = abs_current_dir(path)
+    Rugged::Repository.init_at(abs_path, :bare)
+    abs_path
   end
 
   def gitdocs_add(path = 'local')
@@ -100,9 +100,12 @@ module Helper
 
   def git_clone_and_gitdocs_add(remote_path, *clone_paths)
     clone_paths.each do |clone_path|
-      run_simple("git clone file://#{remote_path} #{clone_path}")
-      run_simple("git config --file #{clone_path}/.git/config user.email 'afish@example.com'")
-      run_simple("git config --file #{clone_path}/.git/config user.name 'Art T. Fish'")
+      repo = Rugged::Repository.clone_at(
+        "file://#{remote_path}",
+        abs_current_dir(clone_path)
+      )
+      repo.config['user.email'] = 'afish@example.com'
+      repo.config['user.name']  = 'Art T. Fish'
       gitdocs_add(clone_path)
     end
   end
@@ -120,7 +123,6 @@ module Helper
   def assert_gitdocs_status_not_contain(expected)
     assert_no_partial_output(expected, output_from(@status_cmd))
   end
-
 end
 
 class MiniTest::Spec

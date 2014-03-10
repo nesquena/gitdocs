@@ -19,19 +19,49 @@ describe 'fully synchronizing repositories' do
 
   it 'should sync new files' do
     write_file('clone1/newfile', 'testing')
-    # TODO: check the change is committed and pushed
 
     sleep 3
     check_file_presence(['clone2/newfile', 'clone3/newfile'], true)
+    check_exact_file_content('clone1/newfile', 'testing')
     check_exact_file_content('clone2/newfile', 'testing')
     check_exact_file_content('clone3/newfile', 'testing')
   end
 
-#Scenario: Sync changes to an existing file
+  it 'should sync changes to an existing file' do
+    write_file('clone1/file', 'testing')
+    sleep(3) # Allow the initial files to sync
 
-#Scenario: Resolve conflicts between 2 changes
-#Scenario: Mark unresolvable conflicts
-#  When a change is made in 1 repository
-#    And a conflicting change is made in another repository
-#  Then all the repositories should contain the conflict markers
+    append_to_file('clone3/file', "\nfoobar")
+
+    sleep(3)
+    check_exact_file_content('clone1/file', "testing\nfoobar")
+    check_exact_file_content('clone2/file', "testing\nfoobar")
+    check_exact_file_content('clone3/file', "testing\nfoobar")
+  end
+
+  it 'should sync empty directories' do
+    in_current_dir { _mkdir('clone1/empty_dir') }
+    sleep(3)
+
+    check_directory_presence(
+      ['clone1/empty_dir', 'clone2/empty_dir', 'clone3/empty_dir'],
+      true
+    )
+  end
+
+  it 'should mark unresolvable conflicts' do
+    write_file('clone1/file', 'testing')
+    sleep(3) # Allow the initial files to sync
+
+    append_to_file('clone2/file', 'foobar')
+    append_to_file('clone3/file', 'deadbeef')
+
+    sleep(3)
+    in_current_dir do
+      # Remember expected file counts include '.', '..', and '.git'
+      assert_equal(6, Dir.entries('clone1').count)
+      assert_equal(6, Dir.entries('clone2').count)
+      assert_equal(6, Dir.entries('clone3').count)
+    end
+  end
 end

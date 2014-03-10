@@ -11,18 +11,6 @@ module Gitdocs
       yield @config if block_given?
     end
 
-    RepoDescriptor = Struct.new(:name, :index)
-
-    def search(term)
-      results = {}
-      @runners.each_with_index do |runner, index|
-        descriptor = RepoDescriptor.new(runner.root, index)
-        repo_results = runner.search(term)
-        results[descriptor] = repo_results unless repo_results.empty?
-      end
-      results
-    end
-
     def start(web_port = nil)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{config.config_root}'")
@@ -38,7 +26,8 @@ module Gitdocs
           # Start the web front-end
           if config.global.start_web_frontend
             web_port ||= config.global.web_frontend_port
-            web_server = Server.new(self, web_port, *@runners)
+            repositories = config.shares.map { |x| Repository.new(x) }
+            web_server = Server.new(self, web_port, repositories)
             web_server.start
             web_server.wait_for_start_and_open(restarting)
           end

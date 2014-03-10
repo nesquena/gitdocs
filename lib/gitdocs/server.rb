@@ -8,15 +8,15 @@ require 'launchy'
 
 module Gitdocs
   class Server
-    def initialize(manager, port = 8888, *gitdocs)
-      @manager = manager
-      @port    = port.to_i
-      @gitdocs = gitdocs
+    def initialize(manager, port = 8888, repositories)
+      @manager      = manager
+      @port         = port.to_i
+      @repositories = repositories
     end
 
     def start
-      gds     = @gitdocs
-      manager = @manager
+      repositories = @repositories
+      manager      = @manager
       Thin::Logging.debug = @manager.debug
       Thin::Server.start('127.0.0.1', @port) do
         use Rack::Static, urls: ['/css', '/js', '/img', '/doc'], root: File.expand_path('../public', __FILE__)
@@ -49,7 +49,7 @@ module Gitdocs
             end
 
             path('search').get do
-              render! 'search', layout: 'app', locals: { conf: manager.config, results: manager.search(request.GET['q']), nav_state: nil }
+              render! 'search', layout: 'app', locals: { conf: manager.config, results: Gitdocs::Repository.search(request.GET['q'], repositories), nav_state: nil }
             end
 
             path('shares') do
@@ -69,20 +69,21 @@ module Gitdocs
             end
 
             var :int do |idx|
-              gd = gds[idx]
-              halt 404 if gd.nil?
+              repository = repositories[idx]
+
+              halt 404 if repository.nil?
               file_path = URI.unescape(request.path_info)
-              expanded_path = File.expand_path(".#{file_path}", gd.root)
-              message_file = File.expand_path('.gitmessage~', gd.root)
-              halt 400 unless expanded_path[/^#{Regexp.quote(gd.root)}/]
+              expanded_path = File.expand_path(".#{file_path}", repository.root)
+              message_file = File.expand_path('.gitmessage~', repository.root)
+              halt 400 unless expanded_path[/^#{Regexp.quote(repository.root)}/]
               parent = File.dirname(file_path)
               parent = '' if parent == '/'
               parent = nil if parent == '.'
-              locals = { idx: idx, parent: parent, root: gd.root, file_path: expanded_path, nav_state: nil }
+              locals = { idx: idx, parent: parent, root: repository.root, file_path: expanded_path, nav_state: nil }
               mime = File.mime_type?(File.open(expanded_path)) if File.file?(expanded_path)
               mode = request.params['mode']
               if mode == 'meta' # Meta
-                halt 200, { 'Content-Type' => 'application/json' }, [gd.file_meta(file_path).to_json]
+                halt 200, { 'Content-Type' => 'application/json' }, [repository.file_meta(file_path).to_json]
               elsif mode == 'save' # Saving
                 File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
                 File.open(message_file, 'w') { |f| f.print request.params['message'] } unless request.params['message'] == ''
@@ -100,19 +101,19 @@ module Gitdocs
                 FileUtils.mkdir_p(expanded_path)
                 redirect!  '/' + idx.to_s + file_path
               elsif File.directory?(expanded_path) # list directory
-                contents =  gd.dir_files(expanded_path)
+                contents =  Dir[File.join(expanded_path, '*')].map { |x| Docfile.new(x) }
                 rendered_readme = nil
                 if readme = Dir[File.expand_path('README.{md}', expanded_path)].first
                   rendered_readme = '<h3>' + File.basename(readme) + '</h3><div class="tilt">' + render(readme) + '</div>'
                 end
                 render! 'dir', layout: 'app', locals: locals.merge(contents: contents, rendered_readme: rendered_readme)
               elsif mode == 'revisions' # list revisions
-                revisions = gd.file_revisions(file_path)
+                revisions = repository.file_revisions(file_path)
                 render! 'revisions', layout: 'app', locals: locals.merge(revisions: revisions)
               elsif mode == 'revert' # revert file
                 if revision = request.params['revision']
                   File.open(message_file, 'w') { |f| f.print "Reverting '#{file_path}' to #{revision}" }
-                  gd.file_revert(file_path, revision)
+                  repository.file_revert(file_path, revision)
                 end
                 redirect! '/' + idx.to_s + file_path
               elsif mode == 'delete' # delete file
@@ -123,7 +124,7 @@ module Gitdocs
                 render! 'edit', layout: 'app', locals: locals.merge(contents: contents)
               elsif mode != 'raw' # render file
                 revision = request.params['revision']
-                expanded_path = gd.file_revision_at(file_path, revision) if revision
+                expanded_path = repository.file_revision_at(file_path, revision) if revision
                 begin # attempting to render file
                   contents = '<div class="tilt">' + render(expanded_path) + '</div>'
                 rescue RuntimeError # not tilt supported
@@ -135,7 +136,7 @@ module Gitdocs
                 end
                 render! 'file', layout: 'app', locals: locals.merge(contents: contents)
               else # other file
-                run! Rack::File.new(gd.root)
+                run! Rack::File.new(repository.root)
               end
             end
           end

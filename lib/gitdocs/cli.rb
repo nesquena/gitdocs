@@ -73,8 +73,7 @@ module Gitdocs
     method_option :pid, type: :string, aliases: '-P'
     desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
     def create(path, remote)
-      FileUtils.mkdir_p(File.dirname(path))
-      system("git clone -q #{remote} #{ShellTools.escape(path)}") || fail("Unable to clone into #{path}")
+      Gitdocs::Repository.clone(path, remote)
       add(path)
       say "Created #{path} path for gitdoc"
     end
