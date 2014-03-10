@@ -1,7 +1,11 @@
+0.5.0.pre2 (3/9/2014)
+
+ * Convert to use rugged and Grit (@acant)
+
 0.5.0.pre1 (11/25/2013)
 
- * Upgrade thin gem to v1.5.1 (Thanks @acant)
- * Add TravisCI configuration (Thanks @acant)
+ * Upgrade thin gem to v1.5.1 (@acant)
+ * Add TravisCI configuration (@acant)
  * Rescue StandardError and better error notifications to fix crashes (@acant)
  * Reduce unexpected exists caused by repository and file system errors
  * Add notification of unexpected daemon exist
