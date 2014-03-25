@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib')
 require 'gitdocs'
 require 'aruba'
 require 'aruba/api'
+require 'timeout'
 
 module MiniTest::Aruba
   class ArubaApiWrapper
@@ -89,6 +90,76 @@ module Helper
     abs_path = abs_current_dir(path)
     Rugged::Repository.init_at(abs_path, :bare)
     abs_path
+  end
+
+  def wait_for_clean_workdir(path)
+    dirty = true
+    Timeout.timeout(10) do
+      while dirty
+        begin
+          sleep(0.1)
+          rugged = Rugged::Repository.new(abs_current_dir(path))
+          dirty = !rugged.diff_workdir(rugged.head.target, include_untracked: true).deltas.empty?
+        rescue Rugged::ReferenceError
+          nil
+        rescue Rugged::InvalidError
+          nil
+        rescue Rugged::RepositoryError
+          nil
+        end
+      end
+    end
+  rescue Timeout::Error
+    assert(false, "#{path} workdir is still dirty")
+  end
+
+  def wait_for_exact_file_content(file, exact_content)
+    in_current_dir do
+      begin
+        Timeout.timeout(10) do
+          sleep(0.1) until File.exist?(file) && IO.read(file) == exact_content
+        end
+      rescue Timeout::Error
+        nil
+      end
+
+      assert(File.exist?(file), "Missing #{file}")
+      actual_content = IO.read(file)
+      assert(
+        actual_content == exact_content,
+        "Expected #{file} content: #{exact_content}\nActual content #{actual_content}"
+      )
+    end
+  end
+
+  def wait_for_directory(path)
+    in_current_dir do
+      begin
+        Timeout.timeout(10) { sleep(0.1) until Dir.exist?(path) }
+      rescue Timeout::Error
+        nil
+      end
+
+      assert(Dir.exist?(path), "Missing #{path}")
+    end
+  end
+
+  def wait_for_directory_count(path, expected_count)
+    in_current_dir do
+      begin
+        Timeout.timeout(5) do
+          sleep(0.1) until Dir.entries(path).count == expected_count
+        end
+      rescue Timeout::Error
+        nil
+      end
+
+      entries = Dir.entries(path)
+      assert(
+        entries.count == expected_count,
+        "Expected Dir count of #{expected_count} actual was #{entries.count} #{entries.join(' ')}"
+      )
+    end
   end
 
   def gitdocs_add(path = 'local')
