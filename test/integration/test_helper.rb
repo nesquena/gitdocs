@@ -144,21 +144,23 @@ module Helper
     end
   end
 
-  def wait_for_directory_count(path, expected_count)
+  def wait_for_conflict_markers(path)
     in_current_dir do
       begin
-        Timeout.timeout(5) do
-          sleep(0.1) until Dir.entries(path).count == expected_count
-        end
+        Timeout.timeout(10) { sleep(0.1) if File.exist?(path) }
       rescue Timeout::Error
         nil
+      ensure
+        assert(!File.exist?(path), "#{path} should have been removed")
       end
 
-      entries = Dir.entries(path)
-      assert(
-        entries.count == expected_count,
-        "Expected Dir count of #{expected_count} actual was #{entries.count} #{entries.join(' ')}"
-      )
+      begin
+        Timeout.timeout(10) { sleep(0.1) if Dir.glob("#{path} (*)").empty? }
+      rescue Timeout::Error
+        nil
+      ensure
+        assert(!Dir.glob("#{path} (*)").empty?, "#{path} conflict marks should have been created")
+      end
     end
   end
 
@@ -171,9 +173,11 @@ module Helper
 
   def git_clone_and_gitdocs_add(remote_path, *clone_paths)
     clone_paths.each do |clone_path|
+      abs_clone_path = abs_current_dir(clone_path)
+      FileUtils.rm_rf(abs_clone_path)
       repo = Rugged::Repository.clone_at(
         "file://#{remote_path}",
-        abs_current_dir(clone_path)
+        abs_clone_path
       )
       repo.config['user.email'] = 'afish@example.com'
       repo.config['user.name']  = 'Art T. Fish'

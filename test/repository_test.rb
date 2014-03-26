@@ -285,8 +285,12 @@ describe Gitdocs::Repository do
         let(:last_oid) { nil }
 
         describe 'and there is an error on push' do
-          # Force an error to occur in the push
-          before { repository.instance_variable_set(:@branch_name, 'missing') }
+          # Simulate an error occurring during the push
+          before do
+            Grit::Git.any_instance.stubs(:push).raises(
+              Grit::Git::CommandFailed.new('', 1, '')
+            )
+          end
           it { subject.must_equal :nothing }
         end
 
@@ -339,10 +343,13 @@ describe Gitdocs::Repository do
         describe 'and this is an error on the push' do
           before do
             write('file2', 'foobar')
-            # Force an error to occur in the push
-            repository.instance_variable_set(:@branch_name, 'missing')
+
+            # Simulate an error occurring during the push
+            Grit::Git.any_instance.stubs(:push).raises(
+              Grit::Git::CommandFailed.new('', 1, 'error message')
+            )
           end
-          it { subject.must_be_kind_of String }
+          it { subject.must_equal 'error message' }
         end
 
         describe 'and this is nothing to push' do
