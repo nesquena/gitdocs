@@ -191,20 +191,26 @@ class Gitdocs::Repository
     return :no_remote unless has_remote?
 
     #add and commit
-    sh_string('find . -type d -regex ``./[^.].*'' -empty -exec touch \'{}/.gitignore\' \;')
-    sh_string('git add .')
-    sh_string("git commit -a -m #{ShellTools.escape(message)}") unless sh("cd #{root} ; git status -s").empty?
+    Dir.glob(File.join(root, '**', '*'))
+      .select { |x| File.directory?(x) && Dir.glob("#{x}/*").empty? }
+      .each { |x| FileUtils.touch(File.join(x, '.gitignore')) }
+    Dir.chdir(root) do
+      @rugged.index.add_all
+      @rugged.index.update_all
+    end
+    @rugged.index.write
+    @grit.commit_index(message) if @rugged.index.count
 
-    if last_synced_oid.nil? || sh_string('git status')[/branch is ahead/]
-      out, code = sh_with_code("git push #{@remote_name} #{@branch_name}")
-      if code.success?
+    remote_branch = Rugged::Branch.lookup(@rugged, "#{@remote_name}/#{@branch_name}", :remote)
+
+    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != @rugged.head.target
+      begin
+        @grit.git.push({ raise: true }, @remote_name, @branch_name)
         :ok
-      elsif last_synced_oid.nil?
-        :nothing
-      elsif out[/\[rejected\]/]
-        :conflict
-      else
-        out # return the output on error
+      rescue Grit::Git::CommandFailed => e
+        return :nothing if last_synced_oid.nil?
+        return :conflict if e.err[/\[rejected\]/]
+        e.err # return the output on error
       end
     else
       :nothing

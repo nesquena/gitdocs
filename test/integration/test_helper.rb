@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib')
 require 'gitdocs'
 require 'aruba'
 require 'aruba/api'
+require 'timeout'
 
 module MiniTest::Aruba
   class ArubaApiWrapper
@@ -91,6 +92,78 @@ module Helper
     abs_path
   end
 
+  def wait_for_clean_workdir(path)
+    dirty = true
+    Timeout.timeout(10) do
+      while dirty
+        begin
+          sleep(0.1)
+          rugged = Rugged::Repository.new(abs_current_dir(path))
+          dirty = !rugged.diff_workdir(rugged.head.target, include_untracked: true).deltas.empty?
+        rescue Rugged::ReferenceError
+          nil
+        rescue Rugged::InvalidError
+          nil
+        rescue Rugged::RepositoryError
+          nil
+        end
+      end
+    end
+  rescue Timeout::Error
+    assert(false, "#{path} workdir is still dirty")
+  end
+
+  def wait_for_exact_file_content(file, exact_content)
+    in_current_dir do
+      begin
+        Timeout.timeout(10) do
+          sleep(0.1) until File.exist?(file) && IO.read(file) == exact_content
+        end
+      rescue Timeout::Error
+        nil
+      end
+
+      assert(File.exist?(file), "Missing #{file}")
+      actual_content = IO.read(file)
+      assert(
+        actual_content == exact_content,
+        "Expected #{file} content: #{exact_content}\nActual content #{actual_content}"
+      )
+    end
+  end
+
+  def wait_for_directory(path)
+    in_current_dir do
+      begin
+        Timeout.timeout(10) { sleep(0.1) until Dir.exist?(path) }
+      rescue Timeout::Error
+        nil
+      end
+
+      assert(Dir.exist?(path), "Missing #{path}")
+    end
+  end
+
+  def wait_for_conflict_markers(path)
+    in_current_dir do
+      begin
+        Timeout.timeout(10) { sleep(0.1) if File.exist?(path) }
+      rescue Timeout::Error
+        nil
+      ensure
+        assert(!File.exist?(path), "#{path} should have been removed")
+      end
+
+      begin
+        Timeout.timeout(10) { sleep(0.1) if Dir.glob("#{path} (*)").empty? }
+      rescue Timeout::Error
+        nil
+      ensure
+        assert(!Dir.glob("#{path} (*)").empty?, "#{path} conflict marks should have been created")
+      end
+    end
+  end
+
   def gitdocs_add(path = 'local')
     add_cmd = "gitdocs add #{path} --pid=gitdocs.pid"
     run_simple(add_cmd, true, 15)
@@ -100,9 +173,11 @@ module Helper
 
   def git_clone_and_gitdocs_add(remote_path, *clone_paths)
     clone_paths.each do |clone_path|
+      abs_clone_path = abs_current_dir(clone_path)
+      FileUtils.rm_rf(abs_clone_path)
       repo = Rugged::Repository.clone_at(
         "file://#{remote_path}",
-        abs_current_dir(clone_path)
+        abs_clone_path
       )
       repo.config['user.email'] = 'afish@example.com'
       repo.config['user.name']  = 'Art T. Fish'
