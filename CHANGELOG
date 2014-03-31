@@ -1,3 +1,8 @@
+0.5.0.pre3 (3/30/2014)
+
+ * Eliminate sleep from sync integration test (@acant)
+ * More rugged git conversion this time for the "push"
+
 0.5.0.pre2 (3/9/2014)
 
  * Convert to use rugged and Grit (@acant)
