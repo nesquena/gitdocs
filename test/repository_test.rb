@@ -292,6 +292,7 @@ describe Gitdocs::Repository do
             )
           end
           it { subject.must_equal :nothing }
+          it { subject ; commit_count(local_repo).must_equal 1 }
         end
 
         describe 'and there is a conflicted file to push' do
@@ -354,6 +355,7 @@ describe Gitdocs::Repository do
 
         describe 'and this is nothing to push' do
           it { subject.must_equal :nothing }
+          it { subject ; commit_count(local_repo).must_equal 1 }
         end
 
         describe 'and there is a conflicted commit to push' do
