@@ -21,7 +21,6 @@ describe Gitdocs::Repository do
   let(:remote_repo)   { Rugged::Repository.init_at('tmp/unit/remote', :bare) }
   let(:local_repo)    { Rugged::Repository.new(local_repo_path) }
 
-
   describe 'initialize' do
     subject { repository }
 
@@ -252,7 +251,7 @@ describe Gitdocs::Repository do
           )
         end
         it { subject.must_equal :ok }
-        it { subject ; File.exists?(File.join(local_repo_path, 'file2')).must_equal true }
+        it { subject ; local_file_exist?('file2').must_equal true }
         it { subject ; commit_count(local_repo).must_equal 2 }
       end
     end
@@ -308,6 +307,21 @@ describe Gitdocs::Repository do
         describe 'and there is an empty directory to push' do
           before { FileUtils.mkdir_p(File.join(local_repo_path, 'directory')) }
           it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 2 }
+          it { subject ; commit_count(remote_repo).must_equal 2 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+        end
+
+        describe 'and there is a directory with a hidden file' do
+          before do
+            FileUtils.mkdir_p(File.join(local_repo_path, 'directory'))
+            write('directory/.hidden', '')
+          end
+          it { subject.must_equal :ok }
+          it { subject ; local_file_exist?('directory', '.gitignore').must_equal false }
           it { subject ; commit_count(local_repo).must_equal 2 }
           it { subject ; commit_count(remote_repo).must_equal 2 }
           it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
@@ -579,9 +593,14 @@ describe Gitdocs::Repository do
     head_commit(repo).tree.map { |x| x[:name] }
   end
 
+  # NOTE: This method is ignoring hidden files.
   def local_repo_files
     Dir.chdir(local_repo_path) do
       Dir.glob('*')
     end
+  end
+
+  def local_file_exist?(*path_elements)
+    File.exist?(File.join(local_repo_path, *path_elements))
   end
 end

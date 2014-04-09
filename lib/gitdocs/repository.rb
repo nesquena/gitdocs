@@ -192,7 +192,7 @@ class Gitdocs::Repository
 
     #add and commit
     Dir.glob(File.join(root, '**', '*'))
-      .select { |x| File.directory?(x) && Dir.glob("#{x}/*").empty? }
+      .select { |x| File.directory?(x) && Dir.glob("#{x}/*", File::FNM_DOTMATCH).size == 2 }
       .each { |x| FileUtils.touch(File.join(x, '.gitignore')) }
     Dir.chdir(root) do
       @rugged.index.add_all
