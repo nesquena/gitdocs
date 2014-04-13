@@ -129,6 +129,7 @@ class Gitdocs::Repository
     Rugged::Branch.each_name(@rugged, :local).sort
   end
 
+  # @return [nil] if there are no commits present
   # @return [String] oid of the HEAD of the working directory
   def current_oid
     @rugged.head.target
@@ -201,9 +202,17 @@ class Gitdocs::Repository
     @rugged.index.write
     @grit.commit_index(message) if @rugged.index.count
 
-    remote_branch = Rugged::Branch.lookup(@rugged, "#{@remote_name}/#{@branch_name}", :remote)
+    return :nothing if current_oid.nil?
 
-    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != @rugged.head.target
+    # HACK: This will return nil if there are no commits in the remote branch.
+    # It is not the response that I would expect but it gets the job done.
+    # This should probably be reviewed when upgrading to the next version of
+    # rugged.
+    remote_branch = Rugged::Branch.lookup(
+      @rugged, "#{@remote_name}/#{@branch_name}", :remote
+    )
+
+    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != current_oid
       begin
         @grit.git.push({ raise: true }, @remote_name, @branch_name)
         :ok
