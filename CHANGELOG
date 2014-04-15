@@ -1,3 +1,6 @@
+0.5.0.pre4
+ * Fix a performance bug related to using Rugged for the "push" (@acant)
+
 0.5.0.pre3 (3/30/2014)
 
  * Eliminate sleep from sync integration test (@acant)
