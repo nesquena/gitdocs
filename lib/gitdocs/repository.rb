@@ -192,15 +192,29 @@ class Gitdocs::Repository
     return :no_remote unless has_remote?
 
     #add and commit
+    # FIXME: glob needs to be expanded to find hidden files, but excluding
+    # .git.
     Dir.glob(File.join(root, '**', '*'))
       .select { |x| File.directory?(x) && Dir.glob("#{x}/*", File::FNM_DOTMATCH).size == 2 }
       .each { |x| FileUtils.touch(File.join(x, '.gitignore')) }
-    Dir.chdir(root) do
-      @rugged.index.add_all
-      @rugged.index.update_all
+
+    # Check if there are uncommitted changes
+    dirty =
+      if current_oid.nil?
+        Dir.glob(File.join(root, '*')).any?
+      else
+        @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
+      end
+
+    # Commit any changes in the working directory.
+    if dirty
+      Dir.chdir(root) do
+        @rugged.index.add_all
+        @rugged.index.update_all
+      end
+      @rugged.index.write
+      @grit.commit_index(message)
     end
-    @rugged.index.write
-    @grit.commit_index(message) if @rugged.index.count
 
     return :nothing if current_oid.nil?
 
