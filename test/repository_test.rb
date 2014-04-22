@@ -117,7 +117,6 @@ describe Gitdocs::Repository do
       it { subject.must_equal [] }
     end
 
-
     describe 'term found' do
       let(:term) { 'foo' }
       before do
@@ -204,31 +203,28 @@ describe Gitdocs::Repository do
       it { subject.must_equal :no_remote }
     end
 
-    describe 'when there is an error' do
-      before do
-        Rugged::Remote.add(
-          Rugged::Repository.new(local_repo_path),
-          'origin',
-          'file:///bad/remote'
-        )
-      end
-      it { subject.must_equal "Fetching origin\n" }
-    end
-
     describe 'with a valid remote with no initial commits' do
       before { create_local_repo_with_remote }
 
+      describe 'when there is an error fetching' do
+        before do
+          Grit::Repo.any_instance.stubs(:remote_fetch)
+            .raises(Grit::Git::CommandFailed.new('', 1, 'fetch error output'))
+        end
+        it { subject.must_equal 'fetch error output' }
+      end
+
       describe 'when there are no local commits' do
-        it { subject.must_equal "Fetching origin\nmerge: origin/master - not something we can merge\n" }
+        it { subject.must_equal :ok }
       end
 
       describe 'when there is a local commit' do
         before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
-        it { subject.must_equal "Fetching origin\nmerge: origin/master - not something we can merge\n" }
+        it { subject.must_equal :ok }
         it { subject ; commit_count(local_repo).must_equal 1 }
       end
 
-      describe 'when new remote commits are pulled and merged' do
+      describe 'then new remote commits are fetched' do
         before do
           bare_commit(
             remote_repo,
@@ -237,9 +233,20 @@ describe Gitdocs::Repository do
             'author@example.com', 'A U Thor'
           )
         end
-        it { subject.must_equal :ok }
-        it { subject ; local_file_exist?('file2').must_equal true }
-        it { subject ; commit_count(local_repo).must_equal 1 }
+
+        describe 'when there is an error merging' do
+          before do
+            Grit::Git.any_instance.stubs(:merge)
+              .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
+          end
+          it { subject.must_equal 'merge error output' }
+        end
+
+        describe ' and merged' do
+          it { subject.must_equal :ok }
+          it { subject ; local_file_exist?('file2').must_equal true }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+        end
       end
     end
 
@@ -263,10 +270,10 @@ describe Gitdocs::Repository do
 
         it { subject.must_equal ['file1'] }
         it { subject ; commit_count(local_repo).must_equal 2 }
-        it { subject ; local_repo_files.count.must_equal 3 }
-        it { subject ; local_repo_files.must_include 'file1 (f6ea049 original)' }
-        it { subject ; local_repo_files.must_include 'file1 (18ed963)' }
-        it { subject ; local_repo_files.must_include 'file1 (7bfce5c)' }
+        it { subject ; local_file_count.must_equal 3 }
+        it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
+        it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
+        it { subject ; local_file_content('file1 (7bfce5c)').must_equal 'dead' }
       end
 
       describe 'when there is a non-conflicted local commit' do
@@ -659,12 +666,12 @@ describe Gitdocs::Repository do
 
     describe 'file does not include the revision' do
       let(:ref) { @commit0 }
-      it { subject ; File.read(file_name).must_equal 'beef' }
+      it { subject ; local_file_content('directory', 'file2').must_equal 'beef' }
     end
 
     describe 'file does include the revision' do
       let(:ref) { @commit2 }
-      it { subject ; File.read(file_name).must_equal "bar\n" }
+      it { subject ; local_file_content('directory', 'file2').must_equal "bar\n" }
     end
   end
 
@@ -744,13 +751,19 @@ describe Gitdocs::Repository do
   end
 
   # NOTE: This method is ignoring hidden files.
-  def local_repo_files
-    Dir.chdir(local_repo_path) do
+  def local_file_count
+    files = Dir.chdir(local_repo_path) do
       Dir.glob('*')
     end
+    files.count
   end
 
   def local_file_exist?(*path_elements)
     File.exist?(File.join(local_repo_path, *path_elements))
+  end
+
+  def local_file_content(*path_elements)
+    local_file_exist?(*path_elements).must_equal true
+    File.read(File.join(local_repo_path, *path_elements))
   end
 end
