@@ -1,14 +1,13 @@
 # -*- encoding : utf-8 -*-
 
 # Wrapper for accessing the shared git repositories.
-# Rugged, grit, or shell will be used in that order of preference depending
+# Rugged or Grit will be used, in that order of preference, depending
 # upon the features which are available with each option.
 #
 # @note If a repository is invalid then query methods will return nil, and
 #   command methods will raise exceptions.
 #
 class Gitdocs::Repository
-  include ShellTools
   attr_reader :invalid_reason
 
   # Initialize the repository on the specified path. If the path is not valid
@@ -358,7 +357,7 @@ class Gitdocs::Repository
   private
 
   def has_remote?
-    sh_string('git remote')
+    @rugged.remotes.any?
   end
 
   # HACK: This will return nil if there are no commits in the remote branch.
@@ -377,11 +376,5 @@ class Gitdocs::Repository
     walker.sorting(Rugged::SORT_DATE)
     walker.push(@rugged.head.target)
     walker
-  end
-
-  # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-  def sh_string(cmd, default = nil)
-    val = sh("cd #{root} ; #{cmd}").strip rescue nil
-    val.nil? || val.empty? ? default : val
   end
 end
