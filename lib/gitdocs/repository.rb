@@ -1,4 +1,5 @@
 # -*- encoding : utf-8 -*-
+require 'find'
 
 # Wrapper for accessing the shared git repositories.
 # Rugged or Grit will be used, in that order of preference, depending
@@ -204,11 +205,12 @@ class Gitdocs::Repository
     return :no_remote unless has_remote?
 
     #add and commit
-    # FIXME: glob needs to be expanded to find hidden files, but excluding
-    # .git.
-    Dir.glob(File.join(root, '**', '*'))
-      .select { |x| File.directory?(x) && Dir.glob("#{x}/*", File::FNM_DOTMATCH).size == 2 }
-      .each { |x| FileUtils.touch(File.join(x, '.gitignore')) }
+    Find.find(root).each do |path|
+      Find.prune if File.basename(path) == '.git'
+      if File.directory?(path) && Dir.entries(path).count == 2
+        FileUtils.touch(File.join(path, '.gitignore'))
+      end
+    end
 
     # Check if there are uncommitted changes
     dirty =

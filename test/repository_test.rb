@@ -8,7 +8,7 @@ describe Gitdocs::Repository do
 
   before do
     FileUtils.rm_rf('tmp/unit')
-    FileUtils.mkdir_p(local_repo_path)
+    mkdir
     repo = Rugged::Repository.init_at(local_repo_path)
     repo.config['user.email'] = 'afish@example.com'
     repo.config['user.name']  = 'Art T. Fish'
@@ -345,19 +345,24 @@ describe Gitdocs::Repository do
           it { subject.must_equal :nothing }
         end
 
-        describe 'and there is an empty directory to push' do
-          before { FileUtils.mkdir_p(File.join(local_repo_path, 'directory')) }
+        describe 'and there are empty directories to push' do
+          before do
+            mkdir('directory')
+            mkdir('.hidden_empty')
+          end
           it { subject.must_equal :ok }
           it { subject ; commit_count(local_repo).must_equal 1 }
           it { subject ; commit_count(remote_repo).must_equal 1 }
           it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
           it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
+          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
         end
 
         describe 'and there is a directory with a hidden file' do
           before do
-            FileUtils.mkdir_p(File.join(local_repo_path, 'directory'))
+            mkdir('directory')
             write('directory/.hidden', '')
           end
           it { subject.must_equal :ok }
@@ -449,20 +454,25 @@ describe Gitdocs::Repository do
           it { subject.must_equal :nothing }
         end
 
-        describe 'and there is an empty directory to push' do
-          before { FileUtils.mkdir_p(File.join(local_repo_path, 'directory')) }
+        describe 'and there are empty directories to push' do
+          before do
+            mkdir('directory')
+            mkdir('.hidden_empty')
+          end
           it { subject.must_equal :ok }
           it { subject ; commit_count(local_repo).must_equal 2 }
           it { subject ; commit_count(remote_repo).must_equal 2 }
           it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 3 }
           it { subject ; head_tree_files(remote_repo).must_include 'file1' }
           it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
+          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
         end
 
         describe 'and there is a directory with a hidden file' do
           before do
-            FileUtils.mkdir_p(File.join(local_repo_path, 'directory'))
+            mkdir('directory')
             write('directory/.hidden', '')
           end
           it { subject.must_equal :ok }
@@ -698,13 +708,17 @@ describe Gitdocs::Repository do
     repo.config['user.name']  = 'Art T. Fish'
   end
 
+  def mkdir(*path)
+    FileUtils.mkdir_p(File.join(local_repo_path, *path))
+  end
+
   def write(filename, content)
-    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    mkdir(File.dirname(filename))
     File.write(File.join(local_repo_path, filename), content)
   end
 
   def write_and_commit(filename, content, commit_msg, author)
-    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    mkdir(File.dirname(filename))
     File.write(File.join(local_repo_path, filename), content)
     `cd #{local_repo_path} ; git add #{filename}; git commit -m '#{commit_msg}' --author='#{author}'`
     `cd #{local_repo_path} ; git rev-parse HEAD`.strip
