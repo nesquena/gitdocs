@@ -1,4 +1,13 @@
-0.5.0.pre4
+0.5.0.pre5 (May 14th 2014)
+
+ * Cleanup behavior on empty commits
+ * Improve pre-commit working directory change
+ * More rugged / grit conversions
+ * Update remote check to rugged
+ * Re-write empty directory tagging to use Find
+
+0.5.0.pre4 (April 15th 2014)
+
  * Fix a performance bug related to using Rugged for the "push" (@acant)
 
 0.5.0.pre3 (3/30/2014)
