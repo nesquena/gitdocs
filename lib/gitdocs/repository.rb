@@ -1,14 +1,14 @@
 # -*- encoding : utf-8 -*-
+require 'find'
 
 # Wrapper for accessing the shared git repositories.
-# Rugged, grit, or shell will be used in that order of preference depending
+# Rugged or Grit will be used, in that order of preference, depending
 # upon the features which are available with each option.
 #
 # @note If a repository is invalid then query methods will return nil, and
 #   command methods will raise exceptions.
 #
 class Gitdocs::Repository
-  include ShellTools
   attr_reader :invalid_reason
 
   # Initialize the repository on the specified path. If the path is not valid
@@ -26,9 +26,10 @@ class Gitdocs::Repository
       @branch_name = path_or_share.branch_name
     end
 
-    @rugged         = Rugged::Repository.new(path)
-    @grit           = Grit::Repo.new(path)
-    @invalid_reason = nil
+    @rugged               = Rugged::Repository.new(path)
+    @grit                 = Grit::Repo.new(path)
+    Grit::Git.git_timeout = 120
+    @invalid_reason       = nil
   rescue Rugged::OSError
     @invalid_reason = :directory_missing
   rescue Rugged::RepositoryError
@@ -129,6 +130,7 @@ class Gitdocs::Repository
     Rugged::Branch.each_name(@rugged, :local).sort
   end
 
+  # @return [nil] if there are no commits present
   # @return [String] oid of the HEAD of the working directory
   def current_oid
     @rugged.head.target
@@ -150,33 +152,45 @@ class Gitdocs::Repository
     return nil unless valid?
     return :no_remote unless has_remote?
 
-    out, status = sh_with_code("cd #{root} ; git fetch --all 2>/dev/null && git merge #{@remote_name}/#{@branch_name} 2>/dev/null")
+    begin
+      @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
+    rescue Grit::Git::GitTimeout
+      return "Fetch timed out for #{root}"
+    rescue Grit::Git::CommandFailed => e
+      return e.err
+    end
 
-    if status.success?
-      :ok
-    elsif out[/CONFLICT/]
-      # Find the conflicted files
-      conflicted_files = sh('git ls-files -u --full-name -z').split("\0")
-        .reduce(Hash.new { |h, k| h[k] = [] }) do|h, line|
-          parts = line.split(/\t/)
-          h[parts.last] << parts.first.split(/ /)
-          h
-        end
+    return :ok if remote_branch.nil? || remote_branch.tip.oid == current_oid
 
-      # Mark the conflicted files
-      conflicted_files.each do |conflict, ids|
-        conflict_start, conflict_end = conflict.scan(/(.*?)(|\.[^\.]+)$/).first
-        ids.each do |(mode, sha, id)|
-          author =  ' original' if id == '1'
-          system("cd #{root} && git show :#{id}:#{conflict} > '#{conflict_start} (#{sha[0..6]}#{author})#{conflict_end}'")
-        end
-        system("cd #{root} && git rm --quiet #{conflict} >/dev/null 2>/dev/null") || fail
+    @grit.git.merge({ raise: true, chdir: root }, "#{@remote_name}/#{@branch_name}")
+    :ok
+  rescue Grit::Git::GitTimeout
+    "Merged command timed out for #{root}"
+  rescue Grit::Git::CommandFailed => e
+    # HACK: The rugged in-memory index will not have been updated after the
+    # Grit merge command. Reload it before checking for conflicts.
+    @rugged.index.reload
+    return e.err unless @rugged.index.conflicts?
+
+    conflicted_paths = @rugged.index.map do |index_entry|
+      filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+
+      author       = ' original' if index_entry[:stage] == 1
+      short_oid    = index_entry[:oid][0..6]
+      new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
+      File.open(File.join(root, new_filename), 'wb') do |f|
+        f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
       end
 
-      conflicted_files.keys
-    else
-      out # return the output on error
+      index_entry[:path]
     end
+
+    conflicted_paths.uniq!
+    conflicted_paths.each { |path| FileUtils.remove(File.join(root, path), force: true) }
+
+    # NOTE: leave the commit until the next push
+
+    conflicted_paths
   end
 
   # Commit and push the repository
@@ -191,19 +205,34 @@ class Gitdocs::Repository
     return :no_remote unless has_remote?
 
     #add and commit
-    Dir.glob(File.join(root, '**', '*'))
-      .select { |x| File.directory?(x) && Dir.glob("#{x}/*", File::FNM_DOTMATCH).size == 2 }
-      .each { |x| FileUtils.touch(File.join(x, '.gitignore')) }
-    Dir.chdir(root) do
-      @rugged.index.add_all
-      @rugged.index.update_all
+    Find.find(root).each do |path|
+      Find.prune if File.basename(path) == '.git'
+      if File.directory?(path) && Dir.entries(path).count == 2
+        FileUtils.touch(File.join(path, '.gitignore'))
+      end
     end
-    @rugged.index.write
-    @grit.commit_index(message) if @rugged.index.count
 
-    remote_branch = Rugged::Branch.lookup(@rugged, "#{@remote_name}/#{@branch_name}", :remote)
+    # Check if there are uncommitted changes
+    dirty =
+      if current_oid.nil?
+        Dir.glob(File.join(root, '*')).any?
+      else
+        @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
+      end
 
-    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != @rugged.head.target
+    # Commit any changes in the working directory.
+    if dirty
+      Dir.chdir(root) do
+        @rugged.index.add_all
+        @rugged.index.update_all
+      end
+      @rugged.index.write
+      @grit.commit_index(message)
+    end
+
+    return :nothing if current_oid.nil?
+
+    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != current_oid
       begin
         @grit.git.push({ raise: true }, @remote_name, @branch_name)
         :ok
@@ -330,7 +359,18 @@ class Gitdocs::Repository
   private
 
   def has_remote?
-    sh_string('git remote')
+    @rugged.remotes.any?
+  end
+
+  # HACK: This will return nil if there are no commits in the remote branch.
+  # It is not the response that I would expect but it mostly gets the job
+  # done. This should probably be reviewed when upgrading to the next version
+  # of Rugged.
+  #
+  # @return [nil] if the remote branch does not exist
+  # @return [Rugged::Remote]
+  def remote_branch
+    Rugged::Branch.lookup(@rugged, "#{@remote_name}/#{@branch_name}", :remote)
   end
 
   def head_walker
@@ -338,17 +378,5 @@ class Gitdocs::Repository
     walker.sorting(Rugged::SORT_DATE)
     walker.push(@rugged.head.target)
     walker
-  end
-
-  # sh_string("git config branch.`git branch | grep '^\*' | sed -e 's/\* //'`.remote", "origin")
-  def sh_string(cmd, default = nil)
-    val = sh("cd #{root} ; #{cmd}").strip rescue nil
-    val.nil? || val.empty? ? default : val
-  end
-
-  # Run in shell, return both status and output
-  # @see #sh
-  def sh_with_code(cmd)
-    ShellTools.sh_with_code(cmd, root)
   end
 end

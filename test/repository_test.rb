@@ -8,7 +8,7 @@ describe Gitdocs::Repository do
 
   before do
     FileUtils.rm_rf('tmp/unit')
-    FileUtils.mkdir_p(local_repo_path)
+    mkdir
     repo = Rugged::Repository.init_at(local_repo_path)
     repo.config['user.email'] = 'afish@example.com'
     repo.config['user.name']  = 'Art T. Fish'
@@ -117,7 +117,6 @@ describe Gitdocs::Repository do
       it { subject.must_equal [] }
     end
 
-
     describe 'term found' do
       let(:term) { 'foo' }
       before do
@@ -204,19 +203,55 @@ describe Gitdocs::Repository do
       it { subject.must_equal :no_remote }
     end
 
-    describe 'when there is an error' do
-      before do
-        Rugged::Remote.add(
-            Rugged::Repository.new(local_repo_path),
-            'origin',
-            'file:///bad/remote'
-        )
+    describe 'with a valid remote with no initial commits' do
+      before { create_local_repo_with_remote }
+
+      describe 'when there is an error fetching' do
+        before do
+          Grit::Repo.any_instance.stubs(:remote_fetch)
+            .raises(Grit::Git::CommandFailed.new('', 1, 'fetch error output'))
+        end
+        it { subject.must_equal 'fetch error output' }
       end
-      it { subject.must_equal "Fetching origin\n" }
+
+      describe 'when there are no local commits' do
+        it { subject.must_equal :ok }
+      end
+
+      describe 'when there is a local commit' do
+        before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
+        it { subject.must_equal :ok }
+        it { subject ; commit_count(local_repo).must_equal 1 }
+      end
+
+      describe 'then new remote commits are fetched' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file2', 'deadbeef',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+        end
+
+        describe 'when there is an error merging' do
+          before do
+            Grit::Git.any_instance.stubs(:merge)
+              .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
+          end
+          it { subject.must_equal 'merge error output' }
+        end
+
+        describe ' and merged' do
+          it { subject.must_equal :ok }
+          it { subject ; local_file_exist?('file2').must_equal true }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+        end
+      end
     end
 
-    describe 'with a valid remote' do
-      before { create_local_repo_with_remote }
+    describe 'with a valid remote with commits' do
+      before { create_local_repo_with_remote_with_commit }
 
       describe 'when there is nothing to pull' do
         it { subject.must_equal :ok }
@@ -235,13 +270,19 @@ describe Gitdocs::Repository do
 
         it { subject.must_equal ['file1'] }
         it { subject ; commit_count(local_repo).must_equal 2 }
-        it { subject ; local_repo_files.count.must_equal 3 }
-        it { subject ; local_repo_files.must_include 'file1 (f6ea049 original)' }
-        it { subject ; local_repo_files.must_include 'file1 (18ed963)' }
-        it { subject ; local_repo_files.must_include 'file1 (7bfce5c)' }
+        it { subject ; local_file_count.must_equal 3 }
+        it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
+        it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
+        it { subject ; local_file_content('file1 (7bfce5c)').must_equal 'dead' }
       end
 
-      describe 'when new commits are pulled and merged' do
+      describe 'when there is a non-conflicted local commit' do
+        before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
+        it { subject.must_equal :ok }
+        it { subject ; commit_count(local_repo).must_equal 2 }
+      end
+
+      describe 'when new remote commits are pulled and merged' do
         before do
           bare_commit(
             remote_repo,
@@ -277,8 +318,117 @@ describe Gitdocs::Repository do
       it { subject.must_equal :no_remote }
     end
 
-    describe 'remote exists' do
+    describe 'remote exists with no commits' do
       before { create_local_repo_with_remote }
+
+      describe 'last sync is nil' do
+        let(:last_oid) { nil }
+
+        describe 'and there is an error on push' do
+          # Simulate an error occurring during the push
+          before do
+            Grit::Git.any_instance.stubs(:push).raises(
+              Grit::Git::CommandFailed.new('', 1, '')
+            )
+          end
+          it { subject.must_equal :nothing }
+          it { subject ; commit_count(local_repo).must_equal 0 }
+        end
+
+        describe 'and there is a conflicted file to push' do
+          before do
+            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+            write('file1', 'beef')
+          end
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject.must_equal :nothing }
+        end
+
+        describe 'and there are empty directories to push' do
+          before do
+            mkdir('directory')
+            mkdir('.hidden_empty')
+          end
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
+          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
+        end
+
+        describe 'and there is a directory with a hidden file' do
+          before do
+            mkdir('directory')
+            write('directory/.hidden', '')
+          end
+          it { subject.must_equal :ok }
+          it { subject ; local_file_exist?('directory', '.gitignore').must_equal false }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+        end
+
+        describe 'and there is a new file to push' do
+          before { write('file2', 'foobar') }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
+        end
+      end
+
+      describe 'last sync is not nil' do
+        let(:last_oid) { 'oid' }
+
+        describe 'and this is an error on the push' do
+          before do
+            write('file2', 'foobar')
+
+            # Simulate an error occurring during the push
+            Grit::Git.any_instance.stubs(:push).raises(
+              Grit::Git::CommandFailed.new('', 1, 'error message')
+            )
+          end
+          it { subject.must_equal 'error message' }
+        end
+
+        describe 'and this is nothing to push' do
+          it { subject.must_equal :nothing }
+          it { subject ; commit_count(local_repo).must_equal 0 }
+        end
+
+        describe 'and there is a conflicted commit to push' do
+          before do
+            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+            write('file1', 'beef')
+          end
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject.must_equal :conflict }
+        end
+
+        describe 'and there is a commit to push' do
+          before { write('file2', 'foobar') }
+          it { subject.must_equal :ok }
+          it { subject ; commit_count(local_repo).must_equal 1 }
+          it { subject ; commit_count(remote_repo).must_equal 1 }
+          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
+        end
+      end
+    end
+
+    describe 'remote exists' do
+      before { create_local_repo_with_remote_with_commit }
 
       describe 'last sync is nil' do
         let(:last_oid) { nil }
@@ -304,20 +454,25 @@ describe Gitdocs::Repository do
           it { subject.must_equal :nothing }
         end
 
-        describe 'and there is an empty directory to push' do
-          before { FileUtils.mkdir_p(File.join(local_repo_path, 'directory')) }
+        describe 'and there are empty directories to push' do
+          before do
+            mkdir('directory')
+            mkdir('.hidden_empty')
+          end
           it { subject.must_equal :ok }
           it { subject ; commit_count(local_repo).must_equal 2 }
           it { subject ; commit_count(remote_repo).must_equal 2 }
           it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+          it { subject ; head_tree_files(remote_repo).count.must_equal 3 }
           it { subject ; head_tree_files(remote_repo).must_include 'file1' }
           it { subject ; head_tree_files(remote_repo).must_include 'directory' }
+          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
+          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
         end
 
         describe 'and there is a directory with a hidden file' do
           before do
-            FileUtils.mkdir_p(File.join(local_repo_path, 'directory'))
+            mkdir('directory')
             write('directory/.hidden', '')
           end
           it { subject.must_equal :ok }
@@ -521,20 +676,26 @@ describe Gitdocs::Repository do
 
     describe 'file does not include the revision' do
       let(:ref) { @commit0 }
-      it { subject ; File.read(file_name).must_equal 'beef' }
+      it { subject ; local_file_content('directory', 'file2').must_equal 'beef' }
     end
 
     describe 'file does include the revision' do
       let(:ref) { @commit2 }
-      it { subject ; File.read(file_name).must_equal "bar\n" }
+      it { subject ; local_file_content('directory', 'file2').must_equal "bar\n" }
     end
   end
 
   ##############################################################################
 
   private
-
   def create_local_repo_with_remote
+    FileUtils.rm_rf(local_repo_path)
+    repo = Rugged::Repository.clone_at(remote_repo.path, local_repo_path)
+    repo.config['user.email'] = 'afish@example.com'
+    repo.config['user.name']  = 'Art T. Fish'
+  end
+
+  def create_local_repo_with_remote_with_commit
     bare_commit(
       remote_repo,
       'file1', 'foobar',
@@ -547,13 +708,17 @@ describe Gitdocs::Repository do
     repo.config['user.name']  = 'Art T. Fish'
   end
 
+  def mkdir(*path)
+    FileUtils.mkdir_p(File.join(local_repo_path, *path))
+  end
+
   def write(filename, content)
-    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    mkdir(File.dirname(filename))
     File.write(File.join(local_repo_path, filename), content)
   end
 
   def write_and_commit(filename, content, commit_msg, author)
-    FileUtils.mkdir_p(File.join(local_repo_path, File.dirname(filename)))
+    mkdir(File.dirname(filename))
     File.write(File.join(local_repo_path, filename), content)
     `cd #{local_repo_path} ; git add #{filename}; git commit -m '#{commit_msg}' --author='#{author}'`
     `cd #{local_repo_path} ; git rev-parse HEAD`.strip
@@ -581,12 +746,18 @@ describe Gitdocs::Repository do
     walker = Rugged::Walker.new(repo)
     walker.push(repo.head.target)
     walker.count
+  rescue Rugged::ReferenceError
+    # The repo does not have a head => no commits.
+    0
   end
 
   def head_commit(repo)
     walker = Rugged::Walker.new(repo)
     walker.push(repo.head.target)
     walker.first
+  rescue Rugged::ReferenceError
+    # The repo does not have a head => no commits => no head commit.
+    nil
   end
 
   def head_tree_files(repo)
@@ -594,13 +765,19 @@ describe Gitdocs::Repository do
   end
 
   # NOTE: This method is ignoring hidden files.
-  def local_repo_files
-    Dir.chdir(local_repo_path) do
+  def local_file_count
+    files = Dir.chdir(local_repo_path) do
       Dir.glob('*')
     end
+    files.count
   end
 
   def local_file_exist?(*path_elements)
     File.exist?(File.join(local_repo_path, *path_elements))
+  end
+
+  def local_file_content(*path_elements)
+    local_file_exist?(*path_elements).must_equal true
+    File.read(File.join(local_repo_path, *path_elements))
   end
 end
