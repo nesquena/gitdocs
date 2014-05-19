@@ -197,7 +197,7 @@ but provide the features that makes Dropbox great. If you are interested in othe
 * [git-sync](http://tychoish.com/essay/git-sync/) manual git syncing tool,
   which also use XMPP notifications
 * [git-annex-assistant](http://git-annex.branchable.com/design/assistant/)
-  directory sync tool based on [git-annex](http://git-annex.branchable.com/). (written in Haskel)
+  directory sync tool based on [git-annex](http://git-annex.branchable.com/). (written in Haskell)
 * [BitTorrent Sync](http://www.bittorrent.com/sync) BitTorrent based syncing
   tool, not open source or publicly defined protocol
 * [StrongSync](https://secure.expandrive.com/strongsync) Dropbox clone utility,
