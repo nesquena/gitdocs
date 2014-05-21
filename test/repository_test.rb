@@ -299,7 +299,7 @@ describe Gitdocs::Repository do
   end
 
   describe '#push' do
-    subject { repository.push(last_oid, 'message') }
+    subject { repository.push('message') }
 
     let(:path_or_share) { stub(
       path:        local_repo_path,
@@ -308,245 +308,94 @@ describe Gitdocs::Repository do
     ) }
 
     describe 'when invalid' do
-      let(:last_oid)      { nil }
       let(:path_or_share) { 'tmp/unit/missing' }
       it { subject.must_be_nil }
     end
 
     describe 'when no remote' do
-      let(:last_oid) { nil }
       it { subject.must_equal :no_remote }
     end
 
     describe 'remote exists with no commits' do
       before { create_local_repo_with_remote }
 
-      describe 'last sync is nil' do
-        let(:last_oid) { nil }
+      describe 'and this is an error on the push' do
+        before do
+          write('file2', 'foobar')
 
-        describe 'and there is an error on push' do
           # Simulate an error occurring during the push
-          before do
-            Grit::Git.any_instance.stubs(:push).raises(
-              Grit::Git::CommandFailed.new('', 1, '')
-            )
-          end
-          it { subject.must_equal :nothing }
-          it { subject ; commit_count(local_repo).must_equal 0 }
+          Grit::Git.any_instance.stubs(:push).raises(
+            Grit::Git::CommandFailed.new('', 1, 'error message')
+          )
         end
-
-        describe 'and there is a conflicted file to push' do
-          before do
-            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
-            write('file1', 'beef')
-          end
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject.must_equal :nothing }
-        end
-
-        describe 'and there are empty directories to push' do
-          before do
-            mkdir('directory')
-            mkdir('.hidden_empty')
-          end
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
-          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
-          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
-          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
-        end
-
-        describe 'and there is a directory with a hidden file' do
-          before do
-            mkdir('directory')
-            write('directory/.hidden', '')
-          end
-          it { subject.must_equal :ok }
-          it { subject ; local_file_exist?('directory', '.gitignore').must_equal false }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
-          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
-        end
-
-        describe 'and there is a new file to push' do
-          before { write('file2', 'foobar') }
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
-        end
+        it { subject.must_equal 'error message' }
       end
 
-      describe 'last sync is not nil' do
-        let(:last_oid) { 'oid' }
+      describe 'and this is nothing to push' do
+        it { subject.must_equal :nothing }
+        it { subject ; commit_count(local_repo).must_equal 0 }
+      end
 
-        describe 'and this is an error on the push' do
-          before do
-            write('file2', 'foobar')
-
-            # Simulate an error occurring during the push
-            Grit::Git.any_instance.stubs(:push).raises(
-              Grit::Git::CommandFailed.new('', 1, 'error message')
-            )
-          end
-          it { subject.must_equal 'error message' }
+      describe 'and there is a conflicted commit to push' do
+        before do
+          bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+          write('file1', 'beef')
         end
+        it { subject ; commit_count(local_repo).must_equal 1 }
+        it { subject ; commit_count(remote_repo).must_equal 1 }
+        it { subject.must_equal :conflict }
+      end
 
-        describe 'and this is nothing to push' do
-          it { subject.must_equal :nothing }
-          it { subject ; commit_count(local_repo).must_equal 0 }
-        end
-
-        describe 'and there is a conflicted commit to push' do
-          before do
-            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
-            write('file1', 'beef')
-          end
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject.must_equal :conflict }
-        end
-
-        describe 'and there is a commit to push' do
-          before { write('file2', 'foobar') }
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-          it { subject ; commit_count(remote_repo).must_equal 1 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
-        end
+      describe 'and there is a commit to push' do
+        before { write('file2', 'foobar') }
+        it { subject.must_equal :ok }
+        it { subject ; commit_count(local_repo).must_equal 1 }
+        it { subject ; commit_count(remote_repo).must_equal 1 }
+        it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+        it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
+        it { subject ; head_tree_files(remote_repo).must_include 'file2' }
       end
     end
 
     describe 'remote exists' do
       before { create_local_repo_with_remote_with_commit }
 
-      describe 'last sync is nil' do
-        let(:last_oid) { nil }
+      describe 'and this is an error on the push' do
+        before do
+          write('file2', 'foobar')
 
-        describe 'and there is an error on push' do
           # Simulate an error occurring during the push
-          before do
-            Grit::Git.any_instance.stubs(:push).raises(
-              Grit::Git::CommandFailed.new('', 1, '')
-            )
-          end
-          it { subject.must_equal :nothing }
-          it { subject ; commit_count(local_repo).must_equal 1 }
+          Grit::Git.any_instance.stubs(:push).raises(
+            Grit::Git::CommandFailed.new('', 1, 'error message')
+          )
         end
-
-        describe 'and there is a conflicted file to push' do
-          before do
-            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
-            write('file1', 'beef')
-          end
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject.must_equal :nothing }
-        end
-
-        describe 'and there are empty directories to push' do
-          before do
-            mkdir('directory')
-            mkdir('.hidden_empty')
-          end
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 3 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
-          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
-          it { subject ; head_tree_files(remote_repo).must_include '.hidden_empty' }
-          it { subject ; Dir.glob("#{local_repo_path}/**/.gitignore", File::FNM_DOTMATCH).count.must_equal 2 }
-        end
-
-        describe 'and there is a directory with a hidden file' do
-          before do
-            mkdir('directory')
-            write('directory/.hidden', '')
-          end
-          it { subject.must_equal :ok }
-          it { subject ; local_file_exist?('directory', '.gitignore').must_equal false }
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
-          it { subject ; head_tree_files(remote_repo).must_include 'directory' }
-        end
-
-        describe 'and there is an existing file update to push' do
-          before { write('file1', 'deadbeef') }
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 1 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
-        end
-
-        describe 'and there is a new file to push' do
-          before { write('file2', 'foobar') }
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
-          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
-        end
+        it { subject.must_equal 'error message' }
       end
 
-      describe 'last sync is not nil' do
-        let(:last_oid) { 'oid' }
+      describe 'and this is nothing to push' do
+        it { subject.must_equal :nothing }
+        it { subject ; commit_count(local_repo).must_equal 1 }
+      end
 
-        describe 'and this is an error on the push' do
-          before do
-            write('file2', 'foobar')
-
-            # Simulate an error occurring during the push
-            Grit::Git.any_instance.stubs(:push).raises(
-              Grit::Git::CommandFailed.new('', 1, 'error message')
-            )
-          end
-          it { subject.must_equal 'error message' }
+      describe 'and there is a conflicted commit to push' do
+        before do
+          bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
+          write('file1', 'beef')
         end
+        it { subject ; commit_count(local_repo).must_equal 2 }
+        it { subject ; commit_count(remote_repo).must_equal 2 }
+        it { subject.must_equal :conflict }
+      end
 
-        describe 'and this is nothing to push' do
-          it { subject.must_equal :nothing }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-        end
-
-        describe 'and there is a conflicted commit to push' do
-          before do
-            bare_commit(remote_repo, 'file1', 'dead', 'commit', 'A U Thor', 'author@example.com')
-            write('file1', 'beef')
-          end
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject.must_equal :conflict }
-        end
-
-        describe 'and there is a commit to push' do
-          before { write('file2', 'foobar') }
-          it { subject.must_equal :ok }
-          it { subject ; commit_count(local_repo).must_equal 2 }
-          it { subject ; commit_count(remote_repo).must_equal 2 }
-          it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
-          it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
-          it { subject ; head_tree_files(remote_repo).must_include 'file1' }
-          it { subject ; head_tree_files(remote_repo).must_include 'file2' }
-        end
+      describe 'and there is a commit to push' do
+        before { write('file2', 'foobar') }
+        it { subject.must_equal :ok }
+        it { subject ; commit_count(local_repo).must_equal 2 }
+        it { subject ; commit_count(remote_repo).must_equal 2 }
+        it { subject ; head_commit(remote_repo).message.must_equal "message\n" }
+        it { subject ; head_tree_files(remote_repo).count.must_equal 2 }
+        it { subject ; head_tree_files(remote_repo).must_include 'file1' }
+        it { subject ; head_tree_files(remote_repo).must_include 'file2' }
       end
     end
   end

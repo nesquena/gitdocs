@@ -200,7 +200,7 @@ class Gitdocs::Repository
   # @return [:nothing] if there was nothing to do
   # @return [String] if there is an error return the message
   # @return [:ok] if commited and pushed without errors or conflicts
-  def push(last_synced_oid, message='Auto-commit from gitdocs')
+  def push(message='Auto-commit from gitdocs')
     return nil unless valid?
     return :no_remote unless has_remote?
 
@@ -232,12 +232,11 @@ class Gitdocs::Repository
 
     return :nothing if current_oid.nil?
 
-    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != current_oid
+    if remote_branch.nil? || remote_branch.tip.oid != current_oid
       begin
         @grit.git.push({ raise: true }, @remote_name, @branch_name)
         :ok
       rescue Grit::Git::CommandFailed => e
-        return :nothing if last_synced_oid.nil?
         return :conflict if e.err[/\[rejected\]/]
         e.err # return the output on error
       end
