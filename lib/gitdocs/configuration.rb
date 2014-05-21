@@ -21,7 +21,7 @@ module Gitdocs
     end
 
     class Config < ActiveRecord::Base
-      attr_accessible :load_browser_on_startup, :start_web_frontend, :web_frontend_port
+      attr_accessible :start_web_frontend, :web_frontend_port
     end
 
     def add_path(path, opts = nil)

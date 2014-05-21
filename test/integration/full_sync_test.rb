@@ -9,7 +9,6 @@ describe 'fully synchronizing repositories' do
     configuration.shares.each do |share|
       share.update_attributes(polling_interval: 0.1, notification: false)
     end
-    configuration.global.update_attributes(load_browser_on_startup: false)
 
     start_cmd = 'gitdocs start --debug --pid=gitdocs.pid --port 7777'
     run(start_cmd, 15)
