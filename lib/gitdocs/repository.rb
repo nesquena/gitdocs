@@ -193,18 +193,16 @@ class Gitdocs::Repository
     conflicted_paths
   end
 
-  # Commit and push the repository
+  # Commit the working directory
+  #
+  # @param [String] message
   #
   # @return [nil] if the repository is invalid
-  # @return [:no_remote] if the remote is not yet set
-  # @return [:nothing] if there was nothing to do
-  # @return [String] if there is an error return the message
-  # @return [:ok] if commited and pushed without errors or conflicts
-  def push(message='Auto-commit from gitdocs')
+  # @return [Boolean] whether a commit was made or not
+  def commit(message)
     return nil unless valid?
-    return :no_remote unless has_remote?
 
-    #add and commit
+    # Mark any empty directories so they will be committed
     Find.find(root).each do |path|
       Find.prune if File.basename(path) == '.git'
       if File.directory?(path) && Dir.entries(path).count == 2
@@ -228,7 +226,22 @@ class Gitdocs::Repository
       end
       @rugged.index.write
       @grit.commit_index(message)
+      true
+    else
+      false
     end
+  end
+
+  # Push the repository
+  #
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [:nothing] if there was nothing to do
+  # @return [String] if there is an error return the message
+  # @return [:ok] if committed and pushed without errors or conflicts
+  def push
+    return nil unless valid?
+    return :no_remote unless has_remote?
 
     return :nothing if current_oid.nil?
 

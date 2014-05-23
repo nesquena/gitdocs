@@ -102,7 +102,8 @@ module Gitdocs
         message = 'Auto-commit from gitdocs'
       end
 
-      result = @repository.push(message)
+      @repository.commit(message)
+      result = @repository.push
 
       return if result.nil? || result == :no_remote || result == :nothing
       level, title, message = case result
