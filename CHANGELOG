@@ -1,3 +1,9 @@
+0.5.0.pre6 (May 24th 2014)
+
+ * Remove the load_browser_on_startup config option (@acant)
+ * Stop the addition of extra conflict markers (@acant)
+ * Separate the commit and push methods in repository (@acant)
+
 0.5.0.pre5 (May 14th 2014)
 
  * Cleanup behavior on empty commits
