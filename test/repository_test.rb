@@ -276,6 +276,31 @@ describe Gitdocs::Repository do
         it { subject ; local_file_content('file1 (7bfce5c)').must_equal 'dead' }
       end
 
+      describe 'when there is a conflict, with additional files' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file1', 'dead',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+          bare_commit(
+            remote_repo,
+            'file2', 'foo',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+          write_and_commit('file1', 'beef', 'conflict commit', author1)
+        end
+
+        it { subject.must_equal ['file1'] }
+        it { subject ; commit_count(local_repo).must_equal 2 }
+        it { subject ; local_file_count.must_equal 3 }
+        it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
+        it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
+        it { subject ; local_file_content('file2').must_equal 'foo' }
+      end
+
       describe 'when there is a non-conflicted local commit' do
         before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
         it { subject.must_equal :ok }
@@ -651,9 +676,7 @@ describe Gitdocs::Repository do
 
   # NOTE: This method is ignoring hidden files.
   def local_file_count
-    files = Dir.chdir(local_repo_path) do
-      Dir.glob('*')
-    end
+    files = Dir.chdir(local_repo_path) { Dir.glob('*') }
     files.count
   end
 
@@ -666,7 +689,7 @@ describe Gitdocs::Repository do
   end
 
   def local_file_content(*path_elements)
-    local_file_exist?(*path_elements).must_equal true
+    return nil unless local_file_exist?
     File.read(File.join(local_repo_path, *path_elements))
   end
 end

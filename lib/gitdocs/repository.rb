@@ -172,25 +172,34 @@ class Gitdocs::Repository
     @rugged.index.reload
     return e.err unless @rugged.index.conflicts?
 
-    conflicted_paths = @rugged.index.map do |index_entry|
-      filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
-
-      author       = ' original' if index_entry[:stage] == 1
-      short_oid    = index_entry[:oid][0..6]
-      new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
-      File.open(File.join(root, new_filename), 'wb') do |f|
-        f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
-      end
-
-      index_entry[:path]
+    # Collect all the index entries by their paths.
+    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
+    @rugged.index.map do |index_entry|
+      index_path_entries[index_entry[:path]].push(index_entry)
     end
 
-    conflicted_paths.uniq!
-    conflicted_paths.each { |path| FileUtils.remove(File.join(root, path), force: true) }
+    # Filter to only the conflicted entries.
+    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
 
-    # NOTE: leave the commit until the next push
+    conflicted_path_entries.each_pair do |path, index_entries|
+      # Write out the different versions of the conflicted file.
+      index_entries.each do |index_entry|
+        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+        author       = ' original' if index_entry[:stage] == 1
+        short_oid    = index_entry[:oid][0..6]
+        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
+        File.open(File.join(root, new_filename), 'wb') do |f|
+          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
+        end
+      end
 
-    conflicted_paths
+      # And remove the original.
+      FileUtils.remove(File.join(root, path), force: true)
+    end
+
+    # NOTE: Let commit be handled by the next regular commit.
+
+    conflicted_path_entries.keys
   end
 
   # Commit the working directory
