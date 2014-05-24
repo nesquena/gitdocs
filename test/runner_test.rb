@@ -63,7 +63,13 @@ describe 'gitdocs runner' do
   describe '#push_changes' do
     subject { runner.push_changes }
 
-    before { repository.expects(:push).returns(push_result) }
+    before do
+      repository.expects(:commit)
+        .with('Auto-commit from gitdocs')
+        .returns(push_result)
+      repository.expects(:push)
+        .returns(push_result)
+    end
 
     describe 'when invalid' do
       let(:push_result) { nil }
@@ -98,12 +104,15 @@ describe 'gitdocs runner' do
       it { subject.must_equal nil }
     end
 
-    describe 'when merge is ok' do
+    describe 'when push is ok' do
       let(:push_result) { :ok }
       before do
         runner.instance_variable_set(:@last_synced_revision, :oid)
-        repository.stubs(:current_oid).returns(:next_oid)
-        repository.stubs(:author_count).with(:oid).returns('Alice' => 1, 'Bob' => 2)
+        repository.stubs(:current_oid)
+          .returns(:next_oid)
+        repository.stubs(:author_count)
+          .with(:oid)
+          .returns('Alice' => 1, 'Bob' => 2)
         notifier.expects(:info)
           .with('Pushed 3 changes', "'root_path' has been pushed")
       end

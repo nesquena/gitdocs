@@ -172,39 +172,46 @@ class Gitdocs::Repository
     @rugged.index.reload
     return e.err unless @rugged.index.conflicts?
 
-    conflicted_paths = @rugged.index.map do |index_entry|
-      filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
-
-      author       = ' original' if index_entry[:stage] == 1
-      short_oid    = index_entry[:oid][0..6]
-      new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
-      File.open(File.join(root, new_filename), 'wb') do |f|
-        f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
-      end
-
-      index_entry[:path]
+    # Collect all the index entries by their paths.
+    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
+    @rugged.index.map do |index_entry|
+      index_path_entries[index_entry[:path]].push(index_entry)
     end
 
-    conflicted_paths.uniq!
-    conflicted_paths.each { |path| FileUtils.remove(File.join(root, path), force: true) }
+    # Filter to only the conflicted entries.
+    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
 
-    # NOTE: leave the commit until the next push
+    conflicted_path_entries.each_pair do |path, index_entries|
+      # Write out the different versions of the conflicted file.
+      index_entries.each do |index_entry|
+        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+        author       = ' original' if index_entry[:stage] == 1
+        short_oid    = index_entry[:oid][0..6]
+        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
+        File.open(File.join(root, new_filename), 'wb') do |f|
+          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
+        end
+      end
 
-    conflicted_paths
+      # And remove the original.
+      FileUtils.remove(File.join(root, path), force: true)
+    end
+
+    # NOTE: Let commit be handled by the next regular commit.
+
+    conflicted_path_entries.keys
   end
 
-  # Commit and push the repository
+  # Commit the working directory
+  #
+  # @param [String] message
   #
   # @return [nil] if the repository is invalid
-  # @return [:no_remote] if the remote is not yet set
-  # @return [:nothing] if there was nothing to do
-  # @return [String] if there is an error return the message
-  # @return [:ok] if commited and pushed without errors or conflicts
-  def push(last_synced_oid, message='Auto-commit from gitdocs')
+  # @return [Boolean] whether a commit was made or not
+  def commit(message)
     return nil unless valid?
-    return :no_remote unless has_remote?
 
-    #add and commit
+    # Mark any empty directories so they will be committed
     Find.find(root).each do |path|
       Find.prune if File.basename(path) == '.git'
       if File.directory?(path) && Dir.entries(path).count == 2
@@ -228,16 +235,30 @@ class Gitdocs::Repository
       end
       @rugged.index.write
       @grit.commit_index(message)
+      true
+    else
+      false
     end
+  end
+
+  # Push the repository
+  #
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [:nothing] if there was nothing to do
+  # @return [String] if there is an error return the message
+  # @return [:ok] if committed and pushed without errors or conflicts
+  def push
+    return nil unless valid?
+    return :no_remote unless has_remote?
 
     return :nothing if current_oid.nil?
 
-    if last_synced_oid.nil? || remote_branch.nil? || remote_branch.tip.oid != current_oid
+    if remote_branch.nil? || remote_branch.tip.oid != current_oid
       begin
         @grit.git.push({ raise: true }, @remote_name, @branch_name)
         :ok
       rescue Grit::Git::CommandFailed => e
-        return :nothing if last_synced_oid.nil?
         return :conflict if e.err[/\[rejected\]/]
         e.err # return the output on error
       end
