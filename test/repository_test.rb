@@ -123,11 +123,13 @@ describe Gitdocs::Repository do
         write_and_commit('file1', 'foo', 'commit', author1)
         write_and_commit('file2', 'beef', 'commit', author1)
         write_and_commit('file3', 'foobar', 'commit', author1)
+        write_and_commit('file4', "foo\ndead\nbeef\nfoobar", 'commit', author1)
       end
       it do
         subject.must_equal([
           Gitdocs::Repository::SearchResult.new('file1', 'foo'),
-          Gitdocs::Repository::SearchResult.new('file3', 'foobar')
+          Gitdocs::Repository::SearchResult.new('file3', 'foobar'),
+          Gitdocs::Repository::SearchResult.new('file4', 'foo ... foobar')
         ])
       end
     end
