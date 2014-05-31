@@ -185,28 +185,30 @@ describe Gitdocs::Repository do
     end
   end
 
-  describe '#pull' do
-    subject { repository.pull }
-
-    let(:path_or_share) { stub(
-      path:        local_repo_path,
-      remote_name: 'origin',
-      branch_name: 'master'
-    ) }
+  describe '#fetch' do
+    subject { repository.fetch }
 
     describe 'when invalid' do
       let(:path_or_share) { 'tmp/unit/missing' }
       it { subject.must_be_nil }
     end
 
-    describe 'when there is no remote' do
+    describe 'when no remote' do
       it { subject.must_equal :no_remote }
     end
 
-    describe 'with a valid remote with no initial commits' do
+    describe 'with remote' do
       before { create_local_repo_with_remote }
 
-      describe 'when there is an error fetching' do
+      describe 'and times out' do
+        before do
+          Grit::Repo.any_instance.stubs(:remote_fetch)
+            .raises(Grit::Git::GitTimeout.new)
+        end
+        it { subject.must_equal "Fetch timed out for #{File.absolute_path(local_repo_path)}" }
+      end
+
+      describe 'and command fails' do
         before do
           Grit::Repo.any_instance.stubs(:remote_fetch)
             .raises(Grit::Git::CommandFailed.new('', 1, 'fetch error output'))
@@ -214,113 +216,151 @@ describe Gitdocs::Repository do
         it { subject.must_equal 'fetch error output' }
       end
 
-      describe 'when there are no local commits' do
-        it { subject.must_equal :ok }
-      end
-
-      describe 'when there is a local commit' do
-        before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
-        it { subject.must_equal :ok }
-        it { subject ; commit_count(local_repo).must_equal 1 }
-      end
-
-      describe 'then new remote commits are fetched' do
+      describe 'and success' do
         before do
           bare_commit(
             remote_repo,
-            'file2', 'deadbeef',
-            'second commit',
-            'author@example.com', 'A U Thor'
+            'file1', 'deadbeef',
+            'commit', 'author@example.com', 'A U Thor'
           )
         end
-
-        describe 'when there is an error merging' do
-          before do
-            Grit::Git.any_instance.stubs(:merge)
-              .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
-          end
-          it { subject.must_equal 'merge error output' }
-        end
-
-        describe ' and merged' do
-          it { subject.must_equal :ok }
-          it { subject ; local_file_exist?('file2').must_equal true }
-          it { subject ; commit_count(local_repo).must_equal 1 }
-        end
+        it { subject.must_equal :ok }
+        it { subject ; local_repo_remote_branch.tip.oid.wont_be_nil }
       end
     end
+  end
 
-    describe 'with a valid remote with commits' do
-      before { create_local_repo_with_remote_with_commit }
+  describe '#merge' do
+    subject { repository.merge }
 
-      describe 'when there is nothing to pull' do
-        it { subject.must_equal :ok }
+    let(:path_or_share) do
+      stub(
+        path:        local_repo_path,
+        remote_name: 'origin',
+        branch_name: 'master'
+      )
+    end
+
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_be_nil }
+    end
+
+    describe 'when no remote' do
+      it { subject.must_equal :no_remote }
+    end
+
+    describe 'has remote but nothing to merge' do
+      before { create_local_repo_with_remote }
+      it { subject.must_equal :ok }
+    end
+
+    describe 'has remote and times out' do
+      before do
+        create_local_repo_with_remote
+        bare_commit(
+          remote_repo,
+          'file1', 'deadbeef',
+          'commit', 'author@example.com', 'A U Thor'
+        )
+        repository.fetch
+
+        Grit::Git.any_instance.stubs(:merge)
+          .raises(Grit::Git::GitTimeout.new)
+      end
+      it { subject.must_equal "Merge timed out for #{File.absolute_path(local_repo_path)}" }
+    end
+
+    describe 'and fails, but does not conflict' do
+      before do
+        create_local_repo_with_remote
+        bare_commit(
+          remote_repo,
+          'file1', 'deadbeef',
+          'commit', 'author@example.com', 'A U Thor'
+        )
+        repository.fetch
+
+        Grit::Git.any_instance.stubs(:merge)
+          .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
+      end
+      it { subject.must_equal 'merge error output' }
+    end
+
+    describe 'and there is a conflict' do
+      before do
+        create_local_repo_with_remote_with_commit
+        bare_commit(
+          remote_repo,
+          'file1', 'dead',
+          'second commit',
+          'author@example.com', 'A U Thor'
+        )
+        write_and_commit('file1', 'beef', 'conflict commit', author1)
+        repository.fetch
       end
 
-      describe 'when there is a conflict' do
+      it { subject.must_equal ['file1'] }
+      it { subject ; commit_count(local_repo).must_equal 2 }
+      it { subject ; local_file_count.must_equal 3 }
+      it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
+      it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
+      it { subject ; local_file_content('file1 (7bfce5c)').must_equal 'dead' }
+    end
+
+    describe 'and there is a conflict, with additional files' do
+      before do
+        create_local_repo_with_remote_with_commit
+        bare_commit(
+          remote_repo,
+          'file1', 'dead',
+          'second commit',
+          'author@example.com', 'A U Thor'
+        )
+        bare_commit(
+          remote_repo,
+          'file2', 'foo',
+          'second commit',
+          'author@example.com', 'A U Thor'
+        )
+        write_and_commit('file1', 'beef', 'conflict commit', author1)
+        repository.fetch
+      end
+
+      it { subject.must_equal ['file1'] }
+      it { subject ; commit_count(local_repo).must_equal 2 }
+      it { subject ; local_file_count.must_equal 3 }
+      it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
+      it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
+      it { subject ; local_file_content('file2').must_equal 'foo' }
+    end
+
+    describe 'and there are non-conflicted local commits' do
+      before do
+        create_local_repo_with_remote_with_commit
+        write_and_commit('file1', 'beef', 'conflict commit', author1)
+        repository.fetch
+      end
+      it { subject.must_equal :ok }
+      it { subject ; local_file_count.must_equal 1 }
+      it { subject ; commit_count(local_repo).must_equal 2 }
+    end
+
+      describe 'when new remote commits are merged' do
         before do
-          bare_commit(
-            remote_repo,
-            'file1', 'dead',
-            'second commit',
-            'author@example.com', 'A U Thor'
-          )
-          write_and_commit('file1', 'beef', 'conflict commit', author1)
-        end
-
-        it { subject.must_equal ['file1'] }
-        it { subject ; commit_count(local_repo).must_equal 2 }
-        it { subject ; local_file_count.must_equal 3 }
-        it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
-        it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
-        it { subject ; local_file_content('file1 (7bfce5c)').must_equal 'dead' }
-      end
-
-      describe 'when there is a conflict, with additional files' do
-        before do
-          bare_commit(
-            remote_repo,
-            'file1', 'dead',
-            'second commit',
-            'author@example.com', 'A U Thor'
-          )
-          bare_commit(
-            remote_repo,
-            'file2', 'foo',
-            'second commit',
-            'author@example.com', 'A U Thor'
-          )
-          write_and_commit('file1', 'beef', 'conflict commit', author1)
-        end
-
-        it { subject.must_equal ['file1'] }
-        it { subject ; commit_count(local_repo).must_equal 2 }
-        it { subject ; local_file_count.must_equal 3 }
-        it { subject ; local_file_content('file1 (f6ea049 original)').must_equal 'foobar' }
-        it { subject ; local_file_content('file1 (18ed963)').must_equal 'beef' }
-        it { subject ; local_file_content('file2').must_equal 'foo' }
-      end
-
-      describe 'when there is a non-conflicted local commit' do
-        before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
-        it { subject.must_equal :ok }
-        it { subject ; commit_count(local_repo).must_equal 2 }
-      end
-
-      describe 'when new remote commits are pulled and merged' do
-        before do
+          create_local_repo_with_remote_with_commit
           bare_commit(
             remote_repo,
             'file2', 'deadbeef',
             'second commit',
             'author@example.com', 'A U Thor'
           )
+          repository.fetch
         end
         it { subject.must_equal :ok }
         it { subject ; local_file_exist?('file2').must_equal true }
         it { subject ; commit_count(local_repo).must_equal 2 }
       end
-    end
   end
 
   describe '#commit' do
@@ -678,6 +718,10 @@ describe Gitdocs::Repository do
   def local_file_count
     files = Dir.chdir(local_repo_path) { Dir.glob('*') }
     files.count
+  end
+
+  def local_repo_remote_branch
+    Rugged::Branch.lookup(local_repo, 'origin/master', :remote)
   end
 
   def local_repo_clean?

@@ -138,34 +138,41 @@ class Gitdocs::Repository
     nil
   end
 
-  # Fetch and merge the repository
+  # Fetch all the remote branches
   #
-  # @raise [RuntimeError] if there is a problem processing conflicted files
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [String] if there is an error return the message
+  # @return [:ok] if the fetch worked
+  def fetch
+    return nil unless valid?
+    return :no_remote unless has_remote?
+
+    @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
+    :ok
+  rescue Grit::Git::GitTimeout
+    "Fetch timed out for #{root}"
+  rescue Grit::Git::CommandFailed => e
+    e.err
+  end
+
+  # Merge the repository
   #
   # @return [nil] if the repository is invalid
   # @return [:no_remote] if the remote is not yet set
   # @return [String] if there is an error return the message
   # @return [Array<String>] if there is a conflict return the Array of
   #   conflicted file names
-  # @return [:ok] if pulled and merged with no errors or conflicts
-  def pull
+  # @return [:ok] if the merged with no errors or conflicts
+  def merge
     return nil unless valid?
     return :no_remote unless has_remote?
-
-    begin
-      @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
-    rescue Grit::Git::GitTimeout
-      return "Fetch timed out for #{root}"
-    rescue Grit::Git::CommandFailed => e
-      return e.err
-    end
-
     return :ok if remote_branch.nil? || remote_branch.tip.oid == current_oid
 
     @grit.git.merge({ raise: true, chdir: root }, "#{@remote_name}/#{@branch_name}")
     :ok
   rescue Grit::Git::GitTimeout
-    "Merged command timed out for #{root}"
+    "Merge timed out for #{root}"
   rescue Grit::Git::CommandFailed => e
     # HACK: The rugged in-memory index will not have been updated after the
     # Grit merge command. Reload it before checking for conflicts.

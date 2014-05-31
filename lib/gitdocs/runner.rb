@@ -61,19 +61,24 @@ module Gitdocs
     end
 
     def sync_changes
-      result = @repository.pull
+      fetch_result = @repository.fetch
+      return unless fetch_result == :ok
 
-      return if result.nil? || result == :no_remote
+      merge_result = @repository.merge
+      # assert !merge_result.nil?
+      # assert merge_result != :no_remote
+      # Neither of these cases should be possible as they would already have
+      # been filtered my the execution of #fetch.
 
-      if result.kind_of?(String)
+      if merge_result.kind_of?(String)
         @notifier.error(
           'There was a problem synchronizing this gitdoc',
-          "A problem occurred in #{root}:\n#{result}"
+          "A problem occurred in #{root}:\n#{merge_result}"
         )
         return
       end
 
-      if result == :ok
+      if merge_result == :ok
         author_change_count = latest_author_count
         unless author_change_count.empty?
           author_list = author_change_count.map { |author, count| "* #{author} (#{change_count(count)})" }.join("\n")
@@ -83,10 +88,10 @@ module Gitdocs
           )
         end
       else
-        #assert result.kind_of?(Array)
+        # assert merge_result.kind_of?(Array)
         @notifier.warn(
           'There were some conflicts',
-          result.map { |f| "* #{f}" }.join("\n")
+          merge_result.map { |f| "* #{f}" }.join("\n")
         )
       end
 

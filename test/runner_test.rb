@@ -19,20 +19,20 @@ describe 'gitdocs runner' do
   describe '#sync_changes' do
     subject { runner.sync_changes }
 
-    before { repository.expects(:pull).returns(pull_result) }
-
-    describe 'when invalid' do
-      let(:pull_result) { nil }
-      it { subject.must_equal nil }
+    before do
+      repository.stubs(:fetch).returns(fetch_result)
+      repository.stubs(:merge).returns(merge_result)
     end
 
-    describe 'when no remote present' do
-      let(:pull_result) { :no_remote }
+    describe 'when nothing to fetch' do
+      let(:fetch_result) { :not_ok }
+      let(:merge_result) { nil }
       it { subject.must_equal nil }
     end
 
     describe 'when merge is conflicted' do
-      let(:pull_result) { ['file'] }
+      let(:fetch_result) { :ok }
+      let(:merge_result) { ['file'] }
       before do
         notifier.expects(:warn).with(
           'There were some conflicts',
@@ -44,7 +44,8 @@ describe 'gitdocs runner' do
     end
 
     describe 'when merge is ok' do
-      let(:pull_result) { :ok }
+      let(:fetch_result) { :ok }
+      let(:merge_result) { :ok }
       before do
         runner.instance_variable_set(:@last_synced_revision, :oid)
         repository.stubs(:current_oid).returns(:next_oid)
