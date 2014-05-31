@@ -1,7 +1,7 @@
 require File.expand_path('../test_helper', __FILE__)
 
 describe 'gitdocs runner' do
-  let(:runner) { Gitdocs::Runner.new(share)}
+  let(:runner) { Gitdocs::Runner.new(share) }
 
   let(:share)      { stub(polling_interval: 1, notification: true) }
   let(:notifier)   { stub }
@@ -27,20 +27,24 @@ describe 'gitdocs runner' do
     describe 'when nothing to fetch' do
       let(:fetch_result) { :not_ok }
       let(:merge_result) { nil }
-      it { subject.must_equal nil }
+      it { subject }
     end
 
-    describe 'when merge is conflicted' do
+    describe 'when merge error' do
       let(:fetch_result) { :ok }
-      let(:merge_result) { ['file'] }
+      let(:merge_result) { 'error' }
+      before { notifier.expects(:merge_notification).with('error', 'root_path') }
+      it { subject }
+    end
+
+    describe 'when merge not_ok' do
+      let(:fetch_result) { :ok }
+      let(:merge_result) { :not_ok }
       before do
-        notifier.expects(:warn).with(
-          'There were some conflicts',
-          "* file"
-        )
+        notifier.expects(:merge_notification).with(:not_ok, 'root_path')
         runner.expects(:push_changes)
       end
-      it { subject.must_equal nil }
+      it { subject }
     end
 
     describe 'when merge is ok' do
@@ -49,14 +53,12 @@ describe 'gitdocs runner' do
       before do
         runner.instance_variable_set(:@last_synced_revision, :oid)
         repository.stubs(:current_oid).returns(:next_oid)
-        repository.stubs(:author_count).with(:oid).returns('Alice' => 1, 'Bob' => 2)
-        notifier.expects(:info).with(
-          'Updated with 3 changes',
-          "In 'root_path':\n* Alice (1 change)\n* Bob (2 changes)"
-        )
+        changes = { 'Alice' => 1, 'Bob' => 2 }
+        repository.stubs(:author_count).with(:oid).returns(changes)
+
+        notifier.expects(:merge_notification).with(changes, 'root_path')
         runner.expects(:push_changes)
       end
-      it { subject.must_equal nil }
       it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
     end
   end
@@ -72,37 +74,10 @@ describe 'gitdocs runner' do
         .returns(push_result)
     end
 
-    describe 'when invalid' do
-      let(:push_result) { nil }
-      it { subject.must_equal nil }
-    end
-
-    describe 'when no remote present' do
-      let(:push_result) { :no_remote }
-      it { subject.must_equal nil }
-    end
-
-    describe 'when nothing happened' do
-      let(:push_result) { :nothing }
-      it { subject.must_equal nil }
-    end
-
-    describe 'when there is an error' do
-      let(:push_result) { 'error' }
-      before do
-        notifier.expects(:error)
-          .with('BAD Could not push changes in root_path', 'error')
-      end
-      it { subject.must_equal nil }
-    end
-
-    describe 'when push is conflicted' do
-      let(:push_result) { :conflict }
-      before do
-        notifier.expects(:warn)
-          .with('There was a conflict in root_path, retrying', '')
-      end
-      it { subject.must_equal nil }
+    describe 'when push not_ok' do
+      let(:push_result) { :not_ok }
+      before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
+      it { subject }
     end
 
     describe 'when push is ok' do
@@ -111,13 +86,10 @@ describe 'gitdocs runner' do
         runner.instance_variable_set(:@last_synced_revision, :oid)
         repository.stubs(:current_oid)
           .returns(:next_oid)
-        repository.stubs(:author_count)
-          .with(:oid)
-          .returns('Alice' => 1, 'Bob' => 2)
-        notifier.expects(:info)
-          .with('Pushed 3 changes', "'root_path' has been pushed")
+        changes = { 'Alice' => 1, 'Bob' => 2 }
+        repository.stubs(:author_count).with(:oid).returns(changes)
+        notifier.expects(:push_notification).with(changes, 'root_path')
       end
-      it { subject.must_equal nil }
       it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
     end
   end
