@@ -47,7 +47,7 @@ module Gitdocs
           unless directories.empty?
             EM.next_tick do
               EM.defer(proc do
-                mutex.synchronize { push_changes }
+                mutex.synchronize { sync_changes }
               end, proc {})
             end
           end
@@ -61,17 +61,7 @@ module Gitdocs
     end
 
     def sync_changes
-      fetch_result = @repository.fetch
-      return unless fetch_result == :ok
-
-      merge_result = @repository.merge
-      merge_result = latest_author_count if merge_result == :ok
-      @notifier.merge_notification(merge_result, root)
-
-      push_changes unless merge_result.kind_of?(String)
-    end
-
-    def push_changes
+      # Commit #################################################################
       message_file = File.expand_path('.gitmessage~', root)
       if File.exist?(message_file)
         message = File.read(message_file)
@@ -81,6 +71,17 @@ module Gitdocs
       end
       @repository.commit(message)
 
+      # Fetch ##################################################################
+      fetch_result = @repository.fetch
+      return unless fetch_result == :ok
+
+      # Merge ##################################################################
+      merge_result = @repository.merge
+      merge_result = latest_author_count if merge_result == :ok
+      @notifier.merge_notification(merge_result, root)
+      return if merge_result.kind_of?(String)
+
+      # Push ###################################################################
       result = @repository.push
       result = latest_author_count if result == :ok
       @notifier.push_notification(result, root)
@@ -88,11 +89,12 @@ module Gitdocs
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      @notifier.error("Unexpected error pushing changes in #{root}", "#{e}")
+      @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
     ############################################################################
+
     private
 
     # Update the author count for the last synced changes, and then update the

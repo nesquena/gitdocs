@@ -20,77 +20,80 @@ describe 'gitdocs runner' do
     subject { runner.sync_changes }
 
     before do
-      repository.stubs(:fetch).returns(fetch_result)
-      repository.stubs(:merge).returns(merge_result)
+      repository.expects(:commit).with('Auto-commit from gitdocs')
+      repository.expects(:fetch).returns(fetch_result)
     end
 
-    describe 'when nothing to fetch' do
+    describe 'fetch failure' do
       let(:fetch_result) { :not_ok }
-      let(:merge_result) { nil }
       it { subject }
     end
 
     describe 'when merge error' do
       let(:fetch_result) { :ok }
-      let(:merge_result) { 'error' }
-      before { notifier.expects(:merge_notification).with('error', 'root_path') }
+      before do
+        repository.expects(:merge).returns('error')
+        notifier.expects(:merge_notification).with('error', 'root_path')
+      end
       it { subject }
     end
 
     describe 'when merge not_ok' do
       let(:fetch_result) { :ok }
-      let(:merge_result) { :not_ok }
       before do
+        repository.expects(:merge).returns(:not_ok)
         notifier.expects(:merge_notification).with(:not_ok, 'root_path')
-        runner.expects(:push_changes)
+        repository.expects(:push).returns(push_result)
       end
-      it { subject }
+
+      describe 'and push is not_ok' do
+        let(:push_result) { :not_ok }
+        before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
+        it { subject }
+      end
+
+      describe 'and push is ok' do
+        let(:push_result) { :ok }
+        before do
+          runner.instance_variable_set(:@last_synced_revision, :oid)
+          repository.stubs(:current_oid).returns(:next_oid)
+          changes = { 'Alice' => 1, 'Bob' => 2 }
+          repository.stubs(:author_count).with(:oid).returns(changes)
+          notifier.expects(:push_notification).with(changes, 'root_path')
+        end
+        it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
+      end
     end
 
-    describe 'when merge is ok' do
+    describe 'merge ok' do
       let(:fetch_result) { :ok }
-      let(:merge_result) { :ok }
-      before do
-        runner.instance_variable_set(:@last_synced_revision, :oid)
-        repository.stubs(:current_oid).returns(:next_oid)
-        changes = { 'Alice' => 1, 'Bob' => 2 }
-        repository.stubs(:author_count).with(:oid).returns(changes)
 
+      before do
+        repository.stubs(:current_oid).returns(:merge_oid, :push_oid)
+
+        repository.expects(:merge).returns(:ok)
+        runner.instance_variable_set(:@last_synced_revision, :oid)
+        changes = { 'Alice' => 1, 'Bob' => 3 }
+        repository.stubs(:author_count).with(:oid).returns(changes)
         notifier.expects(:merge_notification).with(changes, 'root_path')
-        runner.expects(:push_changes)
+        repository.expects(:push).returns(push_result)
       end
-      it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
-    end
-  end
 
-  describe '#push_changes' do
-    subject { runner.push_changes }
-
-    before do
-      repository.expects(:commit)
-        .with('Auto-commit from gitdocs')
-        .returns(push_result)
-      repository.expects(:push)
-        .returns(push_result)
-    end
-
-    describe 'when push not_ok' do
-      let(:push_result) { :not_ok }
-      before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
-      it { subject }
-    end
-
-    describe 'when push is ok' do
-      let(:push_result) { :ok }
-      before do
-        runner.instance_variable_set(:@last_synced_revision, :oid)
-        repository.stubs(:current_oid)
-          .returns(:next_oid)
-        changes = { 'Alice' => 1, 'Bob' => 2 }
-        repository.stubs(:author_count).with(:oid).returns(changes)
-        notifier.expects(:push_notification).with(changes, 'root_path')
+      describe 'and push is not_ok' do
+        let(:push_result) { :not_ok }
+        before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
+        it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :merge_oid }
       end
-      it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
+
+      describe 'and push is ok' do
+        let(:push_result) { :ok }
+        before do
+          changes = { 'Charlie' => 5, 'Dan' =>  7 }
+          repository.stubs(:author_count).with(:merge_oid).returns(changes)
+          notifier.expects(:push_notification).with(changes, 'root_path')
+        end
+        it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :push_oid }
+      end
     end
   end
 end
