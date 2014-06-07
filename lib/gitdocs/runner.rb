@@ -47,7 +47,7 @@ module Gitdocs
           unless directories.empty?
             EM.next_tick do
               EM.defer(proc do
-                mutex.synchronize { push_changes }
+                mutex.synchronize { sync_changes }
               end, proc {})
             end
           end
@@ -61,39 +61,7 @@ module Gitdocs
     end
 
     def sync_changes
-      result = @repository.pull
-
-      return if result.nil? || result == :no_remote
-
-      if result.kind_of?(String)
-        @notifier.error(
-          'There was a problem synchronizing this gitdoc',
-          "A problem occurred in #{root}:\n#{result}"
-        )
-        return
-      end
-
-      if result == :ok
-        author_change_count = latest_author_count
-        unless author_change_count.empty?
-          author_list = author_change_count.map { |author, count| "* #{author} (#{change_count(count)})" }.join("\n")
-          @notifier.info(
-            "Updated with #{change_count(author_change_count)}",
-            "In '#{root}':\n#{author_list}"
-          )
-        end
-      else
-        #assert result.kind_of?(Array)
-        @notifier.warn(
-          'There were some conflicts',
-          result.map { |f| "* #{f}" }.join("\n")
-        )
-      end
-
-      push_changes
-    end
-
-    def push_changes
+      # Commit #################################################################
       message_file = File.expand_path('.gitmessage~', root)
       if File.exist?(message_file)
         message = File.read(message_file)
@@ -101,30 +69,32 @@ module Gitdocs
       else
         message = 'Auto-commit from gitdocs'
       end
-
       @repository.commit(message)
-      result = @repository.push
 
-      return if result.nil? || result == :no_remote || result == :nothing
-      level, title, message = case result
-      when :ok       then [:info, "Pushed #{change_count(latest_author_count)}", "'#{root}' has been pushed"]
-      when :conflict then [:warn, "There was a conflict in #{root}, retrying", '']
-      else
-        # assert result.kind_of?(String)
-        [:error, "BAD Could not push changes in #{root}", result]
-        # TODO: need to add a status on shares so that the push problem can be
-        # displayed.
-      end
-      @notifier.send(level, title, message)
+      # Fetch ##################################################################
+      fetch_result = @repository.fetch
+      return unless fetch_result == :ok
+
+      # Merge ##################################################################
+      merge_result = @repository.merge
+      merge_result = latest_author_count if merge_result == :ok
+      @notifier.merge_notification(merge_result, root)
+      return if merge_result.kind_of?(String)
+
+      # Push ###################################################################
+      result = @repository.push
+      result = latest_author_count if result == :ok
+      @notifier.push_notification(result, root)
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      @notifier.error("Unexpected error pushing changes in #{root}", "#{e}")
+      @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
       # TODO: get logging and/or put the error message into a status field in the database
     end
 
     ############################################################################
+
     private
 
     # Update the author count for the last synced changes, and then update the
@@ -136,16 +106,6 @@ module Gitdocs
       @last_synced_revision = @repository.current_oid
 
       @repository.author_count(last_oid)
-    end
-
-    def change_count(count_or_hash)
-      count = if count_or_hash.respond_to?(:values)
-        count_or_hash .values.reduce(:+)
-      else
-        count_or_hash
-      end
-
-      "#{count} change#{count == 1 ? '' : 's'}"
     end
   end
 end

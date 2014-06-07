@@ -53,10 +53,10 @@ class Gitdocs::Repository
     repository = new(path)
     fail("Unable to clone into #{path}") unless repository.valid?
     repository
-  rescue Grit::Git::GitTimeout => e
-    fail("Unable to clone into #{path} because it timed out")
+  rescue Grit::Git::GitTimeout
+    raise("Unable to clone into #{path} because it timed out")
   rescue Grit::Git::CommandFailed => e
-    fail("Unable to clone into #{path} because of #{e.err}")
+    raise("Unable to clone into #{path} because of #{e.err}")
   end
 
   RepoDescriptor = Struct.new(:name, :index)
@@ -73,7 +73,7 @@ class Gitdocs::Repository
       descriptor = RepoDescriptor.new(repository.root, index)
       results[descriptor] = repository.search(term)
     end
-    results.delete_if { |key, value| value.empty? }
+    results.delete_if { |_key, value| value.empty? }
   end
 
   SearchResult = Struct.new(:file, :context)
@@ -89,19 +89,20 @@ class Gitdocs::Repository
     results = []
     options = { raise: true, bare: false, chdir: root, ignore_case: true }
     @grit.git.grep(options, term).scan(/(.*?):([^\n]*)/) do |(file, context)|
-      if result = results.find { |s| s.file == file }
+      result = results.find { |s| s.file == file }
+      if result
         result.context += ' ... ' + context
       else
         results << SearchResult.new(file, context)
       end
     end
     results
-  rescue Grit::Git::GitTimeout => e
+  rescue Grit::Git::GitTimeout
     # TODO: add logging to record the error details
     []
-  rescue Grit::Git::CommandFailed => e
+  rescue Grit::Git::CommandFailed
     # TODO: add logging to record the error details if they are not just
-      # nothing found
+    # nothing found
     []
   end
 
@@ -138,34 +139,41 @@ class Gitdocs::Repository
     nil
   end
 
-  # Fetch and merge the repository
+  # Fetch all the remote branches
   #
-  # @raise [RuntimeError] if there is a problem processing conflicted files
+  # @return [nil] if the repository is invalid
+  # @return [:no_remote] if the remote is not yet set
+  # @return [String] if there is an error return the message
+  # @return [:ok] if the fetch worked
+  def fetch
+    return nil unless valid?
+    return :no_remote unless remote?
+
+    @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
+    :ok
+  rescue Grit::Git::GitTimeout
+    "Fetch timed out for #{root}"
+  rescue Grit::Git::CommandFailed => e
+    e.err
+  end
+
+  # Merge the repository
   #
   # @return [nil] if the repository is invalid
   # @return [:no_remote] if the remote is not yet set
   # @return [String] if there is an error return the message
   # @return [Array<String>] if there is a conflict return the Array of
   #   conflicted file names
-  # @return [:ok] if pulled and merged with no errors or conflicts
-  def pull
+  # @return [:ok] if the merged with no errors or conflicts
+  def merge
     return nil unless valid?
-    return :no_remote unless has_remote?
-
-    begin
-      @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
-    rescue Grit::Git::GitTimeout
-      return "Fetch timed out for #{root}"
-    rescue Grit::Git::CommandFailed => e
-      return e.err
-    end
-
+    return :no_remote unless remote?
     return :ok if remote_branch.nil? || remote_branch.tip.oid == current_oid
 
     @grit.git.merge({ raise: true, chdir: root }, "#{@remote_name}/#{@branch_name}")
     :ok
   rescue Grit::Git::GitTimeout
-    "Merged command timed out for #{root}"
+    "Merge timed out for #{root}"
   rescue Grit::Git::CommandFailed => e
     # HACK: The rugged in-memory index will not have been updated after the
     # Grit merge command. Reload it before checking for conflicts.
@@ -227,18 +235,16 @@ class Gitdocs::Repository
         @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
       end
 
+    return false unless dirty
+
     # Commit any changes in the working directory.
-    if dirty
-      Dir.chdir(root) do
-        @rugged.index.add_all
-        @rugged.index.update_all
-      end
-      @rugged.index.write
-      @grit.commit_index(message)
-      true
-    else
-      false
+    Dir.chdir(root) do
+      @rugged.index.add_all
+      @rugged.index.update_all
     end
+    @rugged.index.write
+    @grit.commit_index(message)
+    true
   end
 
   # Push the repository
@@ -250,21 +256,17 @@ class Gitdocs::Repository
   # @return [:ok] if committed and pushed without errors or conflicts
   def push
     return nil unless valid?
-    return :no_remote unless has_remote?
+    return :no_remote unless remote?
 
     return :nothing if current_oid.nil?
 
-    if remote_branch.nil? || remote_branch.tip.oid != current_oid
-      begin
-        @grit.git.push({ raise: true }, @remote_name, @branch_name)
-        :ok
-      rescue Grit::Git::CommandFailed => e
-        return :conflict if e.err[/\[rejected\]/]
-        e.err # return the output on error
-      end
-    else
-      :nothing
-    end
+    return :nothing unless remote_branch.nil? || remote_branch.tip.oid != current_oid
+
+    @grit.git.push({ raise: true }, @remote_name, @branch_name)
+    :ok
+  rescue Grit::Git::CommandFailed => e
+    return :conflict if e.err[/\[rejected\]/]
+    e.err # return the output on error
   end
 
   # Get the count of commits by author from the head to the specified oid.
@@ -275,7 +277,7 @@ class Gitdocs::Repository
   def author_count(last_oid)
     walker = head_walker
     walker.hide(last_oid) if last_oid
-    walker.inject(Hash.new(0)) do |result, commit|
+    walker.reduce(Hash.new(0)) do |result, commit|
       result["#{commit.author[:name]} <#{commit.author[:email]}>"] += 1
       result
     end
@@ -298,23 +300,30 @@ class Gitdocs::Repository
   # @return [Hash<Symbol=>String,Integer,Time>] the author, size and
   #   modification date of the file
   def file_meta(file)
-    file = file.gsub(%r{^/}, '')
+    file = lstrip_backslash(file)
 
     commit = head_walker.find { |x| x.diff(paths: [file]).size > 0 }
 
-    fail "File #{file} not found" unless commit
+    fail("File #{file} not found") unless commit
 
     full_path = File.expand_path(file, root)
-    size = if File.directory?(full_path)
-      Dir[File.join(full_path, '**', '*')].reduce(0) do |size, file|
-        File.symlink?(file) ? size : size += File.size(file)
+    total_size =
+      if File.directory?(full_path)
+        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, filename|
+          File.symlink?(filename) ? size : size + File.size(filename)
+        end
+      else
+        File.symlink?(full_path) ? 0 : File.size(full_path)
       end
-    else
-      File.symlink?(full_path) ? 0 : File.size(full_path)
-    end
-    size = -1 if size == 0 # A value of 0 breaks the table sort for some reason
 
-    { author: commit.author[:name], size: size, modified: commit.author[:time] }
+    # A value of 0 breaks the table sort for some reason
+    total_size = -1 if total_size == 0
+
+    {
+      author:   commit.author[:name],
+      size:     total_size,
+      modified: commit.author[:time]
+    }
   end
 
   # Returns the revisions available for a particular file
@@ -326,11 +335,12 @@ class Gitdocs::Repository
   #
   # @return [Array<Hash>]
   def file_revisions(file)
-    file = file.gsub(%r{^/}, '')
+    file = lstrip_backslash(file)
+
     # Excluding the initial commit (without a parent) which keeps things
     # consistent with the original behaviour.
     # TODO: reconsider if this is the correct behaviour
-    head_walker.select{|x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
+    head_walker.select { |x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
       .first(100)
       .map do |commit|
         {
@@ -353,7 +363,8 @@ class Gitdocs::Repository
   #
   # @return [String] path of the temporary file
   def file_revision_at(file, ref)
-    file = file.gsub(%r{^/}, '')
+    file = lstrip_backslash(file)
+
     content = @rugged.blob_at(ref, file).text
     tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
     File.open(tmp_path, 'w') { |f| f.puts content }
@@ -365,7 +376,8 @@ class Gitdocs::Repository
   # @param [String] file
   # @param [String] ref
   def file_revert(file, ref)
-    file = file.gsub(%r{^/}, '')
+    file = lstrip_backslash(file)
+
     blob = @rugged.blob_at(ref, file)
     # Silently fail if the file/ref do not existing in the repository.
     # Which is consistent with the original behaviour.
@@ -379,7 +391,11 @@ class Gitdocs::Repository
 
   private
 
-  def has_remote?
+  def lstrip_backslash(filename)
+    filename.gsub(/^\//, '')
+  end
+
+  def remote?
     @rugged.remotes.any?
   end
 
