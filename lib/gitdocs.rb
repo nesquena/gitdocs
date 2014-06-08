@@ -6,6 +6,7 @@ require 'shell_tools'
 require 'guard'
 require 'grit'
 require 'rugged'
+require 'table_print'
 
 require 'gitdocs/version'
 require 'gitdocs/configuration'

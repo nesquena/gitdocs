@@ -84,8 +84,9 @@ module Gitdocs
       say "GitDoc v#{VERSION}"
       say "Running: #{running?}"
       say "File System Watch Method: #{file_system_watch_method}"
-      say 'Watching paths:'
-      say config.shares.map { |s| "  - #{s.path}" }.join("\n")
+      say 'Watched repositories:'
+      tp.set :max_width, 100
+      tp config.shares, :path
     end
 
     desc 'open', 'Open the Web UI'
