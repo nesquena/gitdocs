@@ -94,7 +94,7 @@ module Helper
 
   def wait_for_clean_workdir(path)
     dirty = true
-    Timeout.timeout(10) do
+    Timeout.timeout(20) do
       while dirty
         begin
           sleep(0.1)
