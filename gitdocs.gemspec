@@ -38,6 +38,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'eventmachine', '>= 1.0.3'
   s.add_dependency 'launchy', '~> 2.4.2'
   s.add_dependency 'rugged', '~> 0.19.0'
+  s.add_dependency 'table_print', '~> 1.5.1'
 
   s.add_development_dependency 'minitest', "~> 5.0.8"
   s.add_development_dependency 'rake'

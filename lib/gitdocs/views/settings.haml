@@ -19,6 +19,14 @@
         %dt Polling interval
         %dd
           %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
+      %dl
+        %dt Sync Type
+        %dd
+          %select{name: "share[#{idx}][sync_type]"}
+            %option{value: 'full', selected: (share.sync_type == 'full' ? 'selected' : nil )}
+              Full
+            %option{value: 'fetch', selected: (share.sync_type == 'fetch' ? 'selected' : nil )}
+              Fetch only
 
       - if Gitdocs::Repository.new(share).available_remotes
         %dl
