@@ -1,3 +1,6 @@
+0.5.0.pre7
+ * add fetch only syncing for repositories (@acant)
+
 0.5.0.pre6 (May 24th 2014)
 
  * Remove the load_browser_on_startup config option (@acant)

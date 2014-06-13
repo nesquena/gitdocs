@@ -86,7 +86,9 @@ module Gitdocs
       say "File System Watch Method: #{file_system_watch_method}"
       say 'Watched repositories:'
       tp.set :max_width, 100
-      tp config.shares, :path
+      tp config.shares,
+        { sync: { display_method: :sync_type } },
+        :path
     end
 
     desc 'open', 'Open the Web UI'

@@ -17,7 +17,7 @@ module Gitdocs
     end
 
     class Share < ActiveRecord::Base
-      attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name
+      attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name, :sync_type
     end
 
     class Config < ActiveRecord::Base
