@@ -189,6 +189,67 @@ describe Gitdocs::Repository do
     end
   end
 
+  describe '#dirty?' do
+    subject { repository.dirty? }
+
+    let(:path_or_share) do
+      stub(
+        path:        local_repo_path,
+        remote_name: 'origin',
+        branch_name: 'master'
+      )
+    end
+
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_equal false }
+    end
+
+    describe 'when no existing commits' do
+      describe 'and no new files' do
+        it { subject.must_equal false }
+      end
+
+      describe 'and new files' do
+        before { write('file1', 'foobar') }
+        it { subject.must_equal true }
+      end
+
+      describe 'and new empty directory' do
+        before { mkdir('directory') }
+        it { subject.must_equal true }
+      end
+    end
+
+    describe 'when commits exist' do
+      before { write_and_commit('file1', 'foobar', 'initial commit', author1) }
+
+      describe 'and no changes' do
+        it { subject.must_equal false }
+      end
+
+      describe 'add empty directory' do
+        before { mkdir('directory') }
+        it { subject.must_equal false }
+      end
+
+      describe 'add file' do
+        before { write('file2', 'foobar') }
+        it { subject.must_equal true }
+      end
+
+      describe 'modify existing file' do
+        before { write('file1', 'deadbeef') }
+        it { subject.must_equal true }
+      end
+
+      describe 'delete file' do
+        before { rm_rf('file1') }
+        it { subject.must_equal true }
+      end
+    end
+  end
+
   describe '#fetch' do
     subject { repository.fetch }
 
@@ -438,7 +499,7 @@ describe Gitdocs::Repository do
       describe 'changes to commit' do
         before do
           write('file1', 'foobar')
-          FileUtils.rm_rf(File.join(local_repo_path, 'file2'))
+          rm_rf('file2')
           write('file3', 'foobar')
           mkdir('directory')
         end
@@ -723,6 +784,10 @@ describe Gitdocs::Repository do
   def write(filename, content)
     mkdir(File.dirname(filename))
     File.write(File.join(local_repo_path, filename), content)
+  end
+
+  def rm_rf(filename)
+    FileUtils.rm_rf(File.join(local_repo_path, filename))
   end
 
   def write_and_commit(filename, content, commit_msg, author)

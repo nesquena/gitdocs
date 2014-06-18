@@ -139,6 +139,16 @@ class Gitdocs::Repository
     nil
   end
 
+  # Is the working directory dirty
+  #
+  # @return [Boolean]
+  def dirty?
+    return false unless valid?
+
+    return Dir.glob(File.join(root, '*')).any? unless current_oid
+    @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
+  end
+
   # Fetch all the remote branches
   #
   # @return [nil] if the repository is invalid
@@ -227,15 +237,7 @@ class Gitdocs::Repository
       end
     end
 
-    # Check if there are uncommitted changes
-    dirty =
-      if current_oid.nil?
-        Dir.glob(File.join(root, '*')).any?
-      else
-        @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
-      end
-
-    return false unless dirty
+    return false unless dirty?
 
     # Commit any changes in the working directory.
     Dir.chdir(root) do
