@@ -93,15 +93,16 @@ module Gitdocs
 
         status = ''
         status += '*' if repository.dirty?
+        status += '!' if repository.need_sync?
 
-        status = '✓' if status.empty?
+        status = 'ok' if status.empty?
         status
       end
       tp config.shares,
         { sync: { display_method: :sync_type } },
         { s: status_display },
         :path
-      say "\n(Legend: ✓ everything synced, * change to commit)"
+      say "\n(Legend: ok everything synced, * change to commit, ! needs sync)"
     end
 
     desc 'open', 'Open the Web UI'

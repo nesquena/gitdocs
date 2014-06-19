@@ -250,6 +250,82 @@ describe Gitdocs::Repository do
     end
   end
 
+  describe '#need_sync' do
+    subject { repository.need_sync? }
+
+    let(:path_or_share) do
+      stub(
+        path:        local_repo_path,
+        remote_name: 'origin',
+        branch_name: 'master'
+      )
+    end
+
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_equal false }
+    end
+
+    describe 'when no remotes' do
+      it { subject.must_equal false }
+    end
+
+    describe 'when no remote commits' do
+      before { create_local_repo_with_remote }
+
+      describe 'no local commits' do
+        it { subject.must_equal false }
+      end
+
+      describe 'local commits' do
+        before { write_and_commit('file1', 'beef', 'conflict commit', author1) }
+        it { subject.must_equal true }
+      end
+    end
+
+    describe 'when remote commits' do
+      before { create_local_repo_with_remote_with_commit }
+
+      describe 'no local commits' do
+        it { subject.must_equal false }
+      end
+
+      describe 'new local commit' do
+        before { write_and_commit('file2', 'beef', 'conflict commit', author1) }
+        it { subject.must_equal true }
+      end
+
+      describe 'new remote commit' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file3', 'dead',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+          repository.fetch
+        end
+
+        it { subject.must_equal true }
+      end
+
+      describe 'new local and remote commit' do
+        before do
+          bare_commit(
+            remote_repo,
+            'file3', 'dead',
+            'second commit',
+            'author@example.com', 'A U Thor'
+          )
+          repository.fetch
+          write_and_commit('file4', 'beef', 'conflict commit', author1)
+        end
+
+        it { subject.must_equal true }
+      end
+    end
+  end
+
   describe '#fetch' do
     subject { repository.fetch }
 

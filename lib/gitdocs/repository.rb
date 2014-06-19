@@ -150,6 +150,15 @@ class Gitdocs::Repository
     @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
   end
 
+  # @return [Boolean]
+  def need_sync?
+    return false unless valid?
+    return false unless remote?
+
+    return !!current_oid unless remote_branch
+    remote_branch.tip.oid != current_oid
+  end
+
   # Fetch all the remote branches
   #
   # @return [nil] if the repository is invalid
