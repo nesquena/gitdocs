@@ -186,9 +186,11 @@ class Gitdocs::Repository
   #   conflicted file names
   # @return [:ok] if the merged with no errors or conflicts
   def merge
-    return nil unless valid?
+    return nil        unless valid?
     return :no_remote unless remote?
-    return :ok if remote_branch.nil? || remote_branch.tip.oid == current_oid
+
+    return :ok        unless remote_branch
+    return :ok        if remote_branch.tip.oid == current_oid
 
     @grit.git.merge({ raise: true, chdir: root }, "#{@remote_name}/#{@branch_name}")
     :ok
@@ -271,8 +273,7 @@ class Gitdocs::Repository
     return :no_remote unless remote?
 
     return :nothing if current_oid.nil?
-
-    return :nothing unless remote_branch.nil? || remote_branch.tip.oid != current_oid
+    return :nothing if remote_branch && remote_branch.tip.oid == current_oid
 
     @grit.git.push({ raise: true }, @remote_name, @branch_name)
     :ok
