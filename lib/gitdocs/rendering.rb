@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 # This shouldn't exist but I can't find any other way to prevent redcarpet from complaining
 # WARN: tilt autoloading 'redcarpet' in a non thread-safe way; explicit require 'redcarpet' suggested.
 # !! Unexpected error while processing request: Input must be UTF-8 or US-ASCII, ASCII-8BIT given

@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 module Gitdocs
   class Docfile
     attr_accessor :parent

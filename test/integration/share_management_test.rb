@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 require File.expand_path('../test_helper', __FILE__)
 
 describe 'Manage which shares are being watched' do

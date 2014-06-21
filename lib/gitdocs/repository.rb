@@ -1,4 +1,5 @@
 # -*- encoding : utf-8 -*-
+
 require 'find'
 
 # Wrapper for accessing the shared git repositories.

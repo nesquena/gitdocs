@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 class AddWebPortToConfig < ActiveRecord::Migration
   def self.up
     add_column :configs, :web_frontend_port, :integer, default: 8888
