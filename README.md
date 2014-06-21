@@ -171,7 +171,8 @@ Gitdocs is a young project but we have many plans for it including:
 
 ## Contributors
 
-Gitdocs was created at [Miso](http://engineering.gomiso.com) by [Joshua Hull](https://github.com/joshbuddy) and [Nathan Esquenazi](https://github.com/nesquena).
+Gitdocs is now primarily being developed by [Andrew Sullivan Cant](https://github.com/acant). Gitdocs was created at [Miso](http://engineering.gomiso.com) by [Joshua Hull](https://github.com/joshbuddy) and [Nathan Esquenazi](https://github.com/nesquena). 
+
 We also have had several contributors:
 
   * [Chris Kempson](https://github.com/ChrisKempson) - Encoding issues
