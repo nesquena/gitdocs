@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 class CreateShares < ActiveRecord::Migration
   def self.up
     create_table :shares do |t|

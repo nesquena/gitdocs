@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 module Gitdocs
   class Runner
     def self.start_all(shares)

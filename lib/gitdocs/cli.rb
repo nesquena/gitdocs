@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 module Gitdocs
   require 'thor'
 
@@ -86,9 +88,21 @@ module Gitdocs
       say "File System Watch Method: #{file_system_watch_method}"
       say 'Watched repositories:'
       tp.set :max_width, 100
+      status_display = lambda do |share|
+        repository = Gitdocs::Repository.new(share)
+
+        status = ''
+        status += '*' if repository.dirty?
+        status += '!' if repository.need_sync?
+
+        status = 'ok' if status.empty?
+        status
+      end
       tp config.shares,
         { sync: { display_method: :sync_type } },
+        { s: status_display },
         :path
+      say "\n(Legend: ok everything synced, * change to commit, ! needs sync)"
     end
 
     desc 'open', 'Open the Web UI'

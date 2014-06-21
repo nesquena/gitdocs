@@ -1,5 +1,6 @@
-require File.expand_path('../test_helper', __FILE__)
+# -*- encoding : utf-8 -*-
 
+require File.expand_path('../test_helper', __FILE__)
 
 describe 'gitdocs configuration' do
   before do

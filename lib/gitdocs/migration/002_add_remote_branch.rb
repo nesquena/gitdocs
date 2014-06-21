@@ -1,3 +1,5 @@
+# -*- encoding : utf-8 -*-
+
 class AddRemoteBranch < ActiveRecord::Migration
   def self.up
     add_column :shares, :remote_name, :string, default: 'origin'
