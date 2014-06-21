@@ -96,7 +96,7 @@ module Helper
 
   def wait_for_clean_workdir(path)
     dirty = true
-    Timeout.timeout(10) do
+    Timeout.timeout(20) do
       while dirty
         begin
           sleep(0.1)
@@ -118,7 +118,7 @@ module Helper
   def wait_for_exact_file_content(file, exact_content)
     in_current_dir do
       begin
-        Timeout.timeout(10) do
+        Timeout.timeout(20) do
           sleep(0.1) until File.exist?(file) && IO.read(file) == exact_content
         end
       rescue Timeout::Error
@@ -137,7 +137,7 @@ module Helper
   def wait_for_directory(path)
     in_current_dir do
       begin
-        Timeout.timeout(10) { sleep(0.1) until Dir.exist?(path) }
+        Timeout.timeout(20) { sleep(0.1) until Dir.exist?(path) }
       rescue Timeout::Error
         nil
       end
@@ -149,7 +149,7 @@ module Helper
   def wait_for_conflict_markers(path)
     in_current_dir do
       begin
-        Timeout.timeout(10) { sleep(0.1) if File.exist?(path) }
+        Timeout.timeout(20) { sleep(0.1) if File.exist?(path) }
       rescue Timeout::Error
         nil
       ensure
@@ -157,7 +157,7 @@ module Helper
       end
 
       begin
-        Timeout.timeout(10) { sleep(0.1) if Dir.glob("#{path} (*)").empty? }
+        Timeout.timeout(20) { sleep(0.1) if Dir.glob("#{path} (*)").empty? }
       rescue Timeout::Error
         nil
       ensure
