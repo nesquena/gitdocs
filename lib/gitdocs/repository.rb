@@ -172,35 +172,7 @@ class Gitdocs::Repository
     # Grit merge command. Reload it before checking for conflicts.
     @rugged.index.reload
     return e.err unless @rugged.index.conflicts?
-
-    # Collect all the index entries by their paths.
-    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
-    @rugged.index.map do |index_entry|
-      index_path_entries[index_entry[:path]].push(index_entry)
-    end
-
-    # Filter to only the conflicted entries.
-    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
-
-    conflicted_path_entries.each_pair do |path, index_entries|
-      # Write out the different versions of the conflicted file.
-      index_entries.each do |index_entry|
-        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
-        author       = ' original' if index_entry[:stage] == 1
-        short_oid    = index_entry[:oid][0..6]
-        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
-        File.open(File.join(root, new_filename), 'wb') do |f|
-          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
-        end
-      end
-
-      # And remove the original.
-      FileUtils.remove(File.join(root, path), force: true)
-    end
-
-    # NOTE: Let commit be handled by the next regular commit.
-
-    conflicted_path_entries.keys
+    mark_conflicts
   end
 
   # Commit the working directory
@@ -212,13 +184,7 @@ class Gitdocs::Repository
   def commit(message)
     return nil unless valid?
 
-    # Mark any empty directories so they will be committed
-    Find.find(root).each do |path|
-      Find.prune if File.basename(path) == '.git'
-      if File.directory?(path) && Dir.entries(path).count == 2
-        FileUtils.touch(File.join(path, '.gitignore'))
-      end
-    end
+    mark_empty_directories
 
     return false unless dirty?
 
@@ -287,25 +253,11 @@ class Gitdocs::Repository
     file = lstrip_backslash(file)
 
     commit = head_walker.find { |x| x.diff(paths: [file]).size > 0 }
-
     fail("File #{file} not found") unless commit
-
-    full_path = File.expand_path(file, root)
-    total_size =
-      if File.directory?(full_path)
-        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, filename|
-          File.symlink?(filename) ? size : size + File.size(filename)
-        end
-      else
-        File.symlink?(full_path) ? 0 : File.size(full_path)
-      end
-
-    # A value of 0 breaks the table sort for some reason
-    total_size = -1 if total_size == 0
 
     {
       author:   commit.author[:name],
-      size:     total_size,
+      size:     total_size(file),
       modified: commit.author[:time]
     }
   end
@@ -399,5 +351,64 @@ class Gitdocs::Repository
     walker.sorting(Rugged::SORT_DATE)
     walker.push(@rugged.head.target)
     walker
+  end
+
+  def mark_empty_directories
+    Find.find(root).each do |path|
+      Find.prune if File.basename(path) == '.git'
+      if File.directory?(path) && Dir.entries(path).count == 2
+        FileUtils.touch(File.join(path, '.gitignore'))
+      end
+    end
+  end
+
+  def mark_conflicts
+    # assert(@rugged.index.conflicts?)
+
+    # Collect all the index entries by their paths.
+    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
+    @rugged.index.map do |index_entry|
+      index_path_entries[index_entry[:path]].push(index_entry)
+    end
+
+    # Filter to only the conflicted entries.
+    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
+
+    conflicted_path_entries.each_pair do |path, index_entries|
+      # Write out the different versions of the conflicted file.
+      index_entries.each do |index_entry|
+        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+        author       = ' original' if index_entry[:stage] == 1
+        short_oid    = index_entry[:oid][0..6]
+        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
+        File.open(File.join(root, new_filename), 'wb') do |f|
+          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
+        end
+      end
+
+      # And remove the original.
+      FileUtils.remove(File.join(root, path), force: true)
+    end
+
+    # NOTE: Let commit be handled by the next regular commit.
+
+    conflicted_path_entries.keys
+  end
+
+  def total_size(path)
+    full_path = File.expand_path(path, root)
+    size =
+      if File.directory?(full_path)
+        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, filename|
+          File.symlink?(filename) ? size : size + File.size(filename)
+        end
+      else
+        File.symlink?(full_path) ? 0 : File.size(full_path)
+      end
+
+    # HACK: A value of 0 breaks the table sort for some reason
+    return -1 if size == 0
+
+    size
   end
 end
