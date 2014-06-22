@@ -82,61 +82,6 @@ describe Gitdocs::Repository do
     end
   end
 
-  describe '.search' do
-    subject { Gitdocs::Repository.search('term', repositories) }
-
-    let(:repositories) { Array.new(4, stub(root: 'root')) }
-    before do
-      repositories[0].expects(:search).with('term').returns(:result1)
-      repositories[1].expects(:search).with('term').returns(:result2)
-      repositories[2].expects(:search).with('term').returns(:result3)
-      repositories[3].expects(:search).with('term').returns([])
-    end
-
-    it do
-      subject.must_equal(
-        Gitdocs::Repository::RepoDescriptor.new('root', 1) => :result3,
-        Gitdocs::Repository::RepoDescriptor.new('root', 2) => :result2,
-        Gitdocs::Repository::RepoDescriptor.new('root', 3) => :result1
-      )
-    end
-  end
-
-  describe '#search' do
-    subject { repository.search(term) }
-
-    describe 'empty term' do
-      let(:term) { '' }
-      it { subject.must_equal [] }
-    end
-
-    describe 'nothing found' do
-      let(:term) { 'foo' }
-      before do
-        write_and_commit('file1', 'bar', 'commit', author1)
-        write_and_commit('file2', 'beef', 'commit', author1)
-      end
-      it { subject.must_equal [] }
-    end
-
-    describe 'term found' do
-      let(:term) { 'foo' }
-      before do
-        write_and_commit('file1', 'foo', 'commit', author1)
-        write_and_commit('file2', 'beef', 'commit', author1)
-        write_and_commit('file3', 'foobar', 'commit', author1)
-        write_and_commit('file4', "foo\ndead\nbeef\nfoobar", 'commit', author1)
-      end
-      it do
-        subject.must_equal([
-          Gitdocs::Repository::SearchResult.new('file1', 'foo'),
-          Gitdocs::Repository::SearchResult.new('file3', 'foobar'),
-          Gitdocs::Repository::SearchResult.new('file4', 'foo ... foobar')
-        ])
-      end
-    end
-  end
-
   describe '#root' do
     subject { repository.root }
 
@@ -323,6 +268,41 @@ describe Gitdocs::Repository do
 
         it { subject.must_equal true }
       end
+    end
+  end
+
+  describe '#grep' do
+    subject { repository.grep('foo') { |file, context| @grep_result << "#{file} #{context}"} }
+
+    before { @grep_result = [] }
+
+    describe 'timeout' do
+      before do
+        Grit::Repo.any_instance.stubs(:remote_fetch)
+          .raises(Grit::Git::GitTimeout.new)
+      end
+      it { subject ; @grep_result.must_equal([]) }
+      it { subject.must_equal '' }
+    end
+
+    describe 'command failure' do
+      before do
+        Grit::Repo.any_instance.stubs(:remote_fetch)
+          .raises(Grit::Git::CommandFailed.new('', 1, 'grep error output'))
+      end
+      it { subject ; @grep_result.must_equal([]) }
+      it { subject.must_equal '' }
+    end
+
+    describe 'success' do
+      before do
+        write_and_commit('file1', 'foo', 'commit', author1)
+        write_and_commit('file2', 'beef', 'commit', author1)
+        write_and_commit('file3', 'foobar', 'commit', author1)
+        write_and_commit('file4', "foo\ndead\nbeef\nfoobar", 'commit', author1)
+      end
+      it { subject ; @grep_result.must_equal(['file1 foo', 'file3 foobar', 'file4 foo', 'file4 foobar']) }
+      it { subject.must_equal("file1:foo\nfile3:foobar\nfile4:foo\nfile4:foobar\n") }
     end
   end
 

@@ -60,53 +60,6 @@ class Gitdocs::Repository
     raise("Unable to clone into #{path} because of #{e.err}")
   end
 
-  RepoDescriptor = Struct.new(:name, :index)
-
-  # Search across multiple repositories
-  #
-  # @param [String] term
-  # @param [Array<Repository>} repositories
-  #
-  # @return [Hash<RepoDescriptor, Array<SearchResult>>]
-  def self.search(term, repositories)
-    results = {}
-    repositories.each_with_index do |repository, index|
-      descriptor = RepoDescriptor.new(repository.root, index)
-      results[descriptor] = repository.search(term)
-    end
-    results.delete_if { |_key, value| value.empty? }
-  end
-
-  SearchResult = Struct.new(:file, :context)
-
-  # Search a single repository
-  #
-  # @param [String] term
-  #
-  # @return [Array<SearchResult>]
-  def search(term)
-    return [] if term.empty?
-
-    results = []
-    options = { raise: true, bare: false, chdir: root, ignore_case: true }
-    @grit.git.grep(options, term).scan(/(.*?):([^\n]*)/) do |(file, context)|
-      result = results.find { |s| s.file == file }
-      if result
-        result.context += ' ... ' + context
-      else
-        results << SearchResult.new(file, context)
-      end
-    end
-    results
-  rescue Grit::Git::GitTimeout
-    # TODO: add logging to record the error details
-    []
-  rescue Grit::Git::CommandFailed
-    # TODO: add logging to record the error details if they are not just
-    # nothing found
-    []
-  end
-
   # @return [String]
   def root
     return nil unless valid?
@@ -157,6 +110,24 @@ class Gitdocs::Repository
 
     return !!current_oid unless remote_branch
     remote_branch.tip.oid != current_oid
+  end
+
+  # @param [String] term
+  # @yield [file, context] Gives the files and context for each of the results
+  # @yieldparam file [String]
+  # @yieldparam context [String]
+  def grep(term, &block)
+    @grit.git.grep(
+      { raise: true, bare: false, chdir: root, ignore_case: true },
+      term
+    ).scan(/(.*?):([^\n]*)/, &block)
+  rescue Grit::Git::GitTimeout
+    # TODO: add logging to record the error details
+    ''
+  rescue Grit::Git::CommandFailed
+    # TODO: add logging to record the error details if they are not just
+    # nothing found
+    ''
   end
 
   # Fetch all the remote branches

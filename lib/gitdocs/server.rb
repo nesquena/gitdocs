@@ -51,7 +51,7 @@ module Gitdocs
             end
 
             path('search').get do
-              render! 'search', layout: 'app', locals: { conf: manager.config, results: Gitdocs::Repository.search(request.GET['q'], repositories), nav_state: nil }
+              render! 'search', layout: 'app', locals: { conf: manager.config, results: Gitdocs::Search.new(repositories).search(request.GET['q']), nav_state: nil }
             end
 
             path('shares') do
