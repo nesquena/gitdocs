@@ -67,5 +67,16 @@ module Gitdocs
     def log(msg, level = :info)
       @debug ? puts(msg) : @logger.send(level, msg)
     end
+
+    # @see Gitdocs::Configuration#update_all
+    def update_all(new_config)
+      config.update_all(new_config)
+      EM.add_timer(0.1) { manager.restart }
+    end
+
+    # @see Gitdocs::Configuration#remove_by_id
+    def remove_by_id(id)
+      config.remove_by_id(id)
+    end
   end
 end

@@ -33,9 +33,35 @@ module Gitdocs
       Share.new(path_opts).save!
     end
 
+    # @param [Hash] new_config
+    # @option new_config [Hash] 'config'
+    # @option new_config [Array<Hash>] 'share'
+    def update_all(new_config)
+      global.update_attributes(new_config['config'])
+      new_config['share'].each do |index, share_config|
+        # Skip the share update if there is no path specified.
+        next unless share_config['path'] && !share_config['path'].empty?
+
+        # Split the remote_branch into remote and branch
+        remote_branch = share_config.delete('remote_branch')
+        if remote_branch
+          share_config['remote_name'], share_config['branch_name'] = remote_branch.split('/', 2)
+        end
+        shares[index.to_i].update_attributes(share_config)
+      end
+    end
+
     def remove_path(path)
       path = normalize_path(path)
       Share.where(path: path).destroy_all
+    end
+
+    # @return [Boolean] whether the share existed for deletion
+    def remove_by_id(id)
+      Share.find(id).destroy
+      true
+    rescue ActiveRecord::RecordNotFound => e
+      false
     end
 
     def clear

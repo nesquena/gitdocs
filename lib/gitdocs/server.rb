@@ -34,18 +34,7 @@ module Gitdocs
             path 'settings' do
               get.render! 'settings', layout: 'app', locals: { conf: manager.config, nav_state: 'settings' }
               post do
-                shares = manager.config.shares
-                manager.config.global.update_attributes(request.POST['config'])
-                request.POST['share'].each do |idx, share|
-                  if remote_branch = share.delete('remote_branch')
-                    share['remote_name'], share['branch_name'] = remote_branch.split('/', 2)
-                  end
-                  # Update paths
-                  if share['path'] && !share['path'].empty?
-                    shares[Integer(idx)].update_attributes(share)
-                  end
-                end
-                EM.add_timer(0.1) { manager.restart }
+                manager.update_all(request.POST)
                 redirect! '/settings'
               end
             end
@@ -62,10 +51,8 @@ module Gitdocs
 
               var(:int) do |id|
                 delete do
-                  share = manager.config.shares.find { |s| s.id == id }
-                  halt 404 if share.nil?
-                  share.destroy
-                  redirect! '/settings'
+                  halt(404) unless manager.remove_by_id(id)
+                  redirect!('/settings')
                 end
               end
             end
