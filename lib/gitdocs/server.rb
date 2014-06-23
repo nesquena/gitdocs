@@ -16,6 +16,16 @@ module Gitdocs
       @repositories = repositories
     end
 
+    def self.start_and_wait(manager, override_port, repositories)
+      return false unless manager.start_web_frontend
+
+      web_port = override_port || manager.web_frontend_port
+      server = Server.new(manager, web_port, repositories)
+      server.start
+      server.wait_for_start
+      true
+    end
+
     def start
       repositories = @repositories
       manager      = @manager
@@ -135,7 +145,7 @@ module Gitdocs
       end
     end
 
-    def wait_for_start_and_open(restarting)
+    def wait_for_start
       wait_for_web_server = proc do
         i = 0
         begin
