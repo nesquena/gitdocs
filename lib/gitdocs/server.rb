@@ -25,14 +25,14 @@ module Gitdocs
         use Rack::MethodOverride
         run Renee {
           if request.path_info == '/'
-            if manager.config.shares.size == 1
+            if manager.shares.size == 1
               redirect! '/0'
             else
-              render! 'home', layout: 'app', locals: { conf: manager.config, nav_state: 'home' }
+              render! 'home', layout: 'app', locals: { shares: manager.shares, nav_state: 'home' }
             end
           else
             path 'settings' do
-              get.render! 'settings', layout: 'app', locals: { conf: manager.config, nav_state: 'settings' }
+              get.render! 'settings', layout: 'app', locals: { conf: manager, nav_state: 'settings' }
               post do
                 manager.update_all(request.POST)
                 redirect! '/settings'
@@ -40,7 +40,7 @@ module Gitdocs
             end
 
             path('search').get do
-              render! 'search', layout: 'app', locals: { conf: manager.config, results: Gitdocs::Search.new(repositories).search(request.GET['q']), nav_state: nil }
+              render! 'search', layout: 'app', locals: { results: Gitdocs::Search.new(repositories).search(request.GET['q']), nav_state: nil }
             end
 
             path('shares') do

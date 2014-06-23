@@ -7,7 +7,7 @@
     %dl
       %dt Web Frontend Port
       %dd
-        %input{:type =>'input', :name=>"config[web_frontend_port]", :value => conf.global.web_frontend_port }
+        %input{:type =>'input', :name=>"config[web_frontend_port]", :value => conf.web_frontend_port }
   %h2 Shares
   - conf.shares.each_with_index do |share, idx|
     %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}

@@ -114,7 +114,7 @@ module Gitdocs
       end
 
       web_port = options[:port]
-      web_port ||= config.global.web_frontend_port
+      web_port ||= config.web_frontend_port
       Launchy.open("http://localhost:#{web_port}/")
     end
 

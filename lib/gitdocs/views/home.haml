@@ -3,7 +3,7 @@
 %p Select a share to browse:
 
 %table
-  - conf.shares.each_with_index do |share, idx|
+  - shares.each_with_index do |share, idx|
     %tr
       %td
         %a{ :href => "/#{idx}" }

@@ -16,19 +16,19 @@ module Gitdocs
     def start(web_port = nil)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{config.config_root}'")
-      log("Shares: (#{config.shares.length}) #{config.shares.map(&:inspect).join(', ')}")
+      log("Shares: (#{shares.length}) #{shares.map(&:inspect).join(', ')}")
 
       restarting = false
       begin
         EM.run do
           log('Starting EM loop...')
 
-          @runners = Runner.start_all(config.shares)
+          @runners = Runner.start_all(shares)
 
           # Start the web front-end
-          if config.global.start_web_frontend
-            web_port ||= config.global.web_frontend_port
-            repositories = config.shares.map { |x| Repository.new(x) }
+          if config.start_web_frontend
+            web_port ||= config.web_frontend_port
+            repositories = shares.map { |x| Repository.new(x) }
             web_server = Server.new(self, web_port, repositories)
             web_server.start
             web_server.wait_for_start_and_open(restarting)
@@ -66,6 +66,14 @@ module Gitdocs
     # log("message")
     def log(msg, level = :info)
       @debug ? puts(msg) : @logger.send(level, msg)
+    end
+
+    def web_frontend_port
+      config.web_frontend_port
+    end
+
+    def shares
+      config.shares
     end
 
     # @see Gitdocs::Configuration#update_all

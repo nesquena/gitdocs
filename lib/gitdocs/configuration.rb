@@ -26,6 +26,14 @@ module Gitdocs
       attr_accessible :start_web_frontend, :web_frontend_port
     end
 
+    def start_web_frontend
+      global.start_web_frontend
+    end
+
+    def web_frontend_port
+      global.web_frontend_port
+    end
+
     def add_path(path, opts = nil)
       path = normalize_path(path)
       path_opts = { path: path }
