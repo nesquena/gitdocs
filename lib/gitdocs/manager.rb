@@ -41,19 +41,10 @@ module Gitdocs
     rescue Exception => e # Report all errors in log
       log(e.class.inspect + ' - ' + e.inspect + ' - ' + e.message.inspect, :error)
       log(e.backtrace.join("\n"), :error)
-
-      # HACK: duplicating the error notification code from the Runner
-      begin
-        title = 'Unexpected exit'
-        msg   = 'Something went wrong. Please see the log for details.'
-
-        Guard::Notifier.notify(msg, title: title, image: :failure)
-        Kernel.warn("#{title}: #{msg}")
-      rescue
-        # do nothing, This contain any exceptions which might be thrown by
-        # the notification.
-      end
-
+      Gitdocs::Notifier.error(
+        'Unexpected exit',
+        'Something went wrong. Please see the log for details.'
+      )
       raise
     ensure
       log("Gitdocs is terminating...goodbye\n\n")

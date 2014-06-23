@@ -4,6 +4,15 @@ require File.expand_path('../test_helper', __FILE__)
 describe Gitdocs::Notifier do
   let(:notifier) { Gitdocs::Notifier.new(show_notifications) }
 
+  describe '#error' do
+    subject { Gitdocs::Notifier.error(:title, :message) }
+    before do
+      Gitdocs::Notifier.expects(:new).with(true).returns(notifier = mock)
+      notifier.expects(:error).with(:title, :message)
+    end
+    it { subject }
+  end
+
   describe '#info' do
     subject { notifier.info('title', 'message') }
 
