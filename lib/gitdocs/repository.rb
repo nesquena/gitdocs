@@ -31,6 +31,7 @@ class Gitdocs::Repository
     @grit                 = Grit::Repo.new(path)
     Grit::Git.git_timeout = 120
     @invalid_reason       = nil
+    @commit_message_path  = File.expand_path('.gitmessage~', root)
   rescue Rugged::OSError
     @invalid_reason = :directory_missing
   rescue Rugged::RepositoryError
@@ -177,12 +178,14 @@ class Gitdocs::Repository
 
   # Commit the working directory
   #
-  # @param [String] message
-  #
   # @return [nil] if the repository is invalid
   # @return [Boolean] whether a commit was made or not
-  def commit(message)
+  def commit
     return nil unless valid?
+
+    # Do this first to allow the message file to be deleted, if it
+    # exists.
+    message = read_and_delete_commit_message_file
 
     mark_empty_directories
 
@@ -351,6 +354,14 @@ class Gitdocs::Repository
     walker.sorting(Rugged::SORT_DATE)
     walker.push(@rugged.head.target)
     walker
+  end
+
+  def read_and_delete_commit_message_file
+    return 'Auto-commit from gitdocs' unless File.exist?(@commit_message_path)
+
+    message = File.read(@commit_message_path)
+    File.delete(@commit_message_path)
+    message
   end
 
   def mark_empty_directories

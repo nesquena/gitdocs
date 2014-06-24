@@ -34,7 +34,7 @@ describe 'gitdocs runner' do
     describe 'full sync' do
       before do
         share.stubs(:sync_type).returns('full')
-        repository.expects(:commit).with('Auto-commit from gitdocs')
+        repository.expects(:commit)
         repository.expects(:fetch).returns(fetch_result)
       end
 

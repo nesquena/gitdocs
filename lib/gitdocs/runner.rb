@@ -64,16 +64,7 @@ module Gitdocs
 
     def sync_changes
       # Commit #################################################################
-      if @share.sync_type == 'full'
-        message_file = File.expand_path('.gitmessage~', root)
-        if File.exist?(message_file)
-            message = File.read(message_file)
-            File.delete(message_file)
-        else
-            message = 'Auto-commit from gitdocs'
-        end
-        @repository.commit(message)
-      end
+      @repository.commit if @share.sync_type == 'full'
 
       # Fetch ##################################################################
       fetch_result = @repository.fetch

@@ -505,7 +505,7 @@ describe Gitdocs::Repository do
   end
 
   describe '#commit' do
-    subject { repository.commit('message') }
+    subject { repository.commit }
 
     let(:path_or_share) do
       stub(
@@ -519,6 +519,8 @@ describe Gitdocs::Repository do
       let(:path_or_share) { 'tmp/unit/missing' }
       it { subject.must_be_nil }
     end
+
+    # TODO: should test the paths which use the message file
 
     describe 'no previous commits' do
       describe 'nothing to commit' do
@@ -536,7 +538,7 @@ describe Gitdocs::Repository do
           before { subject }
           it { local_file_exist?('directory/.gitignore').must_equal true }
           it { commit_count(local_repo).must_equal 1 }
-          it { head_commit(local_repo).message.must_equal "message\n" }
+          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
           it { local_repo_clean?.must_equal true }
         end
       end
@@ -565,7 +567,7 @@ describe Gitdocs::Repository do
           before { subject }
           it { local_file_exist?('directory/.gitignore').must_equal true }
           it { commit_count(local_repo).must_equal 3 }
-          it { head_commit(local_repo).message.must_equal "message\n" }
+          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
           it { local_repo_clean?.must_equal true }
         end
       end
