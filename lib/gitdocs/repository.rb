@@ -31,7 +31,7 @@ class Gitdocs::Repository
     @grit                 = Grit::Repo.new(path)
     Grit::Git.git_timeout = 120
     @invalid_reason       = nil
-    @commit_message_path  = File.expand_path('.gitmessage~', root)
+    @commit_message_path  = abs_path('.gitmessage~')
   rescue Rugged::OSError
     @invalid_reason = :directory_missing
   rescue Rugged::RepositoryError
@@ -100,7 +100,7 @@ class Gitdocs::Repository
   def dirty?
     return false unless valid?
 
-    return Dir.glob(File.join(root, '*')).any? unless current_oid
+    return Dir.glob(abs_path('*')).any? unless current_oid
     @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
   end
 
@@ -240,99 +240,49 @@ class Gitdocs::Repository
     {}
   end
 
-  # Returns file meta data based on relative file path
-  #
-  # @example
-  #  file_meta("path/to/file")
-  #  => { :author => "Nick", :size => 1000, :modified => ... }
-  #
-  # @param [String] file relative path to file in repository
-  #
-  # @raise [RuntimeError] if the file is not found in any commits
-  #
-  # @return [Hash<Symbol=>String,Integer,Time>] the author, size and
-  #   modification date of the file
-  def file_meta(file)
-    file = lstrip_backslash(file)
+  # @param [String] message
+  def write_commit_message(message)
+    return unless message
+    return if message.empty?
 
-    commit = head_walker.find { |x| x.diff(paths: [file]).size > 0 }
-    fail("File #{file} not found") unless commit
-
-    {
-      author:   commit.author[:name],
-      size:     total_size(file),
-      modified: commit.author[:time]
-    }
+    File.open(@commit_message_path, 'w') { |f| f.print(message) }
   end
 
-  # Returns the revisions available for a particular file
+  # Excluding the initial commit (without a parent) which keeps things
+  # consistent with the original behaviour.
+  # TODO: reconsider if this is the correct behaviour
   #
-  # @example
-  #   file_revisions("README")
+  # @param [String] relative_path
+  # @param [Integer] limit the number of commits which will be returned
   #
-  # @param [String] file
-  #
-  # @return [Array<Hash>]
-  def file_revisions(file)
-    file = lstrip_backslash(file)
-
-    # Excluding the initial commit (without a parent) which keeps things
-    # consistent with the original behaviour.
-    # TODO: reconsider if this is the correct behaviour
-    head_walker.select { |x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
-      .first(100)
-      .map do |commit|
-        {
-          commit:  commit.oid[0, 7],
-          subject: commit.message.split("\n")[0],
-          author:  commit.author[:name],
-          date:    commit.author[:time]
-        }
-      end
+  # @return [Array<Rugged::Commit>]
+  def commits_for(relative_path, limit)
+    # TODO should add a filter here for checking that the commit actually has
+    # an associated blob.
+    commits = head_walker.select do |commit|
+      commit.parents.size == 1 && commit.diff(paths: [relative_path]).size > 0
+    end
+    # TODO: should re-write this limit in a way that will skip walking all of
+    # the commits.
+    commits.first(limit)
   end
 
-  # Put the contents of the specified file revision into a temporary file
+  # @param [String] relative_path
   #
-  # @example
-  #   file_revision_at("README", "a4c56h")
-  #   => "/tmp/some/path/README"
-  #
-  # @param [String] file
-  # @param [String] ref
-  #
-  # @return [String] path of the temporary file
-  def file_revision_at(file, ref)
-    file = lstrip_backslash(file)
-
-    content = @rugged.blob_at(ref, file).text
-    tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
-    File.open(tmp_path, 'w') { |f| f.puts content }
-    tmp_path
+  # @return [Rugged::Commit]
+  def last_commit_for(relative_path)
+    head_walker.find { |commit| commit.diff(paths: [relative_path]).size > 0 }
   end
 
-  # Revert file to the specified ref
-  #
-  # @param [String] file
-  # @param [String] ref
-  def file_revert(file, ref)
-    file = lstrip_backslash(file)
-
-    blob = @rugged.blob_at(ref, file)
-    # Silently fail if the file/ref do not existing in the repository.
-    # Which is consistent with the original behaviour.
-    # TODO: should consider throwing an exception on this condition
-    return unless blob
-
-    File.open(File.expand_path(file, root), 'w') { |f| f.puts(blob.text) }
+  # @param [String] relative_path
+  # @param [String] oid
+  def blob_at(relative_path, ref)
+    @rugged.blob_at(ref, relative_path)
   end
 
   ##############################################################################
 
   private
-
-  def lstrip_backslash(filename)
-    filename.gsub(/^\//, '')
-  end
 
   def remote?
     @rugged.remotes.any?
@@ -392,13 +342,13 @@ class Gitdocs::Repository
         author       = ' original' if index_entry[:stage] == 1
         short_oid    = index_entry[:oid][0..6]
         new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
-        File.open(File.join(root, new_filename), 'wb') do |f|
+        File.open(abs_path(new_filename), 'wb') do |f|
           f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
         end
       end
 
       # And remove the original.
-      FileUtils.remove(File.join(root, path), force: true)
+      FileUtils.remove(abs_path(path), force: true)
     end
 
     # NOTE: Let commit be handled by the next regular commit.
@@ -406,20 +356,7 @@ class Gitdocs::Repository
     conflicted_path_entries.keys
   end
 
-  def total_size(path)
-    full_path = File.expand_path(path, root)
-    size =
-      if File.directory?(full_path)
-        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, filename|
-          File.symlink?(filename) ? size : size + File.size(filename)
-        end
-      else
-        File.symlink?(full_path) ? 0 : File.size(full_path)
-      end
-
-    # HACK: A value of 0 breaks the table sort for some reason
-    return -1 if size == 0
-
-    size
+  def abs_path(*path)
+    File.join(root, *path)
   end
 end

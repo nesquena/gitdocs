@@ -709,106 +709,61 @@ describe Gitdocs::Repository do
     end
   end
 
-  describe '#file_meta' do
-    subject { repository.file_meta(file_name) }
+  describe '#write_commit_message' do
+    subject { repository.write_commit_message(commit_message) }
+    before { subject }
 
-    before do
-      write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    describe 'with missing message' do
+      let(:commit_message) { nil }
+      it { local_file_exist?('.gitmessage~').must_equal(false) }
     end
 
-    describe 'on a missing file' do
-      let(:file_name) { 'missing_file' }
-      it { assert_raises(RuntimeError) { subject } }
+    describe 'with empty message' do
+      let(:commit_message) { '' }
+      it { local_file_exist?('.gitmessage~').must_equal(false) }
     end
 
-    describe 'on a file' do
-      describe 'of size zero' do
-        let(:file_name) { 'directory0/file0' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal(-1) }
-        it { subject[:modified].wont_be_nil }
-      end
-
-      describe 'of non-zero size' do
-        let(:file_name) { 'directory/file1' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal 3 }
-        it { subject[:modified].wont_be_nil }
-      end
-    end
-
-    describe 'on a directory' do
-      describe 'of size zero' do
-        let(:file_name) { 'directory0' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal(-1) }
-        it { subject[:modified].wont_be_nil }
-      end
-
-      describe 'of non-zero size' do
-        let(:file_name) { 'directory' }
-        it { subject[:author].must_equal 'A U Thor' }
-        it { subject[:size].must_equal 7 }
-        it { subject[:modified].wont_be_nil }
-      end
+    describe 'with valid message' do
+      let(:commit_message) { 'foobar' }
+      it { local_file_content('.gitmessage~').must_equal('foobar') }
     end
   end
 
-  describe '#file_revisions' do
-    subject { repository.file_revisions('directory') }
+  describe '#commits_for' do
+    subject { repository.commits_for('directory/file', 2) }
 
     before do
       write_and_commit('directory0/file0', '', 'initial commit', author1)
-      @commit1 = write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      @commit3 = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      @commit2 = write_and_commit('directory/file', 'bar', 'commit2', author2)
+      @commit3 = write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    it { subject.length.must_equal 3 }
-    it { subject.map { |x| x[:author] }.must_equal ['A U Thor', 'A U Thor', 'Art T. Fish'] }
-    it { subject.map { |x| x[:commit] }.must_equal [@commit3[0, 7], @commit2[0, 7], @commit1[0, 7]] }
-    it { subject.map { |x| x[:subject] }.must_equal %w(commit3 commit2 commit1) }
+    it { subject.map(&:oid).must_equal([@commit3, @commit2]) }
   end
 
-  describe '#file_revision_at' do
-    subject { repository.file_revision_at('directory/file2', @commit) }
+  describe '#last_commit_for' do
+    subject { repository.last_commit_for('directory/file') }
 
     before do
-      write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      @commit = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      write_and_commit('directory/file', 'bar', 'commit2', author2)
+      @commit3 = write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    it { subject.must_equal '/tmp/file2' }
-    it { File.read(subject).must_equal "beef\n" }
+    it { subject.oid.must_equal(@commit3) }
   end
 
-  describe '#file_revert' do
-    subject { repository.file_revert('directory/file2', ref) }
-
-    let(:file_name) { File.join(local_repo_path, 'directory', 'file2') }
+  describe '#blob_at' do
+    subject { repository.blob_at('directory/file', @commit) }
 
     before do
-      @commit0 = write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      write_and_commit('directory/file2', 'beef', 'commit3', author2)
-      subject
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      @commit = write_and_commit('directory/file', 'bar', 'commit2', author2)
+      write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    describe 'file does not include the revision' do
-      let(:ref) { @commit0 }
-      it { local_file_content('directory', 'file2').must_equal 'beef' }
-    end
-
-    describe 'file does include the revision' do
-      let(:ref) { @commit2 }
-      it { local_file_content('directory', 'file2').must_equal "bar\n" }
-    end
+    it { subject.text.must_equal('bar') }
   end
 
   ##############################################################################
@@ -919,3 +874,4 @@ describe Gitdocs::Repository do
     File.read(File.join(local_repo_path, *path_elements))
   end
 end
+

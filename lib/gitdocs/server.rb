@@ -84,16 +84,11 @@ module Gitdocs
             end
 
             var :int do |idx|
-              repository = repositories[idx]
-              halt(404) if repository.nil?
-              file_path     = URI.unescape(request.path_info)
-              expanded_path = File.expand_path(".#{file_path}", repository.root)
-              message_file = File.expand_path('.gitmessage~', repository.root)
-              halt(400) unless expanded_path[/^#{Regexp.quote(repository.root)}/]
-              parent = File.dirname(file_path)
-              parent = '' if parent == '/'
-              parent = nil if parent == '.'
-              mime   = File.mime_type?(File.open(expanded_path)) if File.file?(expanded_path)
+              halt(404) unless repositories[idx]
+              path = Gitdocs::Repository::Path.new(
+                repositories[idx], URI.unescape(request.path_info)
+              )
+
               mode   = request.params['mode']
               default_locals = {
                 idx:       idx,
@@ -102,33 +97,29 @@ module Gitdocs
               }
 
               if mode == 'meta' # Meta
-                halt 200, { 'Content-Type' => 'application/json' }, [repository.file_meta(file_path).to_json]
+                halt 200, { 'Content-Type' => 'application/json' }, [path.meta.to_json]
               elsif mode == 'save' # Saving
-                File.open(expanded_path, 'w') { |f| f.print request.params['data'] }
-                File.open(message_file, 'w') { |f| f.print request.params['message'] } unless request.params['message'] == ''
-                redirect!("/#{idx}#{file_path}")
+                path.write(request.params['data'], request.params['message'])
+                redirect!("/#{idx}/#{path.relative_path}")
               elsif mode == 'upload'  # Uploading
                 file = request.params['file']
                 halt 404 unless file
                 tempfile = file[:tempfile]
                 filename = file[:filename]
-                FileUtils.mv(tempfile.path, File.expand_path(filename, expanded_path))
-                redirect!("/#{idx}#{file_path}/#{filename}")
-              elsif !File.exist?(expanded_path) && !request.params['dir'] # edit for non-existent file
-                FileUtils.mkdir_p(File.dirname(expanded_path))
-                FileUtils.touch(expanded_path)
-                redirect!("/#{idx}#{file_path}?mode=edit")
-              elsif !File.exist?(expanded_path) && request.params['dir'] # create directory
-                FileUtils.mkdir_p(expanded_path)
-                redirect!("/#{idx}#{file_path}")
-              elsif File.directory?(expanded_path) # list directory
-                contents =  Dir[File.join(expanded_path, '*')].map { |x| Docfile.new(x) }
-                readme = Dir[File.expand_path('README.{md}', expanded_path)].first
+                FileUtils.mv(tempfile.path, path.absolute_path)
+                redirect!("/#{idx}/#{path.relative_path}/#{filename}")
+              elsif !path.exist? && !request.params['dir'] # edit for non-existent file
+                path.touch
+                redirect!("/#{idx}/#{path.relative_path}?mode=edit")
+              elsif !path.exist? && request.params['dir'] # create directory
+                path.mkdir
+                redirect!("/#{idx}/#{path.relative_path}")
+              elsif path.directory? # list directory
                 rendered_readme =
-                  if readme
+                  if path.readme_path
                     <<-EOS.gusb(/^\s+/, '')
-                      <h3>#{File.basename(readme)}</h3>
-                      <div class="tilt">#{render(readme)}</div>
+                      <h3>#{File.basename(path.readme_path)}</h3>
+                      <div class="tilt">#{render(path.readme_path)}</div>
                     EOS
                   else
                     nil
@@ -137,49 +128,47 @@ module Gitdocs
                   'dir',
                   layout: 'app',
                   locals: default_locals.merge(
-                    contents: contents, rendered_readme: rendered_readme
+                    contents:        path.file_listing,
+                    rendered_readme: rendered_readme
                   )
                 )
               elsif mode == 'revisions' # list revisions
-                revisions = repository.file_revisions(file_path)
                 render!(
                   'revisions',
                   layout: 'app',
-                  locals: default_locals.merge(revisions: revisions)
+                  locals: default_locals.merge(revisions: path.revisions)
                 )
               elsif mode == 'revert' # revert file
-                if revision = request.params['revision']
-                  File.open(message_file, 'w') { |f| f.print "Reverting '#{file_path}' to #{revision}" }
-                  repository.file_revert(file_path, revision)
-                end
-                redirect!("/#{idx}#{file_path}")
+                path.revert(request.params['revision'])
+                redirect!("/#{idx}/#{path.relative_path}")
               elsif mode == 'delete' # delete file
-                FileUtils.rm(expanded_path)
+                path.remove
+                parent = File.dirname(path.relative_path)
+                parent = '' if parent == '/'
+                parent = nil if parent == '.'
                 redirect!("/#{idx}#{parent}")
-              elsif mode == 'edit' && mime.match(/text\/|x-empty/) # edit file
-                contents = File.read(expanded_path)
+              elsif mode == 'edit' && path.mime_type.match(/text\/|x-empty/) # edit file
                 render!(
                   'edit',
                   layout: 'app',
-                  locals: default_locals.merge(contents: contents)
+                  locals: default_locals.merge(contents: path.content)
                 )
               elsif mode != 'raw' # render file
-                revision = request.params['revision']
-                expanded_path = repository.file_revision_at(file_path, revision) if revision
-                begin # attempting to render file
-                  contents = %(<div class="tilt">#{render(expanded_path)}</div>)
-                rescue RuntimeError # not tilt supported
-                  contents =
-                    if mime.match(/text\//)
+                revision_path = path.absolute_path(request.params['revision'])
+                contents =
+                  begin # attempting to render file
+                    %(<div class="tilt">#{render(revision_path)}</div>)
+                  rescue RuntimeError # not tilt supported
+                    if path.mime_type.match(/text\//)
                       <<-EOS.gsub(/^\s+/, '')
                         <pre class="CodeRay">
-                          #{CodeRay.scan_file(expanded_path).encode(:html)}
+                          #{CodeRay.scan_file(revision_path).encode(:html)}
                         </pre>
                       EOS
                     else
                       %(<embed class="inline-file" src="/#{idx}#{request.path_info}?mode=raw"></embed>)
                     end
-                end
+                  end
                 render!(
                   'file',
                   layout: 'app',
