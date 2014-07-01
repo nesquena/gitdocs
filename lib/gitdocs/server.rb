@@ -97,9 +97,7 @@ module Gitdocs
               mode   = request.params['mode']
               default_locals = {
                 idx:       idx,
-                parent:    parent,
                 root:      repository.root,
-                file_path: expanded_path,
                 nav_state: nil
               }
 
