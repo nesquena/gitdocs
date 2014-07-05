@@ -31,6 +31,7 @@ class Gitdocs::Repository
     @grit                 = Grit::Repo.new(path)
     Grit::Git.git_timeout = 120
     @invalid_reason       = nil
+    @commit_message_path  = abs_path('.gitmessage~')
   rescue Rugged::OSError
     @invalid_reason = :directory_missing
   rescue Rugged::RepositoryError
@@ -58,53 +59,6 @@ class Gitdocs::Repository
     raise("Unable to clone into #{path} because it timed out")
   rescue Grit::Git::CommandFailed => e
     raise("Unable to clone into #{path} because of #{e.err}")
-  end
-
-  RepoDescriptor = Struct.new(:name, :index)
-
-  # Search across multiple repositories
-  #
-  # @param [String] term
-  # @param [Array<Repository>} repositories
-  #
-  # @return [Hash<RepoDescriptor, Array<SearchResult>>]
-  def self.search(term, repositories)
-    results = {}
-    repositories.each_with_index do |repository, index|
-      descriptor = RepoDescriptor.new(repository.root, index)
-      results[descriptor] = repository.search(term)
-    end
-    results.delete_if { |_key, value| value.empty? }
-  end
-
-  SearchResult = Struct.new(:file, :context)
-
-  # Search a single repository
-  #
-  # @param [String] term
-  #
-  # @return [Array<SearchResult>]
-  def search(term)
-    return [] if term.empty?
-
-    results = []
-    options = { raise: true, bare: false, chdir: root, ignore_case: true }
-    @grit.git.grep(options, term).scan(/(.*?):([^\n]*)/) do |(file, context)|
-      result = results.find { |s| s.file == file }
-      if result
-        result.context += ' ... ' + context
-      else
-        results << SearchResult.new(file, context)
-      end
-    end
-    results
-  rescue Grit::Git::GitTimeout
-    # TODO: add logging to record the error details
-    []
-  rescue Grit::Git::CommandFailed
-    # TODO: add logging to record the error details if they are not just
-    # nothing found
-    []
   end
 
   # @return [String]
@@ -146,7 +100,7 @@ class Gitdocs::Repository
   def dirty?
     return false unless valid?
 
-    return Dir.glob(File.join(root, '*')).any? unless current_oid
+    return Dir.glob(abs_path('*')).any? unless current_oid
     @rugged.diff_workdir(current_oid, include_untracked: true).deltas.any?
   end
 
@@ -157,6 +111,24 @@ class Gitdocs::Repository
 
     return !!current_oid unless remote_branch
     remote_branch.tip.oid != current_oid
+  end
+
+  # @param [String] term
+  # @yield [file, context] Gives the files and context for each of the results
+  # @yieldparam file [String]
+  # @yieldparam context [String]
+  def grep(term, &block)
+    @grit.git.grep(
+      { raise: true, bare: false, chdir: root, ignore_case: true },
+      term
+    ).scan(/(.*?):([^\n]*)/, &block)
+  rescue Grit::Git::GitTimeout
+    # TODO: add logging to record the error details
+    ''
+  rescue Grit::Git::CommandFailed
+    # TODO: add logging to record the error details if they are not just
+    # nothing found
+    ''
   end
 
   # Fetch all the remote branches
@@ -201,53 +173,21 @@ class Gitdocs::Repository
     # Grit merge command. Reload it before checking for conflicts.
     @rugged.index.reload
     return e.err unless @rugged.index.conflicts?
-
-    # Collect all the index entries by their paths.
-    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
-    @rugged.index.map do |index_entry|
-      index_path_entries[index_entry[:path]].push(index_entry)
-    end
-
-    # Filter to only the conflicted entries.
-    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
-
-    conflicted_path_entries.each_pair do |path, index_entries|
-      # Write out the different versions of the conflicted file.
-      index_entries.each do |index_entry|
-        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
-        author       = ' original' if index_entry[:stage] == 1
-        short_oid    = index_entry[:oid][0..6]
-        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
-        File.open(File.join(root, new_filename), 'wb') do |f|
-          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
-        end
-      end
-
-      # And remove the original.
-      FileUtils.remove(File.join(root, path), force: true)
-    end
-
-    # NOTE: Let commit be handled by the next regular commit.
-
-    conflicted_path_entries.keys
+    mark_conflicts
   end
 
   # Commit the working directory
   #
-  # @param [String] message
-  #
   # @return [nil] if the repository is invalid
   # @return [Boolean] whether a commit was made or not
-  def commit(message)
+  def commit
     return nil unless valid?
 
-    # Mark any empty directories so they will be committed
-    Find.find(root).each do |path|
-      Find.prune if File.basename(path) == '.git'
-      if File.directory?(path) && Dir.entries(path).count == 2
-        FileUtils.touch(File.join(path, '.gitignore'))
-      end
-    end
+    # Do this first to allow the message file to be deleted, if it
+    # exists.
+    message = read_and_delete_commit_message_file
+
+    mark_empty_directories
 
     return false unless dirty?
 
@@ -300,113 +240,49 @@ class Gitdocs::Repository
     {}
   end
 
-  # Returns file meta data based on relative file path
-  #
-  # @example
-  #  file_meta("path/to/file")
-  #  => { :author => "Nick", :size => 1000, :modified => ... }
-  #
-  # @param [String] file relative path to file in repository
-  #
-  # @raise [RuntimeError] if the file is not found in any commits
-  #
-  # @return [Hash<Symbol=>String,Integer,Time>] the author, size and
-  #   modification date of the file
-  def file_meta(file)
-    file = lstrip_backslash(file)
+  # @param [String] message
+  def write_commit_message(message)
+    return unless message
+    return if message.empty?
 
-    commit = head_walker.find { |x| x.diff(paths: [file]).size > 0 }
-
-    fail("File #{file} not found") unless commit
-
-    full_path = File.expand_path(file, root)
-    total_size =
-      if File.directory?(full_path)
-        Dir[File.join(full_path, '**', '*')].reduce(0) do |size, filename|
-          File.symlink?(filename) ? size : size + File.size(filename)
-        end
-      else
-        File.symlink?(full_path) ? 0 : File.size(full_path)
-      end
-
-    # A value of 0 breaks the table sort for some reason
-    total_size = -1 if total_size == 0
-
-    {
-      author:   commit.author[:name],
-      size:     total_size,
-      modified: commit.author[:time]
-    }
+    File.open(@commit_message_path, 'w') { |f| f.print(message) }
   end
 
-  # Returns the revisions available for a particular file
+  # Excluding the initial commit (without a parent) which keeps things
+  # consistent with the original behaviour.
+  # TODO: reconsider if this is the correct behaviour
   #
-  # @example
-  #   file_revisions("README")
+  # @param [String] relative_path
+  # @param [Integer] limit the number of commits which will be returned
   #
-  # @param [String] file
-  #
-  # @return [Array<Hash>]
-  def file_revisions(file)
-    file = lstrip_backslash(file)
-
-    # Excluding the initial commit (without a parent) which keeps things
-    # consistent with the original behaviour.
-    # TODO: reconsider if this is the correct behaviour
-    head_walker.select { |x| x.parents.size == 1 && x.diff(paths: [file]).size > 0 }
-      .first(100)
-      .map do |commit|
-        {
-          commit:  commit.oid[0, 7],
-          subject: commit.message.split("\n")[0],
-          author:  commit.author[:name],
-          date:    commit.author[:time]
-        }
-      end
+  # @return [Array<Rugged::Commit>]
+  def commits_for(relative_path, limit)
+    # TODO should add a filter here for checking that the commit actually has
+    # an associated blob.
+    commits = head_walker.select do |commit|
+      commit.parents.size == 1 && commit.diff(paths: [relative_path]).size > 0
+    end
+    # TODO: should re-write this limit in a way that will skip walking all of
+    # the commits.
+    commits.first(limit)
   end
 
-  # Put the contents of the specified file revision into a temporary file
+  # @param [String] relative_path
   #
-  # @example
-  #   file_revision_at("README", "a4c56h")
-  #   => "/tmp/some/path/README"
-  #
-  # @param [String] file
-  # @param [String] ref
-  #
-  # @return [String] path of the temporary file
-  def file_revision_at(file, ref)
-    file = lstrip_backslash(file)
-
-    content = @rugged.blob_at(ref, file).text
-    tmp_path = File.expand_path(File.basename(file), Dir.tmpdir)
-    File.open(tmp_path, 'w') { |f| f.puts content }
-    tmp_path
+  # @return [Rugged::Commit]
+  def last_commit_for(relative_path)
+    head_walker.find { |commit| commit.diff(paths: [relative_path]).size > 0 }
   end
 
-  # Revert file to the specified ref
-  #
-  # @param [String] file
-  # @param [String] ref
-  def file_revert(file, ref)
-    file = lstrip_backslash(file)
-
-    blob = @rugged.blob_at(ref, file)
-    # Silently fail if the file/ref do not existing in the repository.
-    # Which is consistent with the original behaviour.
-    # TODO: should consider throwing an exception on this condition
-    return unless blob
-
-    File.open(File.expand_path(file, root), 'w') { |f| f.puts(blob.text) }
+  # @param [String] relative_path
+  # @param [String] oid
+  def blob_at(relative_path, ref)
+    @rugged.blob_at(ref, relative_path)
   end
 
   ##############################################################################
 
   private
-
-  def lstrip_backslash(filename)
-    filename.gsub(/^\//, '')
-  end
 
   def remote?
     @rugged.remotes.any?
@@ -428,5 +304,59 @@ class Gitdocs::Repository
     walker.sorting(Rugged::SORT_DATE)
     walker.push(@rugged.head.target)
     walker
+  end
+
+  def read_and_delete_commit_message_file
+    return 'Auto-commit from gitdocs' unless File.exist?(@commit_message_path)
+
+    message = File.read(@commit_message_path)
+    File.delete(@commit_message_path)
+    message
+  end
+
+  def mark_empty_directories
+    Find.find(root).each do |path|
+      Find.prune if File.basename(path) == '.git'
+      if File.directory?(path) && Dir.entries(path).count == 2
+        FileUtils.touch(File.join(path, '.gitignore'))
+      end
+    end
+  end
+
+  def mark_conflicts
+    # assert(@rugged.index.conflicts?)
+
+    # Collect all the index entries by their paths.
+    index_path_entries = Hash.new { |h, k| h[k] = Array.new }
+    @rugged.index.map do |index_entry|
+      index_path_entries[index_entry[:path]].push(index_entry)
+    end
+
+    # Filter to only the conflicted entries.
+    conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
+
+    conflicted_path_entries.each_pair do |path, index_entries|
+      # Write out the different versions of the conflicted file.
+      index_entries.each do |index_entry|
+        filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+        author       = ' original' if index_entry[:stage] == 1
+        short_oid    = index_entry[:oid][0..6]
+        new_filename = "#{filename} (#{short_oid}#{author})#{extension}"
+        File.open(abs_path(new_filename), 'wb') do |f|
+          f.write(Rugged::Blob.lookup(@rugged, index_entry[:oid]).content)
+        end
+      end
+
+      # And remove the original.
+      FileUtils.remove(abs_path(path), force: true)
+    end
+
+    # NOTE: Let commit be handled by the next regular commit.
+
+    conflicted_path_entries.keys
+  end
+
+  def abs_path(*path)
+    File.join(root, *path)
   end
 end

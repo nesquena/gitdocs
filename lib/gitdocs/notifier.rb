@@ -4,6 +4,12 @@
 class Gitdocs::Notifier
   INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
 
+  # Wrapper around #error for a single call to the notifier.
+  # @see #error
+  def self.error(title, message)
+    Gitdocs::Notifier.new(true).error(title, message)
+  end
+
   # @param [Boolean] show_notifications
   def initialize(show_notifications)
     @show_notifications = show_notifications

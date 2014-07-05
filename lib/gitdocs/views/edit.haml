@@ -1,6 +1,6 @@
 - @title = root
 
-= partial("header", :locals => { :parent => parent, :file => true, :idx => idx  })
+= partial("header", :locals => { :file => true, :idx => idx  })
 
 %form{ :class => "edit", :action => "/#{idx}#{request.path_info}?mode=save", :method => "post", :style => "display:none;" }
   #editor

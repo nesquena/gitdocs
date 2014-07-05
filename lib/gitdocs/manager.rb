@@ -16,23 +16,16 @@ module Gitdocs
     def start(web_port = nil)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{config.config_root}'")
-      log("Shares: (#{config.shares.length}) #{config.shares.map(&:inspect).join(', ')}")
+      log("Shares: (#{shares.length}) #{shares.map(&:inspect).join(', ')}")
 
       restarting = false
       begin
         EM.run do
           log('Starting EM loop...')
 
-          @runners = Runner.start_all(config.shares)
-
-          # Start the web front-end
-          if config.global.start_web_frontend
-            web_port ||= config.global.web_frontend_port
-            repositories = config.shares.map { |x| Repository.new(x) }
-            web_server = Server.new(self, web_port, repositories)
-            web_server.start
-            web_server.wait_for_start_and_open(restarting)
-          end
+          @runners = Runner.start_all(shares)
+          repositories = shares.map { |x| Repository.new(x) }
+          Server.start_and_wait(self, web_port, repositories)
         end
       rescue Restart
         restarting = true
@@ -41,19 +34,10 @@ module Gitdocs
     rescue Exception => e # Report all errors in log
       log(e.class.inspect + ' - ' + e.inspect + ' - ' + e.message.inspect, :error)
       log(e.backtrace.join("\n"), :error)
-
-      # HACK: duplicating the error notification code from the Runner
-      begin
-        title = 'Unexpected exit'
-        msg   = 'Something went wrong. Please see the log for details.'
-
-        Guard::Notifier.notify(msg, title: title, image: :failure)
-        Kernel.warn("#{title}: #{msg}")
-      rescue
-        # do nothing, This contain any exceptions which might be thrown by
-        # the notification.
-      end
-
+      Gitdocs::Notifier.error(
+        'Unexpected exit',
+        'Something went wrong. Please see the log for details.'
+      )
       raise
     ensure
       log("Gitdocs is terminating...goodbye\n\n")
@@ -75,6 +59,29 @@ module Gitdocs
     # log("message")
     def log(msg, level = :info)
       @debug ? puts(msg) : @logger.send(level, msg)
+    end
+
+    def start_web_frontend
+      config.start_web_frontend
+    end
+
+    def web_frontend_port
+      config.web_frontend_port
+    end
+
+    def shares
+      config.shares
+    end
+
+    # @see Gitdocs::Configuration#update_all
+    def update_all(new_config)
+      config.update_all(new_config)
+      EM.add_timer(0.1) { manager.restart }
+    end
+
+    # @see Gitdocs::Configuration#remove_by_id
+    def remove_by_id(id)
+      config.remove_by_id(id)
     end
   end
 end

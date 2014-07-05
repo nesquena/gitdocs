@@ -20,6 +20,8 @@ require 'gitdocs/docfile'
 require 'gitdocs/rendering'
 require 'gitdocs/notifier'
 require 'gitdocs/repository'
+require 'gitdocs/repository/path'
+require 'gitdocs/search'
 
 module Gitdocs
   DEBUG = ENV['DEBUG']

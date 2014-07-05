@@ -82,61 +82,6 @@ describe Gitdocs::Repository do
     end
   end
 
-  describe '.search' do
-    subject { Gitdocs::Repository.search('term', repositories) }
-
-    let(:repositories) { Array.new(4, stub(root: 'root')) }
-    before do
-      repositories[0].expects(:search).with('term').returns(:result1)
-      repositories[1].expects(:search).with('term').returns(:result2)
-      repositories[2].expects(:search).with('term').returns(:result3)
-      repositories[3].expects(:search).with('term').returns([])
-    end
-
-    it do
-      subject.must_equal(
-        Gitdocs::Repository::RepoDescriptor.new('root', 1) => :result3,
-        Gitdocs::Repository::RepoDescriptor.new('root', 2) => :result2,
-        Gitdocs::Repository::RepoDescriptor.new('root', 3) => :result1
-      )
-    end
-  end
-
-  describe '#search' do
-    subject { repository.search(term) }
-
-    describe 'empty term' do
-      let(:term) { '' }
-      it { subject.must_equal [] }
-    end
-
-    describe 'nothing found' do
-      let(:term) { 'foo' }
-      before do
-        write_and_commit('file1', 'bar', 'commit', author1)
-        write_and_commit('file2', 'beef', 'commit', author1)
-      end
-      it { subject.must_equal [] }
-    end
-
-    describe 'term found' do
-      let(:term) { 'foo' }
-      before do
-        write_and_commit('file1', 'foo', 'commit', author1)
-        write_and_commit('file2', 'beef', 'commit', author1)
-        write_and_commit('file3', 'foobar', 'commit', author1)
-        write_and_commit('file4', "foo\ndead\nbeef\nfoobar", 'commit', author1)
-      end
-      it do
-        subject.must_equal([
-          Gitdocs::Repository::SearchResult.new('file1', 'foo'),
-          Gitdocs::Repository::SearchResult.new('file3', 'foobar'),
-          Gitdocs::Repository::SearchResult.new('file4', 'foo ... foobar')
-        ])
-      end
-    end
-  end
-
   describe '#root' do
     subject { repository.root }
 
@@ -323,6 +268,41 @@ describe Gitdocs::Repository do
 
         it { subject.must_equal true }
       end
+    end
+  end
+
+  describe '#grep' do
+    subject { repository.grep('foo') { |file, context| @grep_result << "#{file} #{context}"} }
+
+    before { @grep_result = [] }
+
+    describe 'timeout' do
+      before do
+        Grit::Repo.any_instance.stubs(:remote_fetch)
+          .raises(Grit::Git::GitTimeout.new)
+      end
+      it { subject ; @grep_result.must_equal([]) }
+      it { subject.must_equal '' }
+    end
+
+    describe 'command failure' do
+      before do
+        Grit::Repo.any_instance.stubs(:remote_fetch)
+          .raises(Grit::Git::CommandFailed.new('', 1, 'grep error output'))
+      end
+      it { subject ; @grep_result.must_equal([]) }
+      it { subject.must_equal '' }
+    end
+
+    describe 'success' do
+      before do
+        write_and_commit('file1', 'foo', 'commit', author1)
+        write_and_commit('file2', 'beef', 'commit', author1)
+        write_and_commit('file3', 'foobar', 'commit', author1)
+        write_and_commit('file4', "foo\ndead\nbeef\nfoobar", 'commit', author1)
+      end
+      it { subject ; @grep_result.must_equal(['file1 foo', 'file3 foobar', 'file4 foo', 'file4 foobar']) }
+      it { subject.must_equal("file1:foo\nfile3:foobar\nfile4:foo\nfile4:foobar\n") }
     end
   end
 
@@ -525,7 +505,7 @@ describe Gitdocs::Repository do
   end
 
   describe '#commit' do
-    subject { repository.commit('message') }
+    subject { repository.commit }
 
     let(:path_or_share) do
       stub(
@@ -539,6 +519,8 @@ describe Gitdocs::Repository do
       let(:path_or_share) { 'tmp/unit/missing' }
       it { subject.must_be_nil }
     end
+
+    # TODO: should test the paths which use the message file
 
     describe 'no previous commits' do
       describe 'nothing to commit' do
@@ -556,7 +538,7 @@ describe Gitdocs::Repository do
           before { subject }
           it { local_file_exist?('directory/.gitignore').must_equal true }
           it { commit_count(local_repo).must_equal 1 }
-          it { head_commit(local_repo).message.must_equal "message\n" }
+          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
           it { local_repo_clean?.must_equal true }
         end
       end
@@ -585,7 +567,7 @@ describe Gitdocs::Repository do
           before { subject }
           it { local_file_exist?('directory/.gitignore').must_equal true }
           it { commit_count(local_repo).must_equal 3 }
-          it { head_commit(local_repo).message.must_equal "message\n" }
+          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
           it { local_repo_clean?.must_equal true }
         end
       end
@@ -727,106 +709,61 @@ describe Gitdocs::Repository do
     end
   end
 
-  describe '#file_meta' do
-    subject { repository.file_meta(file_name) }
+  describe '#write_commit_message' do
+    subject { repository.write_commit_message(commit_message) }
+    before { subject }
 
-    before do
-      write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      write_and_commit('directory/file2', 'beef', 'commit3', author2)
+    describe 'with missing message' do
+      let(:commit_message) { nil }
+      it { local_file_exist?('.gitmessage~').must_equal(false) }
     end
 
-    describe 'on a missing file' do
-      let(:file_name) { 'missing_file' }
-      it { assert_raises(RuntimeError) { subject } }
+    describe 'with empty message' do
+      let(:commit_message) { '' }
+      it { local_file_exist?('.gitmessage~').must_equal(false) }
     end
 
-    describe 'on a file' do
-      describe 'of size zero' do
-        let(:file_name) { 'directory0/file0' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal(-1) }
-        it { subject[:modified].wont_be_nil }
-      end
-
-      describe 'of non-zero size' do
-        let(:file_name) { 'directory/file1' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal 3 }
-        it { subject[:modified].wont_be_nil }
-      end
-    end
-
-    describe 'on a directory' do
-      describe 'of size zero' do
-        let(:file_name) { 'directory0' }
-        it { subject[:author].must_equal 'Art T. Fish' }
-        it { subject[:size].must_equal(-1) }
-        it { subject[:modified].wont_be_nil }
-      end
-
-      describe 'of non-zero size' do
-        let(:file_name) { 'directory' }
-        it { subject[:author].must_equal 'A U Thor' }
-        it { subject[:size].must_equal 7 }
-        it { subject[:modified].wont_be_nil }
-      end
+    describe 'with valid message' do
+      let(:commit_message) { 'foobar' }
+      it { local_file_content('.gitmessage~').must_equal('foobar') }
     end
   end
 
-  describe '#file_revisions' do
-    subject { repository.file_revisions('directory') }
+  describe '#commits_for' do
+    subject { repository.commits_for('directory/file', 2) }
 
     before do
       write_and_commit('directory0/file0', '', 'initial commit', author1)
-      @commit1 = write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      @commit3 = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      @commit2 = write_and_commit('directory/file', 'bar', 'commit2', author2)
+      @commit3 = write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    it { subject.length.must_equal 3 }
-    it { subject.map { |x| x[:author] }.must_equal ['A U Thor', 'A U Thor', 'Art T. Fish'] }
-    it { subject.map { |x| x[:commit] }.must_equal [@commit3[0, 7], @commit2[0, 7], @commit1[0, 7]] }
-    it { subject.map { |x| x[:subject] }.must_equal %w(commit3 commit2 commit1) }
+    it { subject.map(&:oid).must_equal([@commit3, @commit2]) }
   end
 
-  describe '#file_revision_at' do
-    subject { repository.file_revision_at('directory/file2', @commit) }
+  describe '#last_commit_for' do
+    subject { repository.last_commit_for('directory/file') }
 
     before do
-      write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      @commit = write_and_commit('directory/file2', 'beef', 'commit3', author2)
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      write_and_commit('directory/file', 'bar', 'commit2', author2)
+      @commit3 = write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    it { subject.must_equal '/tmp/file2' }
-    it { File.read(subject).must_equal "beef\n" }
+    it { subject.oid.must_equal(@commit3) }
   end
 
-  describe '#file_revert' do
-    subject { repository.file_revert('directory/file2', ref) }
-
-    let(:file_name) { File.join(local_repo_path, 'directory', 'file2') }
+  describe '#blob_at' do
+    subject { repository.blob_at('directory/file', @commit) }
 
     before do
-      @commit0 = write_and_commit('directory0/file0', '', 'initial commit', author1)
-      write_and_commit('directory/file1', 'foo', 'commit1', author1)
-      @commit2 = write_and_commit('directory/file2', 'bar', 'commit2', author2)
-      write_and_commit('directory/file2', 'beef', 'commit3', author2)
-      subject
+      write_and_commit('directory/file', 'foo', 'commit1', author1)
+      @commit = write_and_commit('directory/file', 'bar', 'commit2', author2)
+      write_and_commit('directory/file', 'beef', 'commit3', author2)
     end
 
-    describe 'file does not include the revision' do
-      let(:ref) { @commit0 }
-      it { local_file_content('directory', 'file2').must_equal 'beef' }
-    end
-
-    describe 'file does include the revision' do
-      let(:ref) { @commit2 }
-      it { local_file_content('directory', 'file2').must_equal "bar\n" }
-    end
+    it { subject.text.must_equal('bar') }
   end
 
   ##############################################################################
@@ -937,3 +874,4 @@ describe Gitdocs::Repository do
     File.read(File.join(local_repo_path, *path_elements))
   end
 end
+
