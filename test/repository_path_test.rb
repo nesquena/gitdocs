@@ -265,13 +265,14 @@ describe Gitdocs::Repository::Path do
 
     describe 'directory' do
       before do
+        mkdir('directory/file/dir1')
         write('directory/file/file1', 'foo')
         write('directory/file/file2', 'bar')
       end
 
-      it { subject.size.must_equal 2 }
-      it { subject.map(&:path).must_include absolute_local_path('file1') }
-      it { subject.map(&:path).must_include absolute_local_path('file2') }
+      it { subject.size.must_equal 3 }
+      it { subject.sort_by(&:name).map(&:name).must_equal %w(dir1 file1 file2) }
+      it { subject.sort_by(&:name).map(&:is_directory).must_equal [true, false, false] }
     end
   end
 

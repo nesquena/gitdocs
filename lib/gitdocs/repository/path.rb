@@ -89,9 +89,16 @@ class Gitdocs::Repository::Path
     Dir.glob(File.join(@absolute_path, 'README.{md}')).first
   end
 
+  DirEntry = Struct.new(:name, :is_directory)
+
   def file_listing
     return nil unless directory?
-    Dir.glob(File.join(@absolute_path, '*')).map { |x| Gitdocs::Docfile.new(x) }
+    Dir.glob(File.join(@absolute_path, '*')).map do |entry_path|
+      DirEntry.new(
+        File.basename(entry_path),
+        File.directory?(entry_path)
+      )
+    end
   end
 
   def content
