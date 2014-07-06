@@ -92,7 +92,7 @@ module Gitdocs
               mode   = request.params['mode']
               default_locals = {
                 idx:       idx,
-                root:      repository.root,
+                root:      repositories[idx].root,
                 nav_state: nil
               }
 
@@ -175,7 +175,7 @@ module Gitdocs
                   locals: default_locals.merge(contents: contents)
                 )
               else # other file
-                run! Rack::File.new(repository.root)
+                run! Rack::File.new(repositories[idx].root)
               end
             end
           end
