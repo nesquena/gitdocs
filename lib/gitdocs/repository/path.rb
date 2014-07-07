@@ -38,7 +38,7 @@ class Gitdocs::Repository::Path
     FileUtils.rm(@absolute_path)
   end
 
-  # @return [Boolean] whether the path is a text file
+  # @return [Boolean]
   def text?
     return false unless File.file?(@absolute_path)
     mime_type = File.mime_type?(File.open(@absolute_path))
@@ -93,14 +93,16 @@ class Gitdocs::Repository::Path
 
   DirEntry = Struct.new(:name, :is_directory)
 
+  # @return [Array<DirEntry>] entries in the directory
+  #   * excluding any git related directories
+  #   * sorted by filename, ignoring any leading '.'s
   def file_listing
     return nil unless directory?
-    Dir.glob(File.join(@absolute_path, '*')).map do |entry_path|
-      DirEntry.new(
-        File.basename(entry_path),
-        File.directory?(entry_path)
-      )
-    end
+
+    Dir.glob(File.join(@absolute_path, '{*,.*}'))
+      .reject  { |x| x.match(/\/\.(\.|git|gitignore|gitmessage~)?$/) }
+      .sort_by { |x| File.basename(x).sub(/^\./, '') }
+      .map     { |x| DirEntry.new(File.basename(x), File.directory?(x)) }
   end
 
   def content
