@@ -38,9 +38,11 @@ class Gitdocs::Repository::Path
     FileUtils.rm(@absolute_path)
   end
 
-  def mime_type
-    return nil unless File.file?(@absolute_path)
-    File.mime_type?(File.open(@absolute_path))
+  # @return [Boolean] whether the path is a text file
+  def text?
+    return false unless File.file?(@absolute_path)
+    mime_type = File.mime_type?(File.open(@absolute_path))
+    !!(mime_type =~ /text\/|x-empty/)
   end
 
   # Returns file meta data based on relative file path

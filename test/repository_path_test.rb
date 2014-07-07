@@ -106,21 +106,31 @@ describe Gitdocs::Repository::Path do
     end
   end
 
-  describe '#mime_type' do
-    subject { path.mime_type }
+  describe '#text?' do
+    subject { path.text? }
 
     describe 'missing' do
-      it { subject.must_be_nil }
+      it { subject.must_equal false }
     end
 
     describe 'directory' do
       before { mkdir('directory/file') }
-      it { subject.must_be_nil }
+      it { subject.must_equal false }
     end
 
-    describe 'file' do
+    describe 'not a text file' do
+      let(:relative_path) { 'directory/file.png' }
+      it { subject.must_equal false }
+    end
+
+    describe 'empty file' do
+      before { write('directory/file', '') }
+      it { subject.must_equal true }
+    end
+
+    describe 'text file' do
       before { write('directory/file', 'foobar') }
-      it { subject.must_equal 'text/plain; charset=us-ascii' }
+      it { subject.must_equal true }
     end
   end
 
