@@ -106,21 +106,31 @@ describe Gitdocs::Repository::Path do
     end
   end
 
-  describe '#mime_type' do
-    subject { path.mime_type }
+  describe '#text?' do
+    subject { path.text? }
 
     describe 'missing' do
-      it { subject.must_be_nil }
+      it { subject.must_equal false }
     end
 
     describe 'directory' do
       before { mkdir('directory/file') }
-      it { subject.must_be_nil }
+      it { subject.must_equal false }
     end
 
-    describe 'file' do
+    describe 'not a text file' do
+      let(:relative_path) { 'directory/file.png' }
+      it { subject.must_equal false }
+    end
+
+    describe 'empty file' do
+      before { write('directory/file', '') }
+      it { subject.must_equal true }
+    end
+
+    describe 'text file' do
       before { write('directory/file', 'foobar') }
-      it { subject.must_equal 'text/plain; charset=us-ascii' }
+      it { subject.must_equal true }
     end
   end
 
@@ -265,13 +275,20 @@ describe Gitdocs::Repository::Path do
 
     describe 'directory' do
       before do
+        write('directory/file/.hidden', 'beef')
+        mkdir('directory/file/dir1')
         write('directory/file/file1', 'foo')
         write('directory/file/file2', 'bar')
+
+        # Paths which should not be included
+        write('directory/file/.git', 'test')
+        write('directory/file/.gitignore', 'test')
+        write('directory/file/.gitmessage~', 'test')
       end
 
-      it { subject.size.must_equal 2 }
-      it { subject.map(&:path).must_include absolute_local_path('file1') }
-      it { subject.map(&:path).must_include absolute_local_path('file2') }
+      it { subject.size.must_equal 4 }
+      it { subject.map(&:name).must_equal %w(dir1 file1 file2 .hidden) }
+      it { subject.map(&:is_directory).must_equal [true, false, false, false] }
     end
   end
 

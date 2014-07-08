@@ -38,9 +38,11 @@ class Gitdocs::Repository::Path
     FileUtils.rm(@absolute_path)
   end
 
-  def mime_type
-    return nil unless File.file?(@absolute_path)
-    File.mime_type?(File.open(@absolute_path))
+  # @return [Boolean]
+  def text?
+    return false unless File.file?(@absolute_path)
+    mime_type = File.mime_type?(File.open(@absolute_path))
+    !!(mime_type =~ /text\/|x-empty/)
   end
 
   # Returns file meta data based on relative file path
@@ -89,9 +91,18 @@ class Gitdocs::Repository::Path
     Dir.glob(File.join(@absolute_path, 'README.{md}')).first
   end
 
+  DirEntry = Struct.new(:name, :is_directory)
+
+  # @return [Array<DirEntry>] entries in the directory
+  #   * excluding any git related directories
+  #   * sorted by filename, ignoring any leading '.'s
   def file_listing
     return nil unless directory?
-    Dir.glob(File.join(@absolute_path, '*')).map { |x| Gitdocs::Docfile.new(x) }
+
+    Dir.glob(File.join(@absolute_path, '{*,.*}'))
+      .reject  { |x| x.match(/\/\.(\.|git|gitignore|gitmessage~)?$/) }
+      .sort_by { |x| File.basename(x).sub(/^\./, '') }
+      .map     { |x| DirEntry.new(File.basename(x), File.directory?(x)) }
   end
 
   def content

@@ -15,7 +15,7 @@
       - contents.each_with_index do |f, i|
         %tr
           %td
-            %img{ :src => "/img/#{f.dir? ? 'folder' : 'file'}.png", :width => 16, :height => 16 }
+            %img{ :src => "/img/#{f.is_directory ? 'folder' : 'file'}.png", :width => 16, :height => 16 }
             %a{ :href => "/#{idx}#{request.path_info}/#{f.name}" }
               = f.name
           %td.author

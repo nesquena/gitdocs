@@ -147,7 +147,7 @@ module Gitdocs
                 parent = '' if parent == '/'
                 parent = nil if parent == '.'
                 redirect!("/#{idx}#{parent}")
-              elsif mode == 'edit' && path.mime_type.match(/text\/|x-empty/) # edit file
+              elsif mode == 'edit' && path.text? # edit file
                 render!(
                   'edit',
                   layout: 'app',
@@ -159,7 +159,7 @@ module Gitdocs
                   begin # attempting to render file
                     %(<div class="tilt">#{render(revision_path)}</div>)
                   rescue RuntimeError # not tilt supported
-                    if path.mime_type.match(/text\//)
+                    if path.text?
                       <<-EOS.gsub(/^\s+/, '')
                         <pre class="CodeRay">
                           #{CodeRay.scan_file(revision_path).encode(:html)}
