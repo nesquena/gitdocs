@@ -30,7 +30,7 @@ describe Gitdocs::Notifier do
           .with(
             'message',
             title: 'title',
-            image: File.expand_path('../../lib/img/icon.png', __FILE__)
+            image: File.expand_path('../../../lib/img/icon.png', __FILE__)
           )
       end
       it { subject }
