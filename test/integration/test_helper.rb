@@ -7,6 +7,16 @@ require 'gitdocs'
 require 'aruba'
 require 'aruba/api'
 require 'timeout'
+require 'capybara'
+require 'capybara_minitest_spec'
+require 'capybara/poltergeist'
+
+Capybara.app_host       = 'http://localhost:7777/'
+Capybara.default_driver = :poltergeist
+Capybara.run_server     = false
+Capybara.register_driver :poltergeist do |app|
+  Capybara::Poltergeist::Driver.new(app, js_errors: false)
+end
 
 module MiniTest::Aruba
   class ArubaApiWrapper
@@ -45,11 +55,18 @@ end
 
 module Helper
   include MiniTest::Aruba
+  include Capybara::DSL
+  include Capybara::RSpecMatchers
 
   def before_setup
     super
     set_env('HOME', abs_current_dir)
     ENV['TEST'] = nil
+  end
+
+  def teardown
+    Capybara.reset_sessions!
+    Capybara.use_default_driver
   end
 
   def after_teardown
@@ -68,6 +85,18 @@ module Helper
         # Nothing to do.
       end
     end
+  end
+
+  def start_daemon
+    configuration = Gitdocs::Configuration.new
+    configuration.shares.each do |share|
+      share.update_attributes(polling_interval: 0.1, notification: false)
+    end
+
+    start_cmd = 'gitdocs start --debug --pid=gitdocs.pid --port 7777'
+    run(start_cmd, 15)
+    assert_success(true)
+    assert_partial_output('Started gitdocs', output_from(start_cmd))
   end
 
   # @overload abs_current_dir

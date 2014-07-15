@@ -5,17 +5,7 @@ require File.expand_path('../test_helper', __FILE__)
 describe 'fully synchronizing repositories' do
   before do
     git_clone_and_gitdocs_add(git_init_remote, 'clone1', 'clone2', 'clone3')
-
-    # TODO: apply this configuration through the CLI in future
-    configuration = Gitdocs::Configuration.new
-    configuration.shares.each do |share|
-      share.update_attributes(polling_interval: 0.1, notification: false)
-    end
-
-    start_cmd = 'gitdocs start --debug --pid=gitdocs.pid --port 7777'
-    run(start_cmd, 15)
-    assert_success(true)
-    assert_partial_output('Started gitdocs', output_from(start_cmd))
+    start_daemon
   end
 
   it 'should sync new files' do
