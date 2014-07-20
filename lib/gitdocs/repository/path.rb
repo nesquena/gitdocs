@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
 
+# Class for executing File and Git operations on a specific path in the
+# repository.
 class Gitdocs::Repository::Path
   attr_reader :relative_path
 
@@ -13,7 +15,7 @@ class Gitdocs::Repository::Path
     )
   end
 
-  # Write the content to the path, create any necessary directories.
+  # Write the content to the path and create any necessary directories.
   #
   # @param [String] content
   # @param [String] commit_message
@@ -24,15 +26,18 @@ class Gitdocs::Repository::Path
     @repository.write_commit_message(commit_message)
   end
 
+  # Touch and path and create any necessary directories.
   def touch
     FileUtils.mkdir_p(File.dirname(@absolute_path))
     FileUtils.touch(@absolute_path)
   end
 
+  # Create the path as a directory.
   def mkdir
     FileUtils.mkdir_p(@absolute_path)
   end
 
+  # Remove the path, but only if it is a file.
   def remove
     return nil unless File.file?(@absolute_path)
     FileUtils.rm(@absolute_path)
@@ -42,7 +47,7 @@ class Gitdocs::Repository::Path
   def text?
     return false unless File.file?(@absolute_path)
     mime_type = File.mime_type?(File.open(@absolute_path))
-    !!(mime_type =~ /text\/|x-empty/)
+    !!(mime_type =~ /text\/|x-empty/) # rubocop:disable DoubleNegation
   end
 
   # Returns file meta data based on relative file path
@@ -53,8 +58,7 @@ class Gitdocs::Repository::Path
   #
   # @raise [RuntimeError] if the file is not found in any commits
   #
-  # @return [Hash<Symbol=>String,Integer,Time>] the author, size and
-  #   modification date of the file
+  # @return [Hash<:author => String, :size => Integer, modified => Time>]
   def meta
     commit = @repository.last_commit_for(@relative_path)
 
@@ -146,7 +150,7 @@ class Gitdocs::Repository::Path
   private
 
   def total_size
-    size =
+    result =
       if File.directory?(@absolute_path)
         Dir[File.join(@absolute_path, '**', '*')].reduce(0) do |size, filename|
           File.symlink?(filename) ? size : size + File.size(filename)
@@ -156,8 +160,7 @@ class Gitdocs::Repository::Path
       end
 
     # HACK: A value of 0 breaks the table sort for some reason
-    return -1 if size == 0
-
-    size
+    return -1 if result == 0
+    result
   end
 end

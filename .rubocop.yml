@@ -8,3 +8,6 @@ ClassAndModuleChildren:
 # method looking long, but not actually increasing the complexity at all.
 MethodLength:
   Enabled: false
+
+EachWithObject:
+  Enabled: false

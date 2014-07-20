@@ -49,10 +49,6 @@ describe 'gitdocs configuration' do
     assert_equal [], @config.shares.map(&:path)
   end
 
-  it 'can normalize paths' do
-    assert_equal File.expand_path('../test_helper.rb', Dir.pwd), @config.normalize_path('../test_helper.rb')
-  end
-
   describe '#update_all' do
     before do
       @config.add_path('/my/path')

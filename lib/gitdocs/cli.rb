@@ -1,12 +1,16 @@
 # -*- encoding : utf-8 -*-
 
+# rubocop:disable LineLength, ClassLength
+
 module Gitdocs
   require 'thor'
 
   class Cli < Thor
     include Thor::Actions
 
-    def self.source_root; File.expand_path('../../', __FILE__); end
+    def self.source_root
+      File.expand_path('../../', __FILE__)
+    end
 
     desc 'start', 'Starts a daemonized gitdocs process'
     method_option :debug, type: :boolean, aliases: '-D'
@@ -87,7 +91,7 @@ module Gitdocs
       say "Running: #{running?}"
       say "File System Watch Method: #{file_system_watch_method}"
       say 'Watched repositories:'
-      tp.set :max_width, 100
+      tp.set(:max_width, 100)
       status_display = lambda do |share|
         repository = Gitdocs::Repository.new(share)
 
@@ -98,10 +102,12 @@ module Gitdocs
         status = 'ok' if status.empty?
         status
       end
-      tp config.shares,
+      tp(
+        config.shares,
         { sync: { display_method: :sync_type } },
         { s: status_display },
         :path
+      )
       say "\n(Legend: ok everything synced, * change to commit, ! needs sync)"
     end
 
@@ -119,9 +125,9 @@ module Gitdocs
     end
 
     # TODO: make this work
-    #desc 'config', 'Configuration options for gitdocs'
-    #def config
-    #end
+    # desc 'config', 'Configuration options for gitdocs'
+    # def config
+    # end
 
     desc 'help', 'Prints out the help'
     def help(task = nil, subcommand = false)
@@ -157,7 +163,7 @@ module Gitdocs
       end
 
       # @return [Symbol] to indicate how the file system is being watched
-      def file_system_watch_method
+      def file_system_watch_method # rubocop:disable CyclomaticComplexity
         if Guard::Listener.mac? && Guard::Darwin.usable?
           :notification
         elsif Guard::Listener.linux? && Guard::Linux.usable?

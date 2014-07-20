@@ -42,7 +42,9 @@ module Gitdocs
       # Listen for changes in local repository
 
       EM.defer(proc do
-        listener = Guard::Listener.select_and_init(root, watch_all_modifications: true)
+        listener = Guard::Listener.select_and_init(
+          root, watch_all_modifications: true
+        )
         listener.on_change do |directories|
           directories.uniq!
           directories.delete_if { |d| d =~ /\/\.git/ }
@@ -75,7 +77,7 @@ module Gitdocs
       merge_result = @repository.merge
       merge_result = latest_author_count if merge_result == :ok
       @notifier.merge_notification(merge_result, root)
-      return if merge_result.kind_of?(String)
+      return if merge_result.is_a?(String)
 
       # Push ###################################################################
       result = @repository.push
@@ -86,7 +88,6 @@ module Gitdocs
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
-      # TODO: get logging and/or put the error message into a status field in the database
     end
 
     ############################################################################
