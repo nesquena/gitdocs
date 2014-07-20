@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://engineering.gomiso.com/2011/11/30/collaborate-and-track-tasks-with-ease-using-gitdocs/'
   s.summary     = 'Open-source Dropbox using Ruby and Git.'
   s.description = 'Open-source Dropbox using Ruby and Git.'
+  s.license     = 'MIT'
 
   s.rubyforge_project = 'gitdocs'
 
