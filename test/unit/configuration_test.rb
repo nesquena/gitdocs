@@ -67,7 +67,7 @@ describe 'gitdocs configuration' do
           '1' => { 'path' => '/my/path/2',  'polling_interval' => 66 },
           '2' => { 'path' => '/my/path/3a', 'polling_interval' => 77 },
           '3' => { 'path' => '',            'polling_interval' => 88 },
-          '4' => {                          'polling_interval' => 99 },
+          '4' => {                          'polling_interval' => 99 }
         }
       )
     end

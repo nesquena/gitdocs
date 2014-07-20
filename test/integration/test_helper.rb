@@ -76,13 +76,13 @@ module Helper
 
     terminate_processes!
     prep_for_fs_check do
-      next unless File.exists?('gitdocs.pid')
+      next unless File.exist?('gitdocs.pid')
 
       pid = IO.read('gitdocs.pid').to_i
       Process.kill('KILL', pid)
       begin
         Process.wait(pid)
-      rescue SystemCallError
+      rescue SystemCallError # rubocop:disable Lint/HandleExceptions
         # This means that the process is already gone.
         # Nothing to do.
       end

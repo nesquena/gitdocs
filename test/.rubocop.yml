@@ -1,0 +1,13 @@
+inherit_from: ../.rubocop.yml
+
+# Allow longer lines in the tests because sometime we are checking longer
+# strings.
+LineLength:
+  Max: 120
+
+# Allow for lines which let a and then make an assertion. And for adding some
+# spaces to line the lets and assertions up to make them more tabular.
+Style/Semicolon:
+  AllowAsExpressionSeparator: true
+Style/SpaceBeforeSemicolon:
+  Enabled: false

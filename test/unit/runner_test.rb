@@ -74,8 +74,10 @@ describe 'gitdocs runner' do
             changes = { 'Alice' => 1, 'Bob' => 2 }
             repository.stubs(:author_count).with(:oid).returns(changes)
             notifier.expects(:push_notification).with(changes, 'root_path')
+
+            subject
           end
-          it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
+          it { runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
         end
       end
 
@@ -95,8 +97,12 @@ describe 'gitdocs runner' do
 
         describe 'and push is not_ok' do
           let(:push_result) { :not_ok }
-          before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
-          it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :merge_oid }
+          before do
+            notifier.expects(:push_notification).with(:not_ok, 'root_path')
+
+            subject
+          end
+          it { runner.instance_variable_get(:@last_synced_revision).must_equal :merge_oid }
         end
 
         describe 'and push is ok' do
@@ -105,8 +111,10 @@ describe 'gitdocs runner' do
             changes = { 'Charlie' => 5, 'Dan' =>  7 }
             repository.stubs(:author_count).with(:merge_oid).returns(changes)
             notifier.expects(:push_notification).with(changes, 'root_path')
+
+            subject
           end
-          it { subject ; runner.instance_variable_get(:@last_synced_revision).must_equal :push_oid }
+          it { runner.instance_variable_get(:@last_synced_revision).must_equal :push_oid }
         end
       end
     end
