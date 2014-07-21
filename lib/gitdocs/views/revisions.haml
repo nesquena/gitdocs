@@ -3,7 +3,7 @@
 = partial("header", :locals => { :file => true, :idx => idx  })
 
 - if revisions && revisions.any?
-  %table.condensed-table.zebra-striped
+  %table#revisions.condensed-table.zebra-striped
     %thead
       %tr
         %th Commit
@@ -20,7 +20,7 @@
               = r[:commit]
           %td.subject= r[:subject]
           %td.author= r[:author]
-          %td.date.reldate= r[:date]
+          %td.date.reldate= r[:date].iso8601
           %td.revert
             %a{ :href => "?mode=revert&revision=#{r[:commit]}", :onclick => "javascript:return confirm('Are you sure?')" }
               = r[:commit]

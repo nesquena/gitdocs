@@ -76,7 +76,7 @@ module Gitdocs
     # @see Gitdocs::Configuration#update_all
     def update_all(new_config)
       config.update_all(new_config)
-      EM.add_timer(0.1) { manager.restart }
+      EM.add_timer(0.1) { restart }
     end
 
     # @see Gitdocs::Configuration#remove_by_id
