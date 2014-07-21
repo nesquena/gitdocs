@@ -2,6 +2,9 @@
 
 # Disable style checks that are invalid for Renee
 # rubocop:disable Blocks, MultilineBlockChain
+#
+# TODO: extract the WebApp into its own class but until then...
+# rubocop:disable LineLength, ClassLength, CyclomaticComplexity, BlockNesting
 
 require 'thin'
 require 'renee'

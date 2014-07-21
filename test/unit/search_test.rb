@@ -27,12 +27,12 @@ describe Gitdocs::Search do
       let(:term) { 'term' }
       before do
         repository1.stubs(:grep).with(term).multiple_yields(
-          ['file1', 'context1']
+          %w(file1 context1)
         )
         repository2.stubs(:grep).with(term).multiple_yields(
-          ['file2', 'context2a'],
-          ['file2', 'context2b'],
-          ['file3', 'context3'],
+          %w(file2 context2a),
+          %w(file2 context2b),
+          %w(file3 context3)
         )
       end
 

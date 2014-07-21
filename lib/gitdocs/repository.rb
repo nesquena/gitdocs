@@ -2,13 +2,16 @@
 
 require 'find'
 
+# rubocop:disable ClassLength
+# This class is long, but at the moment everything in it seems to be
+# appropriate.
+
 # Wrapper for accessing the shared git repositories.
 # Rugged or Grit will be used, in that order of preference, depending
 # upon the features which are available with each option.
 #
 # @note If a repository is invalid then query methods will return nil, and
 #   command methods will raise exceptions.
-#
 class Gitdocs::Repository
   attr_reader :invalid_reason
 
@@ -109,7 +112,7 @@ class Gitdocs::Repository
     return false unless valid?
     return false unless remote?
 
-    return !!current_oid unless remote_branch
+    return !!current_oid unless remote_branch # rubocop:disable DoubleNegation
     remote_branch.tip.oid != current_oid
   end
 
@@ -164,7 +167,10 @@ class Gitdocs::Repository
     return :ok        unless remote_branch
     return :ok        if remote_branch.tip.oid == current_oid
 
-    @grit.git.merge({ raise: true, chdir: root }, "#{@remote_name}/#{@branch_name}")
+    @grit.git.merge(
+      { raise: true, chdir: root },
+      "#{@remote_name}/#{@branch_name}"
+    )
     :ok
   rescue Grit::Git::GitTimeout
     "Merge timed out for #{root}"
@@ -183,8 +189,7 @@ class Gitdocs::Repository
   def commit
     return nil unless valid?
 
-    # Do this first to allow the message file to be deleted, if it
-    # exists.
+    # Do this first to allow the message file to be deleted, if it exists.
     message = read_and_delete_commit_message_file
 
     mark_empty_directories
@@ -257,7 +262,7 @@ class Gitdocs::Repository
   #
   # @return [Array<Rugged::Commit>]
   def commits_for(relative_path, limit)
-    # TODO should add a filter here for checking that the commit actually has
+    # TODO: should add a filter here for checking that the commit actually has
     # an associated blob.
     commits = head_walker.select do |commit|
       commit.parents.size == 1 && commit.diff(paths: [relative_path]).size > 0
@@ -315,7 +320,7 @@ class Gitdocs::Repository
   end
 
   def mark_empty_directories
-    Find.find(root).each do |path|
+    Find.find(root).each do |path| # rubocop:disable Style/Next
       Find.prune if File.basename(path) == '.git'
       if File.directory?(path) && Dir.entries(path).count == 2
         FileUtils.touch(File.join(path, '.gitignore'))

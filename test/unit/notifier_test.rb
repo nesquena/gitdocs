@@ -50,7 +50,7 @@ describe Gitdocs::Notifier do
       let(:show_notifications) { true }
       before do
         Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify).with('message', title: 'title',)
+        Guard::Notifier.expects(:notify).with('message', title: 'title')
       end
       it { subject }
     end
@@ -100,7 +100,7 @@ describe Gitdocs::Notifier do
       before do
         notifier.expects(:warn).with(
           'There were some conflicts',
-          "* file"
+          '* file'
         )
       end
       it { subject }
@@ -131,7 +131,7 @@ describe Gitdocs::Notifier do
       let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
       before do
         notifier.expects(:info)
-          .with('Pushed 4 changes', "root_path has been pushed")
+          .with('Pushed 4 changes', 'root_path has been pushed')
       end
       it { subject }
     end

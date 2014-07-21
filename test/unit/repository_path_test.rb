@@ -146,7 +146,7 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'on a 'do
-      let(:commit) { stub(author: { name: :name, time: :time } ) }
+      let(:commit) { stub(author: { name: :name, time: :time }) }
       before do
         write('directory0/file0', '')
         write('directory/file1', 'foo')
@@ -315,8 +315,8 @@ describe Gitdocs::Repository::Path do
 
     before do
       repository.stubs(:commits_for).returns([
-        stub(oid: '1234567890', message: "short1\nlong", author: { name: :name1, time: :time1 } ),
-        stub(oid: '0987654321', message: "short2\nlong", author: { name: :name2, time: :time2 } )
+        stub(oid: '1234567890', message: "short1\nlong", author: { name: :name1, time: :time1 }),
+        stub(oid: '0987654321', message: "short2\nlong", author: { name: :name2, time: :time2 })
       ])
     end
     it { subject.size.must_equal(2) }

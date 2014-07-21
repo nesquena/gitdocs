@@ -49,10 +49,6 @@ describe 'gitdocs configuration' do
     assert_equal [], @config.shares.map(&:path)
   end
 
-  it 'can normalize paths' do
-    assert_equal File.expand_path('../test_helper.rb', Dir.pwd), @config.normalize_path('../test_helper.rb')
-  end
-
   describe '#update_all' do
     before do
       @config.add_path('/my/path')
@@ -67,7 +63,7 @@ describe 'gitdocs configuration' do
           '1' => { 'path' => '/my/path/2',  'polling_interval' => 66 },
           '2' => { 'path' => '/my/path/3a', 'polling_interval' => 77 },
           '3' => { 'path' => '',            'polling_interval' => 88 },
-          '4' => {                          'polling_interval' => 99 },
+          '4' => {                          'polling_interval' => 99 }
         }
       )
     end

@@ -272,7 +272,7 @@ describe Gitdocs::Repository do
   end
 
   describe '#grep' do
-    subject { repository.grep('foo') { |file, context| @grep_result << "#{file} #{context}"} }
+    subject { repository.grep('foo') { |file, context| @grep_result << "#{file} #{context}" } }
 
     before { @grep_result = [] }
 
@@ -483,25 +483,25 @@ describe Gitdocs::Repository do
       end
     end
 
-      describe 'when new remote commits are merged' do
-        before do
-          create_local_repo_with_remote_with_commit
-          bare_commit(
-            remote_repo,
-            'file2', 'deadbeef',
-            'second commit',
-            'author@example.com', 'A U Thor'
-          )
-          repository.fetch
-        end
-        it { subject.must_equal :ok }
-
-        describe 'side effects' do
-          before { subject }
-          it { local_file_exist?('file2').must_equal true }
-          it { commit_count(local_repo).must_equal 2 }
-        end
+    describe 'when new remote commits are merged' do
+      before do
+        create_local_repo_with_remote_with_commit
+        bare_commit(
+          remote_repo,
+          'file2', 'deadbeef',
+          'second commit',
+          'author@example.com', 'A U Thor'
+        )
+        repository.fetch
       end
+      it { subject.must_equal :ok }
+
+      describe 'side effects' do
+        before { subject }
+        it { local_file_exist?('file2').must_equal true }
+        it { commit_count(local_repo).must_equal 2 }
+      end
+    end
   end
 
   describe '#commit' do
@@ -810,7 +810,7 @@ describe Gitdocs::Repository do
     `cd #{local_repo_path} ; git rev-parse HEAD`.strip
   end
 
-  def bare_commit(repo, filename, content, message, email, name)
+  def bare_commit(repo, filename, content, message, email, name)  # rubocop:disable ParameterLists
     index = Rugged::Index.new
     index.add(
       path: filename,
@@ -874,4 +874,3 @@ describe Gitdocs::Repository do
     File.read(File.join(local_repo_path, *path_elements))
   end
 end
-

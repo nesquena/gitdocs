@@ -5,7 +5,7 @@ class Gitdocs::Notifier
   INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
 
   # Wrapper around #error for a single call to the notifier.
-  # @see #error
+  # @param (see #error)
   def self.error(title, message)
     Gitdocs::Notifier.new(true).error(title, message)
   end
@@ -17,60 +17,58 @@ class Gitdocs::Notifier
   end
 
   # @param [String] title
-  # @param [String] title
+  # @param [String] message
   def info(title, message)
     if @show_notifications
       Guard::Notifier.notify(message, title: title, image: INFO_ICON)
     else
       puts("#{title}: #{message}")
     end
-  rescue # Prevent StandardErrors from stopping the daemon.
+  rescue # rubocop:disable Lint/HandleExceptions
+    # Prevent StandardErrors from stopping the daemon.
   end
 
   # @param [String] title
-  # @param [String] title
+  # @param [String] message
   def warn(title, message)
     if @show_notifications
       Guard::Notifier.notify(message, title: title)
     else
       Kernel.warn("#{title}: #{message}")
     end
-  rescue # Prevent StandardErrors from stopping the daemon.
+  rescue # rubocop:disable Lint/HandleExceptions
+    # Prevent StandardErrors from stopping the daemon.
   end
 
   # @param [String] title
-  # @param [String] title
+  # @param [String] message
   def error(title, message)
     if @show_notifications
       Guard::Notifier.notify(message, title: title, image: :failure)
     else
       Kernel.warn("#{title}: #{message}")
     end
-  rescue # Prevent StandardErrors from stopping the daemon.
+  rescue # rubocop:disable Lint/HandleExceptions
+    # Prevent StandardErrors from stopping the daemon.
   end
 
-  # @param [nil, :no_remote, String, Array<String>, Hash<String, Integer>] result
+  # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] result
   # @param [String] root
   def merge_notification(result, root)
     return if result.nil?
     return if result == :no_remote
     return if result == :ok
 
-    if result.kind_of?(Array)
+    if result.is_a?(Array)
       warn(
         'There were some conflicts',
         result.map { |f| "* #{f}" }.join("\n")
       )
-    elsif result.kind_of?(Hash)
-      unless result.empty?
-        author_list = result.map do |author, count|
-          "* #{author} (#{change_to_s(count)})"
-        end
-        info(
-          "Updated with #{change_to_s(result)}",
-          "In #{root}:\n#{author_list.join("\n")}"
-        )
-      end
+    elsif result.is_a?(Hash) && !result.empty?
+      info(
+        "Updated with #{change_to_s(result)}",
+        "In #{root}:\n#{author_list(result)}"
+      )
     else
       error(
         'There was a problem synchronizing this gitdoc',
@@ -79,7 +77,7 @@ class Gitdocs::Notifier
     end
   end
 
-  # @param [nil, :no_remote, :nothing, :conflict, String, Hash<String, Integer>] result
+  # @param [nil, Symbol, Hash<String => Integer>, #to_s] result push operation
   # @param [String] root
   def push_notification(result, root)
     return if result.nil?
@@ -88,7 +86,7 @@ class Gitdocs::Notifier
 
     if result == :conflict
       warn("There was a conflict in #{root}, retrying", '')
-    elsif result.kind_of?(Hash)
+    elsif result.is_a?(Hash)
       info("Pushed #{change_to_s(result)}", "#{root} has been pushed")
     else
       error("BAD Could not push changes in #{root}", result.to_s)
@@ -99,6 +97,16 @@ class Gitdocs::Notifier
 
   private
 
+  # @param [Hash<String => Integer>] changes
+  # @return [String]
+  def author_list(changes)
+    changes
+      .map { |author, count| "* #{author} (#{change_to_s(count)})" }
+      .join("\n")
+  end
+
+  # @param [Integer, Hash<String => Integer>] count_or_hash
+  # @return [String]
   def change_to_s(count_or_hash)
     count =
       if count_or_hash.respond_to?(:values)

@@ -18,7 +18,6 @@ module Gitdocs
       log("Using configuration root: '#{config.config_root}'")
       log("Shares: (#{shares.length}) #{shares.map(&:inspect).join(', ')}")
 
-      restarting = false
       begin
         EM.run do
           log('Starting EM loop...')
@@ -28,11 +27,11 @@ module Gitdocs
           Server.start_and_wait(self, web_port, repositories)
         end
       rescue Restart
-        restarting = true
         retry
       end
-    rescue Exception => e # Report all errors in log
-      log(e.class.inspect + ' - ' + e.inspect + ' - ' + e.message.inspect, :error)
+    rescue Exception => e # rubocop:disable RescueException
+      # Report all errors in log
+      log("#{e.class.inspect} - #{e.inspect} - #{e.message.inspect}", :error)
       log(e.backtrace.join("\n"), :error)
       Gitdocs::Notifier.error(
         'Unexpected exit',
