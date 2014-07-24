@@ -58,13 +58,14 @@ class Gitdocs::Notifier
     return if result.nil?
     return if result == :no_remote
     return if result == :ok
+    return if result == {}
 
     if result.is_a?(Array)
       warn(
         'There were some conflicts',
         result.map { |f| "* #{f}" }.join("\n")
       )
-    elsif result.is_a?(Hash) && !result.empty?
+    elsif result.is_a?(Hash)
       info(
         "Updated with #{change_to_s(result)}",
         "In #{root}:\n#{author_list(result)}"

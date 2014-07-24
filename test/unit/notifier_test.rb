@@ -80,9 +80,17 @@ describe Gitdocs::Notifier do
 
     let(:show_notifications) { false }
 
-    describe('with nil')        { let(:result) { nil }        ; it { subject } }
-    describe('with no_remote')  { let(:result) { :no_remote } ; it { subject } }
-    describe('with no changes') { let(:result) { {} }         ; it { subject } }
+    describe 'with no changes' do
+      before do
+        # Ensure that the notification methods are not called.
+        notifier.stubs(:warn).raises
+        notifier.stubs(:info).raises
+        notifier.stubs(:error).raises
+      end
+      describe('with nil')        { let(:result) { nil }        ; it { subject } }
+      describe('with no_remote')  { let(:result) { :no_remote } ; it { subject } }
+      describe('with no changes') { let(:result) { {} }         ; it { subject } }
+    end
 
     describe 'with changes' do
       let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
