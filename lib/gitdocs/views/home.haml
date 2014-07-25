@@ -1,4 +1,4 @@
-- @title = "Pick a Share"
+- @title = 'Pick a Share'
 
 %p Select a share to browse:
 
@@ -6,5 +6,5 @@
   - shares.each_with_index do |share, idx|
     %tr
       %td
-        %a{ :href => "/#{idx}" }
+        %a{ href: "/#{idx}" }
           = share.path

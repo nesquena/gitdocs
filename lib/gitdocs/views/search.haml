@@ -1,16 +1,16 @@
 - @title = "Matches for #{request.params['q'].inspect}"
-%script{ :src => "/js/search.js", :type => "text/javascript", :charset => "utf-8" }
+%script{ src: '/js/search.js', type: 'text/javascript', charset: 'utf-8' }
 
-.results{ "data-query" => request.params['q'] }
-  -if results.empty?
+.results{ 'data-query' => request.params['q'] }
+  - if results.empty?
     %h2 No results
-  -else
+  - else
     - results.each do |repo, search_results|
       %h2= repo.name
       %dl
         - search_results.each do |res|
           %dt
-            %a{:href => "/#{repo.index}/#{res.file}"}
+            %a{href: "/#{repo.index}/#{res.file}"}
               = "/#{res.file}"
           %dd
             = res.context

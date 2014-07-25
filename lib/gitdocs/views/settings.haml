@@ -1,57 +1,57 @@
-- @title = "Settings"
-%script{ :src => "/js/settings.js", :type => "text/javascript", :charset => "utf-8" }
+- @title = 'Settings'
+%script{ src: '/js/settings.js', type: 'text/javascript', charset: 'utf-8' }
 
-%form#settings{:method => 'POST', :action => '/settings'}
+%form#settings{ method: 'POST', action: '/settings' }
   %h2 Gitdocs
   #config.field.config
     %dl
       %dt Web Frontend Port
       %dd
-        %input{:type =>'input', :name=>"config[web_frontend_port]", :value => conf.web_frontend_port }
+        %input{ type: 'input', name: 'config[web_frontend_port]', value: conf.web_frontend_port }
   %h2 Shares
   - conf.shares.each_with_index do |share, idx|
-    %div{:id => "share-#{idx}", :class => "share #{idx % 2 == 0 ? 'even' : 'odd'}"}
+    %div{ id: "share-#{idx}", class: "share #{idx.even? ? 'even' : 'odd'}" }
       %dl
         %dt Path
         %dd
-          %input{:name=>"share[#{idx}][path]", :value => share.path, :class => "path" }
+          %input{ name: "share[#{idx}][path]", value: share.path, class: 'path' }
       %dl
         %dt Polling interval
         %dd
-          %input{:name=>"share[#{idx}][polling_interval]", :value => share.polling_interval}
+          %input{ name: "share[#{idx}][polling_interval]", value: share.polling_interval }
       %dl
         %dt Sync Type
         %dd
-          %select{name: "share[#{idx}][sync_type]"}
-            %option{value: 'full', selected: (share.sync_type == 'full' ? 'selected' : nil )}
+          %select{ name: "share[#{idx}][sync_type]" }
+            %option{ value: 'full',  selected: (share.sync_type == 'full' ? 'selected' : nil) }
               Full
-            %option{value: 'fetch', selected: (share.sync_type == 'fetch' ? 'selected' : nil )}
+            %option{ value: 'fetch', selected: (share.sync_type == 'fetch' ? 'selected' : nil) }
               Fetch only
 
       - if Gitdocs::Repository.new(share).available_remotes
         %dl
           %dt Remote
           %dd
-            %select{:name=>"share[#{idx}][remote_branch]"}
+            %select{ name: "share[#{idx}][remote_branch]" }
               - Gitdocs::Repository.new(share).available_remotes.each do |remote|
-                %option{:value => remote, :selected => remote == "#{share.remote_name}/#{share.branch_name}" ? 'selected' : nil}
+                %option{ value: remote, selected: remote == "#{share.remote_name}/#{share.branch_name}" ? 'selected' : nil }
                   = remote
       - else
 
         %dl
           %dt Remote
           %dd
-            %input{:name=>"share[#{idx}][remote_name]", :value => share.remote_name}
+            %input{ name: "share[#{idx}][remote_name]", value: share.remote_name }
         %dl
           %dt Branch
           %dd
-            %input{:name=>"share[#{idx}][branch_name]", :value => share.branch_name}
+            %input{ name: "share[#{idx}][branch_name]", value: share.branch_name }
       .notify.field
-        %input{:type =>'hidden', :value => '0', :name=>"share[#{idx}][notification]"}
-        %input{:type =>'checkbox', :value => '1', :name=>"share[#{idx}][notification]", :checked => share.notification ? 'checked' : nil}
+        %input{ type: 'hidden',   value: '0', name: "share[#{idx}][notification]"}
+        %input{ type: 'checkbox', value: '1', name: "share[#{idx}][notification]", checked: share.notification ? 'checked' : nil }
         %span Notifications?
       .delete
-        %a{ :href => "/shares/#{share.id}", :class => "btn remove_share danger", :"data-method" => "delete"}
+        %a{ href: "/shares/#{share.id}", class: 'btn remove_share danger', :'data-method' => 'delete' }
           Delete
 
-  %input{:value => 'Save', :type => 'submit', :class => "btn primary" }
+  %input{ value: 'Save', type: 'submit', class: 'btn primary' }

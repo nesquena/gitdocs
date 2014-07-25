@@ -49,4 +49,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'metric_fu'
   s.add_development_dependency 'aruba'
   s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'haml-lint',              '~> 0.6.0'
+
 end

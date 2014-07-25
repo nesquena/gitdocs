@@ -1,15 +1,14 @@
 - @title = root
 
-= partial("header", :locals => { :file => true, :idx => idx  })
+= partial('header', locals: { file: true, idx: idx })
 
-%form{ :class => "edit", :action => "/#{idx}#{request.path_info}?mode=save", :method => "post", :style => "display:none;" }
+%form{ class: 'edit', action: "/#{idx}#{request.path_info}?mode=save", method: 'POST', style: 'display:none;' }
   #editor
-  %textarea{ :id => 'data', :name => "data" }= preserve contents
+  %textarea{ id: 'data', name: 'data' }= preserve contents
   .clearfix
-    %textarea{ :id => 'message', :name => 'message', :class => 'span16', :placeholder => 'Optional commit message.' }
-  %input{ :type => 'submit', :value => "Save", :class => "btn primary" }
-  %a{ :href => "/#{idx}#{request.path_info}", :class => "btn secondary" } Cancel
-  %input{ :type => 'hidden', :class => 'filename', :value => request.path_info }
+    %textarea{ id: 'message', name: 'message', class: 'span16', placeholder: 'Optional commit message.' }
+  %input{ type: 'submit', value: 'Save', class: 'btn primary' }
+  %a{ href: "/#{idx}#{request.path_info}", class: 'btn secondary' } Cancel
+  %input{ type: 'hidden', class: 'filename', value: request.path_info }
 
-= partial("ace_scripts")
-
+= partial('ace_scripts')
