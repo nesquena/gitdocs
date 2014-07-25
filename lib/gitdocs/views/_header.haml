@@ -1,7 +1,7 @@
 %h2.path
   %span.path= request.path_info.empty? ? '/' : request.path_info
 - if file
-  %ul{ class: 'tabs' }
+  %ul.tabs
     %li
       %a{ href: "#{request.path}" } View
     %li

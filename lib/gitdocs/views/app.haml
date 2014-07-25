@@ -16,13 +16,13 @@
     #nav.topbar
       .fill
         .container
-          %a{class: 'brand', href: '/'} Gitdocs
-          %ul(class = "nav")
+          %a.brand{ href: '/'} Gitdocs
+          %ul.nav
             %li{ class: ('active' if nav_state == 'home') }
               %a(href = "/") Home
             %li{ class: ('active' if nav_state == 'settings') }
               %a(href = "/settings") Settings
-          %form{class: 'pull-left', action: '/search', method: 'GET' }
+          %form.pull-left{ action: '/search', method: 'GET' }
             %input{ type: 'text', placeholder: 'Search', name: 'q' }
 
     #main.container
