@@ -1,7 +1,6 @@
 # -*- encoding : utf-8 -*-
 
 require 'thread'
-require 'yajl'
 require 'dante'
 require 'socket'
 require 'shell_tools'
