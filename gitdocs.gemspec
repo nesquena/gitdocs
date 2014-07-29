@@ -50,5 +50,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'aruba'
   s.add_development_dependency 'rubocop'
   s.add_development_dependency 'haml-lint',              '~> 0.6.0'
-
+  s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
 end
