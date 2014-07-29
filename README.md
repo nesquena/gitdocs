@@ -3,6 +3,8 @@
 [![Gem Version](https://badge.fury.io/rb/gitdocs.png)](http://badge.fury.io/rb/gitdocs)
 [![Code Climate](https://codeclimate.com/github/bazaarlabs/gitdocs.png)](https://codeclimate.com/github/bazaarlabs/gitdocs)
 [![Build Status](https://travis-ci.org/nesquena/gitdocs.svg?branch=master)](https://travis-ci.org/nesquena/gitdocs)
+[![Inline docs](http://inch-ci.org/github/nesquena/gitdocs.png?branch=master)](http://inch-ci.org/github/nesquena/gitdocs)
+[![Dependency Status](https://gemnasium.com/nesquena/gitdocs.svg)](https://gemnasium.com/nesquena/gitdocs)
 
 Open-source dropbox alternative powered by git. Collaborate on files and tasks without any extra hassle.
 gitdocs will automatically keep everyone's repos in sync by pushing and pulling changes.
