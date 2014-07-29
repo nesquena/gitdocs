@@ -5,6 +5,7 @@
 [![Build Status](https://travis-ci.org/nesquena/gitdocs.svg?branch=master)](https://travis-ci.org/nesquena/gitdocs)
 [![Inline docs](http://inch-ci.org/github/nesquena/gitdocs.png?branch=master)](http://inch-ci.org/github/nesquena/gitdocs)
 [![Dependency Status](https://gemnasium.com/nesquena/gitdocs.svg)](https://gemnasium.com/nesquena/gitdocs)
+[![Coverage Status](https://coveralls.io/repos/nesquena/gitdocs/badge.png?branch=master)](https://coveralls.io/r/nesquena/gitdocs)
 
 Open-source dropbox alternative powered by git. Collaborate on files and tasks without any extra hassle.
 gitdocs will automatically keep everyone's repos in sync by pushing and pulling changes.
@@ -12,7 +13,7 @@ This allows any git repo to be used as a collaborative task list, file share, or
 Supports a web front-end allowing each repo to be accessed through your browser.
 
 **Note:** Gitdocs has been tested on multiple unix systems including Mac OS X and Ubuntu.
-Windows support is [half-baked](https://github.com/bazaarlabs/gitdocs/issues/7)
+Windows support is [half-baked](https://github.com/nesquena/gitdocs/issues/7)
 but we plan to tackle that shortly in an upcoming release.
 
 ## Why?

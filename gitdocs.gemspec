@@ -51,4 +51,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop'
   s.add_development_dependency 'haml-lint',              '~> 0.6.0'
   s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
+  s.add_development_dependency 'coveralls',              '~> 0.7.0'
 end
