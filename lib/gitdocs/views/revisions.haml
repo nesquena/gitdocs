@@ -22,7 +22,7 @@
           %td.author= r[:author]
           %td.date.reldate= r[:date].iso8601
           %td.revert
-            %a{ href: "?mode=revert&revision=#{r[:commit]}", onclick: "javascript:return confirm('Are you sure?')" }
+            %a{ href: "?mode=revert&revision=#{r[:commit]}" }
               = r[:commit]
 - if revisions.empty?
   %p No revisions for this file could be found.
