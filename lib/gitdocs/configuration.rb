@@ -18,11 +18,11 @@ class Gitdocs::Configuration
   end
 
   class Share < ActiveRecord::Base
-    attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name, :sync_type
+    #attr_accessible :polling_interval, :path, :notification, :branch_name, :remote_name, :sync_type
   end
 
   class Config < ActiveRecord::Base
-    attr_accessible :start_web_frontend, :web_frontend_port
+    #attr_accessible :start_web_frontend, :web_frontend_port
   end
 
   # return [Boolean]
