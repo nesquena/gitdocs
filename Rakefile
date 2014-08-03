@@ -1,5 +1,8 @@
 require 'bundler/gem_tasks'
 require 'rake/testtask'
+require 'jslint/tasks'
+
+JSLint.config_path = '.jslint.yml'
 
 namespace :test do
   # Separate the unit and integration tests when running the entire suite.

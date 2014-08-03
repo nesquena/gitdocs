@@ -1,14 +1,14 @@
 %h2.path
   %span.path= request.path_info.empty? ? '/' : request.path_info
 - if file
-  %ul{ :class => "tabs" }
+  %ul.tabs
     %li
-      %a{ :href => "#{request.path}" } View
+      %a{ href: "#{request.path}" } View
     %li
-      %a{ :href => "?mode=raw" } Raw
+      %a{ href: '?mode=raw' } Raw
     %li
-      %a{ :href => "?mode=edit" } Edit
+      %a{ href: '?mode=edit' } Edit
     %li
-      %a{ :href => "?mode=revisions" } Revisions
+      %a{ href: '?mode=revisions' } Revisions
     %li
-      %a{ :href => "?mode=delete", :onclick => "javascript:return confirm('Are you sure?')" } Delete
+      %a.delete{ href: '?mode=delete' } Delete

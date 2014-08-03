@@ -73,11 +73,6 @@ module Gitdocs
             end
 
             path('shares') do
-              post do
-                Configuration::Share.create
-                redirect!('/settings')
-              end
-
               var(:int) do |id|
                 delete do
                   halt(404) unless manager.remove_by_id(id)
