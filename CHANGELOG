@@ -1,4 +1,10 @@
-0.5.0.pre7
+0.5.0.pre7 (August 3rd 2014)
+
+ * UI improvements to repo browser (@acant)
+ * upgrade dependencies (@acant)
+ * add integration testing for repo browser (@acant)
+ * include hidden files in directory listing (@acant)
+ * refactor the server, cleanup file manipulation (@acant)
  * add fetch only syncing for repositories (@acant)
  * add sync status for reach repository in the CLI status (@acant)
  * fix display of hidden files in the web UI (@acant)
