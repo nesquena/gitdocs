@@ -7,7 +7,8 @@ Gem::Specification.new do |s|
   s.version     = Gitdocs::VERSION
   s.authors     = ['Josh Hull', 'Nathan Esquenazi']
   s.email       = ['joshbuddy@gmail.com', 'nesquena@gmail.com']
-  s.homepage    = 'http://engineering.gomiso.com/2011/11/30/collaborate-and-track-tasks-with-ease-using-gitdocs/'
+  s.homepage    = 'https://github.com/nesquena/gitdocs'
+
   s.summary     = 'Open-source Dropbox using Ruby and Git.'
   s.description = 'Open-source Dropbox using Ruby and Git.'
   s.license     = 'MIT'
