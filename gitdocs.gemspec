@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'growl',           '~> 1.0.3'
   s.add_dependency 'haml',            '~> 4.0.5'
   s.add_dependency 'sqlite3',         '~> 1.3.4'
-  s.add_dependency 'activerecord',    '~> 4.1.4'
+  s.add_dependency 'activerecord',    '~> 4.2.0'
   s.add_dependency 'grit',            '~> 2.5.0'
   s.add_dependency 'shell_tools',     '~> 0.1.0'
   s.add_dependency 'mimetype-fu',     '~> 0.1.2'
