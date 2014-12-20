@@ -40,7 +40,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rugged',          '~> 0.19.0'
   s.add_dependency 'table_print',     '~> 1.5.1'
 
-  s.add_development_dependency 'minitest',               '~> 5.4.0'
+  s.add_development_dependency 'minitest',               '~> 5.5.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
   s.add_development_dependency 'poltergeist',            '~> 1.5.1'
   s.add_development_dependency 'rake'
