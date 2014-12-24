@@ -19,7 +19,7 @@ class Gitdocs::Search
   private
 
   def search_repository(repository, term)
-    return [] if term.empty?
+    return [] if term.nil? || term.empty?
 
     results = []
     repository.grep(term) do |file, context|

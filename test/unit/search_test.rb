@@ -18,6 +18,11 @@ describe Gitdocs::Search do
       repository2.stubs(:root).returns('root')
     end
 
+    describe 'term is missing' do
+      let(:term) { nil }
+      it { subject.must_equal({}) }
+    end
+
     describe 'term is empty' do
       let(:term) { '' }
       it { subject.must_equal({}) }
