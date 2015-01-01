@@ -1,7 +1,7 @@
 - @title = 'Settings'
 %script{ src: '/js/settings.js', type: 'text/javascript', charset: 'utf-8' }
 
-%form#settings{ method: 'POST', action: '/settings' }
+%form#settings{ method: 'POST', action: url('/') }
   %h2 Gitdocs
   #config.field.config
     %dl
@@ -51,7 +51,7 @@
         %input{ type: 'checkbox', value: '1', name: "share[#{idx}][notification]", checked: share.notification ? 'checked' : nil }
         %span Notifications?
       .delete
-        %a.remote_share.btn.danger{ href: "/shares/#{share.id}", :'data-method' => 'delete' }
+        %a.remote_share.btn.danger{ href: url("/#{share.id}"), :'data-method' => 'delete' }
           Delete
 
   %input.btn.primary{ value: 'Save', type: 'submit' }
