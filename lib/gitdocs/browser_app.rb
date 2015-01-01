@@ -50,8 +50,12 @@ module Gitdocs
 
       case params[:mode]
       when 'meta'
-        content_type :json
-        path.meta.to_json
+        begin
+          content_type :json
+          path.meta.to_json
+        rescue
+          halt(404)
+        end
       when 'edit'
         halt(404) unless path.text?
         haml(
