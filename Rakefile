@@ -26,4 +26,22 @@ Rake::TestTask.new do |t|
   t.verbose = true
 end
 
+desc 'Start the web interface for development'
+task server: 'server:start'
+
+namespace :server do
+  task :start do
+    sh('shotgun config.ru')
+  end
+
+  desc 'Copy the current configuration for use with the development web interface'
+  task :copy_config do
+    FileUtils.mkdir_p('./tmp/web')
+    FileUtils.copy(
+      File.expand_path('.gitdocs/config.db', ENV['HOME']),
+      './tmp/web/config.db'
+    )
+  end
+end
+
 task default: 'test:integration'
