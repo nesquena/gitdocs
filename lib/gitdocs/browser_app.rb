@@ -71,12 +71,6 @@ module Gitdocs
       when 'revert'
         path.revert(params[:revision])
         redirect to("/#{id}/#{path.relative_path}")
-      when 'delete'
-        path.remove
-        parent = File.dirname(path.relative_path)
-        parent = '' if parent == '/'
-        parent = nil if parent == '.'
-        redirect to("/#{id}#{parent}")
       when 'raw'
         send_file(path.absolute_path)
       else
@@ -151,6 +145,21 @@ module Gitdocs
           "/#{id}/#{path.relative_path}/#{filename}"
         end
       redirect to(redirect_path)
+    end
+
+    delete('/:id*') do
+      id = params[:id].to_i
+
+      halt(404) unless settings.repositories[id]
+      path = Gitdocs::Repository::Path.new(
+        settings.repositories[id], URI.unescape(params[:splat].first)
+      )
+
+      path.remove
+      parent = File.dirname(path.relative_path)
+      parent = '' if parent == '/'
+      parent = nil if parent == '.'
+      redirect to("/#{id}#{parent}")
     end
   end
 end

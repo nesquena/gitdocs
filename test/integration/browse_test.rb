@@ -137,7 +137,7 @@ describe 'browse and edit repository file through the UI' do
 
   it 'should allow file deletion' do
     within('table#fileListing') { within('tbody') { click_link('file1') } }
-    click_link('Delete')
+    click_on('Delete')
     within('table#fileListing') do
       within('tbody') do
         page.must_have_css('tr', count: 1)

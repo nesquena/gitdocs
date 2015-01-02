@@ -11,4 +11,6 @@
     %li
       %a{ href: '?mode=revisions' } Revisions
     %li
-      %a.delete{ href: '?mode=delete' } Delete
+      %form{ method: 'POST', :'data-confirm-submit' => 'Are you sure?' }
+        %input{ name: '_method', type: 'hidden', value: 'delete' }
+        %input.btn.danger{ type: 'submit', value: 'Delete' }
