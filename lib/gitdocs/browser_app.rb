@@ -35,13 +35,22 @@ module Gitdocs
       )
     end
 
-    get('/:id*') do
-      id = params[:id].to_i
+    helpers do
+      # @return [Integer]
+      def id
+        @id ||= params[:id].to_i
+      end
 
-      halt(404) unless settings.repositories[id]
-      path = Gitdocs::Repository::Path.new(
-        settings.repositories[id], URI.unescape(params[:splat].first)
-      )
+      # @return [Gitdocs::Repository::Path]
+      def path
+        halt(404) unless settings.repositories[id]
+        @path ||= Gitdocs::Repository::Path.new(
+          settings.repositories[id], URI.unescape(params[:splat].first)
+        )
+      end
+    end
+
+    get('/:id*') do
       default_locals = {
         idx:       id,
         root:      settings.repositories[id].root,
@@ -124,13 +133,6 @@ module Gitdocs
     end
 
     post('/:id*') do
-      id = params[:id].to_i
-
-      halt(404) unless settings.repositories[id]
-      path = Gitdocs::Repository::Path.new(
-        settings.repositories[id], URI.unescape(params[:splat].first)
-      )
-
       redirect_path =
         case params[:mode]
         when 'save'
@@ -148,13 +150,6 @@ module Gitdocs
     end
 
     delete('/:id*') do
-      id = params[:id].to_i
-
-      halt(404) unless settings.repositories[id]
-      path = Gitdocs::Repository::Path.new(
-        settings.repositories[id], URI.unescape(params[:splat].first)
-      )
-
       path.remove
       parent = File.dirname(path.relative_path)
       parent = '' if parent == '/'
