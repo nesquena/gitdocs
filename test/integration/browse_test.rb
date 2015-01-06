@@ -80,7 +80,7 @@ describe 'browse and edit repository file through the UI' do
           page.must_have_css('tr', count: 2)
           within(:xpath, '//tr[2]') do
             within('td.revert') do
-              find('a').click
+              find('input.btn').click
             end
           end
         end

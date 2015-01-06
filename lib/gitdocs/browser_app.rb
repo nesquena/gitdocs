@@ -76,10 +76,6 @@ module Gitdocs
           :revisions,
           locals: default_locals.merge(revisions: path.revisions)
         )
-      # TODO: revert and delete should be moved into the PUT/DELETE handler
-      when 'revert'
-        path.revert(params[:revision])
-        redirect to("/#{id}/#{path.relative_path}")
       when 'raw'
         send_file(path.absolute_path)
       else
@@ -145,6 +141,17 @@ module Gitdocs
           filename = file[:filename]
           FileUtils.mv(tempfile.path, path.absolute_path)
           "/#{id}/#{path.relative_path}/#{filename}"
+        end
+      redirect to(redirect_path)
+    end
+
+    put('/:id*') do
+      redirect_path =
+        if params[:revision]
+          path.revert(params[:revision])
+          "/#{id}/#{path.relative_path}"
+        else
+          halt(400)
         end
       redirect to(redirect_path)
     end
