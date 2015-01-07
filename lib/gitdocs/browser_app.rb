@@ -131,9 +131,6 @@ module Gitdocs
     post('/:id*') do
       redirect_path =
         case params[:mode]
-        when 'save'
-          path.write(params[:data], params[:message])
-          "/#{id}/#{path.relative_path}"
         when 'upload'
           file = params['file']
           halt(404) unless file
@@ -147,8 +144,11 @@ module Gitdocs
 
     put('/:id*') do
       redirect_path =
-        if params[:revision]
+        if params[:revision] # revert
           path.revert(params[:revision])
+          "/#{id}/#{path.relative_path}"
+        elsif params[:data] && params[:message] # save
+          path.write(params[:data], params[:message])
           "/#{id}/#{path.relative_path}"
         else
           halt(400)

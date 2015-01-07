@@ -2,11 +2,12 @@
 
 = haml(:_header, locals: { file: true, idx: idx })
 
-%form.edit{ action: "#{request.path_info}?mode=save", method: 'POST', style: 'display:none;' }
+%form.edit{ method: 'POST', style: 'display:none;' }
   #editor
   %textarea#data{ name: 'data' }= preserve contents
   .clearfix
     %textarea.span16#message{ name: 'message', placeholder: 'Optional commit message.' }
+  %input{ name: '_method', type: 'hidden', value: 'put' }
   %input.btn.primary{ type: 'submit', value: 'Save' }
   %a.btn.secondary{ href: request.path_info } Cancel
   %input.filename{ type: 'hidden', value: request.path_info }
