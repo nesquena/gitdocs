@@ -15,6 +15,11 @@ class Gitdocs::Repository::Path
     )
   end
 
+  def join(path_fragment)
+    @relative_path = File.join(@relative_path, path_fragment)
+    @absolute_path = File.join(@absolute_path, path_fragment)
+  end
+
   # Write the content to the path and create any necessary directories.
   #
   # @param [String] content
