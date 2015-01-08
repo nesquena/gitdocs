@@ -120,14 +120,11 @@ module Gitdocs
 
     post('/:id*') do
       redirect_path =
-        if params['file']
-          file = params['file']
-          halt(404) unless file
-          tempfile = file[:tempfile]
-          filename = file[:filename]
-          FileUtils.mv(tempfile.path, path.absolute_path)
-          "/#{id}/#{path.relative_path}/#{filename}"
-        elsif params[:filename]
+        if params[:file] # upload
+          path.join(params[:file][:filename])
+          FileUtils.mv(params[:file][:tempfile].path, path.absolute_path)
+          "/#{id}/#{path.relative_path}"
+        elsif params[:filename] # add file/directory
           path.join(params[:filename])
           if params[:new_file]
             path.touch

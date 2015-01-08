@@ -27,9 +27,9 @@
 
 .row
   .span6
-    %form.upload{ method: 'POST', enctype: 'multipart/form-data', action: "#{request.path_info}?mode=upload" }
+    %form.upload{ method: 'POST', enctype: 'multipart/form-data' }
       %p Upload file to this directory
-      %input.uploader{ type: 'file',   value: 'Select a file', name: 'file', size: 12 }
+      %input.uploader{ type: 'file', value: 'Select a file', name: 'file', size: 12 }
       %input.btn.secondary{ type: 'submit', value: 'Upload file' }
   .span8
     %form.add{ method: 'POST' }
