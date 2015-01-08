@@ -79,65 +79,67 @@ module Gitdocs
       when 'raw'
         send_file(path.absolute_path)
       else
-        if path.exist?
-          if path.directory?
-            rendered_readme =
-              if path.readme_path
-                <<-EOS.gusb(/^\s+/, '')
-                  <h3>#{File.basename(path.readme_path)}</h3>
-                  <div class="tilt">#{render(path.readme_path)}</div>
-                EOS
-              end
-            haml(
-              :dir,
-              locals: default_locals.merge(
-                contents:        path.file_listing,
-                rendered_readme: rendered_readme
-              )
+        if path.directory?
+          rendered_readme =
+            if path.readme_path
+              <<-EOS.gusb(/^\s+/, '')
+                <h3>#{File.basename(path.readme_path)}</h3>
+                <div class="tilt">#{render(path.readme_path)}</div>
+              EOS
+            end
+          haml(
+            :dir,
+            locals: default_locals.merge(
+              contents:        path.file_listing,
+              rendered_readme: rendered_readme
             )
-          else
-            revision_path = path.absolute_path(params[:revision])
-            contents =
-              begin # Attempt to render with Tilt
-                %(<div class="tilt">#{Tilt.new(revision_path).render}</div>)
-              rescue LoadError, RuntimeError # No tilt support
-                if path.text?
-                  <<-EOS.gsub(/^\s+/, '')
-                    <pre class="CodeRay">
-                      #{CodeRay.scan_file(revision_path).encode(:html)}
-                    </pre>
-                  EOS
-                else
-                  %(<embed class="inline-file" src="/#{id}#{request.path_info}?mode=raw"></embed>)
-                end
-              end
-            haml(
-              :file,
-              locals: default_locals.merge(contents: contents)
-            )
-          end
+          )
         else
-          if params[:dir]
-            path.mkdir
-            redirect to("/#{id}/#{path.relative_path}")
-          else
-            path.touch
-            redirect to("/#{id}/#{path.relative_path}?mode=edit")
-          end
+          revision_path = path.absolute_path(params[:revision])
+          contents =
+            begin # Attempt to render with Tilt
+              %(<div class="tilt">#{Tilt.new(revision_path).render}</div>)
+            rescue LoadError, RuntimeError # No tilt support
+              if path.text?
+                <<-EOS.gsub(/^\s+/, '')
+                  <pre class="CodeRay">
+                    #{CodeRay.scan_file(revision_path).encode(:html)}
+                  </pre>
+                EOS
+              else
+                %(<embed class="inline-file" src="/#{id}#{request.path_info}?mode=raw"></embed>)
+              end
+            end
+          haml(
+            :file,
+            locals: default_locals.merge(contents: contents)
+          )
         end
       end
     end
 
     post('/:id*') do
       redirect_path =
-        case params[:mode]
-        when 'upload'
+        if params['file']
           file = params['file']
           halt(404) unless file
           tempfile = file[:tempfile]
           filename = file[:filename]
           FileUtils.mv(tempfile.path, path.absolute_path)
           "/#{id}/#{path.relative_path}/#{filename}"
+        elsif params[:filename]
+          path.join(params[:filename])
+          if params[:new_file]
+            path.touch
+            "/#{id}/#{path.relative_path}?mode=edit"
+          elsif params[:new_directory]
+            path.mkdir
+            "/#{id}/#{path.relative_path}"
+          else
+            halt(400)
+          end
+        else
+          halt(400)
         end
       redirect to(redirect_path)
     end
@@ -151,7 +153,8 @@ module Gitdocs
           path.write(params[:data], params[:message])
           "/#{id}/#{path.relative_path}"
         else
-          halt(400)
+          # No valid inputs, do nothing and redirect.
+          "/#{id}/#{path.relative_path}"
         end
       redirect to(redirect_path)
     end

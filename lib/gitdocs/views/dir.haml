@@ -32,11 +32,11 @@
       %input.uploader{ type: 'file',   value: 'Select a file', name: 'file', size: 12 }
       %input.btn.secondary{ type: 'submit', value: 'Upload file' }
   .span8
-    %form.add
+    %form.add{ method: 'POST' }
       %p Add new file or directory
-      %input.edit{ type: 'text',   name: 'path', placeholder: 'somefile.md or somedir' }
-      %input.btn.secodary.file{ type: 'submit', value: 'New file' }
-      %input.btn.secondary.directory{ type: 'submit', value: 'New directory' }
+      %input{ type: 'text',   name: 'filename', placeholder: 'somefile.md or somedir' }
+      %input.btn.secondary{ type: 'submit', name: 'new_file', value: 'New file' }
+      %input.btn.secondary{ type: 'submit', name: 'new_directory', value: 'New directory' }
 
 - if rendered_readme
   .contents

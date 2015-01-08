@@ -107,7 +107,7 @@ describe 'browse and edit repository file through the UI' do
   describe 'creation' do
     it 'should allow directory creation' do
       within('form.add') do
-        fill_in('path', with: 'new_directory')
+        fill_in('filename', with: 'new_directory')
         click_button('directory')
       end
       within('h2') { page.must_have_content('/new_directory') }
@@ -116,7 +116,7 @@ describe 'browse and edit repository file through the UI' do
 
     it 'should allow file creation' do
       within('form.add') do
-        fill_in('path', with: 'new_file')
+        fill_in('filename', with: 'new_file')
         click_button('file')
       end
 
