@@ -1,4 +1,4 @@
-- @title = "Matches for #{request.params['q'].inspect}"
+- @title = "Matches for &quot;#{request.params['q']}&quot;"
 %script{ src: '/js/search.js', type: 'text/javascript', charset: 'utf-8' }
 
 .results{ 'data-query' => request.params['q'] }

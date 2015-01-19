@@ -1,6 +1,6 @@
 - @title = root
 
-= partial('header', locals: { file: false, idx: idx })
+= haml(:_header, locals: { file: false, idx: idx })
 
 - if contents && contents.any?
   %table#fileListing.condensed-table.zebra-striped
@@ -16,7 +16,7 @@
         %tr
           %td
             %img{ src: "/img/#{f.is_directory ? 'folder' : 'file'}.png", width: 16, height: 16 }
-            %a{ href: "/#{idx}#{request.path_info}/#{f.name}" }
+            %a{ href: "#{request.path_info}/#{f.name}" }
               = f.name
           %td.author
           %td.modified
@@ -27,16 +27,16 @@
 
 .row
   .span6
-    %form.upload{ method: 'POST', enctype: 'multipart/form-data', action: "/#{idx}#{request.path_info}?mode=upload" }
+    %form.upload{ method: 'POST', enctype: 'multipart/form-data' }
       %p Upload file to this directory
-      %input.uploader{ type: 'file',   value: 'Select a file', name: 'file', size: 12 }
+      %input.uploader{ type: 'file', value: 'Select a file', name: 'file', size: 12 }
       %input.btn.secondary{ type: 'submit', value: 'Upload file' }
   .span8
-    %form.add
+    %form.add{ method: 'POST' }
       %p Add new file or directory
-      %input.edit{ type: 'text',   name: 'path', placeholder: 'somefile.md or somedir' }
-      %input.btn.secodary.file{ type: 'submit', value: 'New file' }
-      %input.btn.secondary.directory{ type: 'submit', value: 'New directory' }
+      %input{ type: 'text',   name: 'filename', placeholder: 'somefile.md or somedir' }
+      %input.btn.secondary{ type: 'submit', name: 'new_file', value: 'New file' }
+      %input.btn.secondary{ type: 'submit', name: 'new_directory', value: 'New directory' }
 
 - if rendered_readme
   .contents

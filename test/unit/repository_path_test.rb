@@ -12,6 +12,13 @@ describe Gitdocs::Repository::Path do
     FileUtils.rm_rf('tmp/unit')
   end
 
+  describe '#join' do
+    subject { path.join('new_file') }
+    before { subject }
+    it { path.relative_path.must_equal('directory/file/new_file') }
+    it { path.absolute_path.must_equal(absolute_local_path('new_file')) }
+  end
+
   describe '#write' do
     subject { path.write('foobar', :message) }
     before { repository.expects(:write_commit_message).with(:message) }

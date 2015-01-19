@@ -1,14 +1,15 @@
 - @title = root
 
-= partial('header', locals: { file: true, idx: idx })
+= haml(:_header, locals: { file: true, idx: idx })
 
-%form.edit{ action: "/#{idx}#{request.path_info}?mode=save", method: 'POST', style: 'display:none;' }
+%form.edit{ method: 'POST', style: 'display:none;' }
   #editor
   %textarea#data{ name: 'data' }= preserve contents
   .clearfix
     %textarea.span16#message{ name: 'message', placeholder: 'Optional commit message.' }
+  %input{ name: '_method', type: 'hidden', value: 'put' }
   %input.btn.primary{ type: 'submit', value: 'Save' }
-  %a.btn.secondary{ href: "/#{idx}#{request.path_info}" } Cancel
+  %a.btn.secondary{ href: request.path_info } Cancel
   %input.filename{ type: 'hidden', value: request.path_info }
 
-= partial('ace_scripts')
+= erb(:_ace_scripts)

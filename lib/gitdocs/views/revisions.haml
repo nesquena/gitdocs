@@ -1,6 +1,6 @@
 - @title = root
 
-= partial('header', locals: { file: true, idx: idx })
+= haml(:_header, locals: { file: true, idx: idx })
 
 - if revisions && revisions.any?
   %table#revisions.condensed-table.zebra-striped
@@ -22,7 +22,8 @@
           %td.author= r[:author]
           %td.date.reldate= r[:date].iso8601
           %td.revert
-            %a{ href: "?mode=revert&revision=#{r[:commit]}" }
-              = r[:commit]
+            %form{ method: 'POST', :'data-confirm-submit' => 'Are you sure?' }
+              %input{ name: '_method', type: 'hidden', value: 'put' }
+              %input.btn{ type: 'submit', name: 'revision', value: r[:commit] }
 - if revisions.empty?
   %p No revisions for this file could be found.
