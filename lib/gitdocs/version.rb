@@ -1,3 +1,3 @@
 module Gitdocs
-  VERSION = '0.5.0.pre7'
+  VERSION = '0.5.0'
 end
