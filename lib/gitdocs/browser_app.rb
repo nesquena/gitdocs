@@ -1,15 +1,16 @@
 # -*- encoding : utf-8 -*-
 
 require 'sinatra/base'
-require 'coderay'
 require 'uri'
 require 'haml'
 require 'mimetype_fu'
-require 'tilt'
+require 'gitdocs/rendering_helper'
 
 module Gitdocs
   class BrowserApp < Sinatra::Base
     set :haml, format: :html5
+
+    helpers Gitdocs::RenderingHelper
 
     get('/') do
       if settings.repositories.size == 1
@@ -80,39 +81,21 @@ module Gitdocs
         send_file(path.absolute_path)
       else
         if path.directory?
-          rendered_readme =
-            if path.readme_path
-              <<-EOS.gusb(/^\s+/, '')
-                <h3>#{File.basename(path.readme_path)}</h3>
-                <div class="tilt">#{render(path.readme_path)}</div>
-              EOS
-            end
           haml(
             :dir,
             locals: default_locals.merge(
               contents:        path.file_listing,
-              rendered_readme: rendered_readme
+              rendered_readme: file_content_render(path.readme_path)
             )
           )
         else
-          revision_path = path.absolute_path(params[:revision])
-          contents =
-            begin # Attempt to render with Tilt
-              %(<div class="tilt">#{Tilt.new(revision_path).render}</div>)
-            rescue LoadError, RuntimeError # No tilt support
-              if path.text?
-                <<-EOS.gsub(/^\s+/, '')
-                  <pre class="CodeRay">
-                    #{CodeRay.scan_file(revision_path).encode(:html)}
-                  </pre>
-                EOS
-              else
-                %(<embed class="inline-file" src="/#{id}#{request.path_info}?mode=raw"></embed>)
-              end
-            end
           haml(
             :file,
-            locals: default_locals.merge(contents: contents)
+            locals: default_locals.merge(
+              contents: file_content_render(
+                path.absolute_path(params[:revision])
+              )
+            )
           )
         end
       end
