@@ -20,6 +20,8 @@ describe 'browse and edit repository file through the UI' do
     repository.commit
     write_file('local/file2', 'A5A5A5A5')
     repository.commit
+    write_file('local/README.md', 'hello i am a README')
+    repository.commit
 
     start_daemon
 
@@ -32,10 +34,14 @@ describe 'browse and edit repository file through the UI' do
     end
   end
 
+  it 'should show the README' do
+    page.must_have_content('hello i am a README')
+  end
+
   it 'should browse text files' do
     within('table#fileListing') do
       within('tbody') do
-        page.must_have_css('tr', count: 2)
+        page.must_have_css('tr', count: 3)
         click_link('file1')
       end
     end
@@ -140,7 +146,7 @@ describe 'browse and edit repository file through the UI' do
     click_on('Delete')
     within('table#fileListing') do
       within('tbody') do
-        page.must_have_css('tr', count: 1)
+        page.must_have_css('tr', count: 2)
         page.wont_have_content('file1')
         page.must_have_content('file2')
       end
