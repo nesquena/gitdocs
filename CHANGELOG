@@ -2,6 +2,7 @@
  * upgrade gems activerecord, minitest, haml-lint, redcarpet (@acant)
  * convert web interface to use Sinatra instead of renee (@acant)
  * add rake task to run the web interface standalone using the shotgun gem (@acant)
+ * add fenced code (and syntax highlighting) into Markdown parsing (@acant)
 
 0.5.0.pre7 (August 3rd 2014)
 
