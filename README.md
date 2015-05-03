@@ -59,6 +59,7 @@ gem install gitdocs
 If you have Growl installed on Max OSX, you'll probably want to run:
 
 ```
+brew install caskroom/cask/brew-cask
 brew install growlnotify
 ```
 
