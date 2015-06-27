@@ -10,7 +10,7 @@ module Gitdocs
   class BrowserApp < Sinatra::Base
     set :haml, format: :html5
 
-    helpers Gitdocs::RenderingHelper
+    helpers RenderingHelper
 
     get('/') do
       if settings.repositories.size == 1
@@ -30,7 +30,7 @@ module Gitdocs
       haml(
         :search,
         locals: {
-          results: Gitdocs::Search.new(settings.repositories).search(params[:q]),
+          results: Search.new(settings.repositories).search(params[:q]),
           nav_state: nil
         }
       )
@@ -45,7 +45,7 @@ module Gitdocs
       # @return [Gitdocs::Repository::Path]
       def path
         halt(404) unless settings.repositories[id]
-        @path ||= Gitdocs::Repository::Path.new(
+        @path ||= Repository::Path.new(
           settings.repositories[id], URI.unescape(params[:splat].first)
         )
       end

@@ -11,8 +11,8 @@ module Gitdocs
     def initialize(share)
       @share = share
       @polling_interval = share.polling_interval
-      @notifier         = Gitdocs::Notifier.new(@share.notification)
-      @repository       = Gitdocs::Repository.new(share)
+      @notifier         = Notifier.new(@share.notification)
+      @repository       = Repository.new(share)
     end
 
     def root

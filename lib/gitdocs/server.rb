@@ -10,7 +10,7 @@ module Gitdocs
       @manager      = manager
       @port         = port.to_i
       @repositories = repositories
-      @search       = Gitdocs::Search.new(repositories)
+      @search       = Search.new(repositories)
     end
 
     def self.start_and_wait(manager, override_port, repositories)
@@ -24,7 +24,7 @@ module Gitdocs
     end
 
     def start
-      Gitdocs::BrowserApp.set :repositories, @repositories
+      BrowserApp.set :repositories, @repositories
 
       Thin::Logging.debug = @manager.debug
       Thin::Server.start('127.0.0.1', @port) do
@@ -33,8 +33,8 @@ module Gitdocs
           root: File.expand_path('../public', __FILE__)
         use Rack::MethodOverride
 
-        map('/settings') { run Gitdocs::SettingsApp }
-        map('/') { run Gitdocs::BrowserApp }
+        map('/settings') { run SettingsApp }
+        map('/') { run BrowserApp }
       end
     end
 

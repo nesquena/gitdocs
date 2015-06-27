@@ -34,7 +34,7 @@ module Gitdocs
       # Report all errors in log
       log("#{e.class.inspect} - #{e.inspect} - #{e.message.inspect}", :error)
       log(e.backtrace.join("\n"), :error)
-      Gitdocs::Notifier.error(
+      Notifier.error(
         'Unexpected exit',
         'Something went wrong. Please see the log for details.'
       )

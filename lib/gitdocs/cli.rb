@@ -79,7 +79,7 @@ module Gitdocs
     method_option :pid, type: :string, aliases: '-P'
     desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
     def create(path, remote)
-      Gitdocs::Repository.clone(path, remote)
+      Repository.clone(path, remote)
       add(path)
       say "Created #{path} path for gitdoc"
     end
@@ -93,7 +93,7 @@ module Gitdocs
       say 'Watched repositories:'
       tp.set(:max_width, 100)
       status_display = lambda do |share|
-        repository = Gitdocs::Repository.new(share)
+        repository = Repository.new(share)
 
         status = ''
         status += '*' if repository.dirty?
