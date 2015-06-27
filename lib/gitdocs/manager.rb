@@ -4,18 +4,19 @@ module Gitdocs
   Restart = Class.new(RuntimeError)
 
   class Manager
-    attr_reader :config, :debug
+    attr_reader :debug
 
     def initialize(config_root, debug)
-      @config = Configuration.new(config_root)
-      @logger = Logger.new(File.expand_path('log', @config.config_root))
-      @debug  = debug
+      Initializer.root_dirname = config_root
+      @logger      = Logger.new(File.expand_path('log', Initializer.root_dirname))
+      @debug       = debug
       yield @config if block_given?
     end
 
     def start(web_port = nil)
       log("Starting Gitdocs v#{VERSION}...")
-      log("Using configuration root: '#{config.config_root}'")
+      log("Using configuration root: '#{Initializer.root_dirname}'")
+      shares = Share.all
       log("Shares: (#{shares.length}) #{shares.map(&:inspect).join(', ')}")
 
       begin
@@ -58,29 +59,6 @@ module Gitdocs
     # log("message")
     def log(msg, level = :info)
       @debug ? puts(msg) : @logger.send(level, msg)
-    end
-
-    def start_web_frontend
-      config.start_web_frontend
-    end
-
-    def web_frontend_port
-      config.web_frontend_port
-    end
-
-    def shares
-      config.shares
-    end
-
-    # @see Gitdocs::Configuration#update_all
-    def update_all(new_config)
-      config.update_all(new_config)
-      EM.add_timer(0.1) { restart }
-    end
-
-    # @see Gitdocs::Configuration#remove_by_id
-    def remove_by_id(id)
-      config.remove_by_id(id)
     end
   end
 end

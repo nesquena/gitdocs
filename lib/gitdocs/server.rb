@@ -14,9 +14,9 @@ module Gitdocs
     end
 
     def self.start_and_wait(manager, override_port, repositories)
-      return false unless manager.start_web_frontend
+      return false unless Configuration.start_web_frontend
 
-      web_port = override_port || manager.web_frontend_port
+      web_port = override_port || Configuration.web_frontend_port
       server = Server.new(manager, web_port, repositories)
       server.start
       server.wait_for_start
@@ -24,7 +24,6 @@ module Gitdocs
     end
 
     def start
-      Gitdocs::SettingsApp.set :manager, @manager
       Gitdocs::BrowserApp.set :repositories, @repositories
 
       Thin::Logging.debug = @manager.debug

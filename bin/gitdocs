@@ -2,4 +2,5 @@
 
 require 'gitdocs'
 
+Gitdocs::Initializer.initialize_all
 Gitdocs::Cli.start(ARGV)

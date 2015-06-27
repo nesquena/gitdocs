@@ -10,6 +10,8 @@ require 'rugged'
 require 'table_print'
 
 require 'gitdocs/version'
+require 'gitdocs/initializer'
+require 'gitdocs/share'
 require 'gitdocs/configuration'
 require 'gitdocs/runner'
 require 'gitdocs/server'

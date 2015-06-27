@@ -90,8 +90,8 @@ module Helper
   end
 
   def start_daemon
-    configuration = Gitdocs::Configuration.new
-    configuration.shares.each do |share|
+    Gitdocs::Initializer.initialize_database
+    Gitdocs::Share.all.each do |share|
       share.update_attributes(polling_interval: 0.1, notification: false)
     end
 

@@ -21,7 +21,7 @@ class Gitdocs::Repository
   # @see #valid?
   # @see #invalid_reason
   #
-  # @param [String, Configuration::Share] path_or_share
+  # @param [String, Share] path_or_share
   def initialize(path_or_share)
     path = path_or_share
     if path_or_share.respond_to?(:path)

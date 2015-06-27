@@ -57,7 +57,7 @@ module Gitdocs
     method_option :pid, type: :string, aliases: '-P'
     desc 'add PATH', 'Adds a path to gitdocs'
     def add(path)
-      config.add_path(path)
+      Share.create_by_path!(normalize_path(path))
       say "Added path #{path} to doc list"
       restart if running?
     end
@@ -65,14 +65,14 @@ module Gitdocs
     method_option :pid, type: :string, aliases: '-P'
     desc 'rm PATH', 'Removes a path from gitdocs'
     def rm(path)
-      config.remove_path(path)
+      Share.remove_by_path(path)
       say "Removed path #{path} from doc list"
       restart if running?
     end
 
     desc 'clear', 'Clears all paths from gitdocs'
     def clear
-      config.clear
+      Share.destroy_all
       say 'Cleared paths from gitdocs'
     end
 
@@ -103,7 +103,7 @@ module Gitdocs
         status
       end
       tp(
-        config.shares,
+        Share.all,
         { sync: { display_method: :sync_type } },
         { s: status_display },
         :path
@@ -120,7 +120,7 @@ module Gitdocs
       end
 
       web_port = options[:port]
-      web_port ||= config.web_frontend_port
+      web_port ||= Configuration.web_frontend_port
       Launchy.open("http://localhost:#{web_port}/")
     end
 
@@ -146,10 +146,6 @@ module Gitdocs
         )
       end
 
-      def config
-        @config ||= Configuration.new
-      end
-
       def running?
         runner.daemon_running?
       end
@@ -160,6 +156,12 @@ module Gitdocs
 
       def pid_path
         options[:pid] || '/tmp/gitdocs.pid'
+      end
+
+      # @param [String] path
+      # @return [String]
+      def normalize_path(path)
+        File.expand_path(path, Dir.pwd)
       end
 
       # @return [Symbol] to indicate how the file system is being watched
