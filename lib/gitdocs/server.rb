@@ -10,7 +10,6 @@ module Gitdocs
       @manager      = manager
       @port         = port.to_i
       @repositories = repositories
-      @search       = Search.new(repositories)
     end
 
     def self.start_and_wait(manager, override_port, repositories)
