@@ -30,7 +30,7 @@ module Gitdocs
       haml(
         :search,
         locals: {
-          results: Search.new(settings.repositories).search(params[:q]),
+          results:   Search.search(params[:q]),
           nav_state: nil
         }
       )
