@@ -8,9 +8,8 @@ module Gitdocs
 
     def initialize(config_root, debug)
       Initializer.root_dirname = config_root
-      @logger      = Logger.new(File.expand_path('log', Initializer.root_dirname))
-      @debug       = debug
-      yield @config if block_given?
+      @logger = Logger.new(File.expand_path('log', Initializer.root_dirname))
+      @debug  = debug
     end
 
     def start(override_web_port)
