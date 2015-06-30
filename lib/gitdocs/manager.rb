@@ -13,7 +13,7 @@ module Gitdocs
       yield @config if block_given?
     end
 
-    def start(web_port = nil)
+    def start(override_web_port)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{Initializer.root_dirname}'")
       shares = Share.all
@@ -24,8 +24,7 @@ module Gitdocs
           log('Starting EM loop...')
 
           @runners = Runner.start_all(shares)
-          repositories = shares.map { |x| Repository.new(x) }
-          Server.start_and_wait(self, web_port, repositories)
+          Server.start_and_wait(self, override_web_port)
         end
       rescue Restart
         retry

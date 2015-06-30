@@ -12,17 +12,31 @@ module Gitdocs
 
     helpers RenderingHelper
 
+    helpers do
+      # @return [Integer]
+      def id
+        @id ||= params[:id].to_i
+      end
+
+      # @return [Gitdocs::Repository::Path]
+      def repository
+        @repository ||= Repository.new(Share.at(id))
+      end
+
+      # @return [Gitdocs::Repository::Path]
+      def path
+        halt(404) unless repository
+        @path ||= Repository::Path.new(
+          repository, URI.unescape(params[:splat].first)
+        )
+      end
+    end
+
     get('/') do
-      if settings.repositories.size == 1
+      if Share.all.count == 1
         redirect to('/0/')
       else
-        haml(
-          :home,
-          locals: {
-            shares:    settings.repositories,
-            nav_state: 'home'
-          }
-        )
+        haml(:home, locals: { nav_state: 'home' })
       end
     end
 
@@ -36,25 +50,10 @@ module Gitdocs
       )
     end
 
-    helpers do
-      # @return [Integer]
-      def id
-        @id ||= params[:id].to_i
-      end
-
-      # @return [Gitdocs::Repository::Path]
-      def path
-        halt(404) unless settings.repositories[id]
-        @path ||= Repository::Path.new(
-          settings.repositories[id], URI.unescape(params[:splat].first)
-        )
-      end
-    end
-
     get('/:id*') do
       default_locals = {
         idx:       id,
-        root:      settings.repositories[id].root,
+        root:      repository.root,
         nav_state: nil
       }
 

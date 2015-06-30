@@ -6,25 +6,22 @@ require 'gitdocs/settings_app'
 
 module Gitdocs
   class Server
-    def initialize(manager, port = 8888, repositories)
-      @manager      = manager
-      @port         = port.to_i
-      @repositories = repositories
+    def initialize(manager, port)
+      @manager = manager
+      @port    = port.to_i
     end
 
-    def self.start_and_wait(manager, override_port, repositories)
+    def self.start_and_wait(manager, override_port)
       return false unless Configuration.start_web_frontend
 
       web_port = override_port || Configuration.web_frontend_port
-      server = Server.new(manager, web_port, repositories)
+      server = Server.new(manager, web_port)
       server.start
       server.wait_for_start
       true
     end
 
     def start
-      BrowserApp.set :repositories, @repositories
-
       Thin::Logging.debug = @manager.debug
       Thin::Server.start('127.0.0.1', @port) do
         use Rack::Static,
