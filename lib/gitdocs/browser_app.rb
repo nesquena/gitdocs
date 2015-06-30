@@ -20,7 +20,7 @@ module Gitdocs
 
       # @return [Gitdocs::Repository::Path]
       def repository
-        @repository ||= Repository.new(Share.at(id))
+        @repository ||= Repository.new(Share.find(id))
       end
 
       # @return [Gitdocs::Repository::Path]
@@ -34,7 +34,7 @@ module Gitdocs
 
     get('/') do
       if Share.all.count == 1
-        redirect to('/0/')
+        redirect to("/#{Share.first.id}/")
       else
         haml(:home, locals: { nav_state: 'home' })
       end
@@ -52,7 +52,6 @@ module Gitdocs
 
     get('/:id*') do
       default_locals = {
-        idx:       id,
         root:      repository.root,
         nav_state: nil
       }
