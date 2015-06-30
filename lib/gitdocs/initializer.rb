@@ -59,5 +59,15 @@ module Gitdocs
       return if value.nil?
       @database = value
     end
+
+    # @return [Boolean]
+    def self.debug
+      @debug ||= false
+    end
+
+    # @param [Boolean] value
+    def self.debug=(value)
+      @debug = value
+    end
   end
 end

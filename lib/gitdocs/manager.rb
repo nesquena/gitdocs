@@ -4,12 +4,8 @@ module Gitdocs
   Restart = Class.new(RuntimeError)
 
   class Manager
-    attr_reader :debug
-
-    def initialize(config_root, debug)
-      Initializer.root_dirname = config_root
+    def initialize
       @logger = Logger.new(File.expand_path('log', Initializer.root_dirname))
-      @debug  = debug
     end
 
     def start(override_web_port)
@@ -56,7 +52,7 @@ module Gitdocs
     # Logs and outputs to file or stdout based on debugging state
     # log("message")
     def log(msg, level = :info)
-      @debug ? puts(msg) : @logger.send(level, msg)
+      Initializer.debug ? puts(msg) : @logger.send(level, msg)
     end
   end
 end

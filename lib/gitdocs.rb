@@ -23,14 +23,11 @@ require 'gitdocs/repository/path'
 require 'gitdocs/search'
 
 module Gitdocs
-  DEBUG = ENV['DEBUG']
-
-  # Gitdocs.start(:config_root => "...", :debug => true)
-  def self.start(options = {})
-    options = { debug: DEBUG, config_root: nil }.merge(options)
+  # @param [nil, Integer] override_web_port
+  def self.start(override_web_port)
     @manager.stop if @manager
-    @manager = Manager.new(options[:config_root], options[:debug])
-    @manager.start(options[:port])
+    @manager = Manager.new
+    @manager.start(override_web_port)
   end
 
   def self.restart

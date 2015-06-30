@@ -24,9 +24,10 @@ module Gitdocs
 
       if options[:debug]
         say 'Starting in debug mode', :yellow
-        Gitdocs.start(debug: true, port: options[:port])
+        Gitdocs::Initializer.debug = true
+        Gitdocs.start(options[:port])
       else
-        runner.execute { Gitdocs.start(port: options[:port]) }
+        runner.execute { Gitdocs.start(options[:port]) }
         if running?
           say 'Started gitdocs', :green
         else
