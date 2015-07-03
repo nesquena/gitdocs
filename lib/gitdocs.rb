@@ -37,4 +37,17 @@ module Gitdocs
   def self.stop
     @manager.stop
   end
+
+  # @return [Logger]
+  def self.logger
+    return @logger if @logger
+
+    output =
+      if Initializer::debug
+        STDOUT
+      else
+        File.expand_path('log', Initializer.root_dirname)
+      end
+    @logger = Logger.new(output)
+  end
 end

@@ -4,10 +4,7 @@ module Gitdocs
   Restart = Class.new(RuntimeError)
 
   class Manager
-    def initialize
-      @logger = Logger.new(File.expand_path('log', Initializer.root_dirname))
-    end
-
+    # @param [nil, #to_i] override_web_port
     def start(override_web_port)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{Initializer.root_dirname}'")
@@ -19,7 +16,7 @@ module Gitdocs
           log('Starting EM loop...')
 
           @runners = Runner.start_all(shares)
-          Server.start_and_wait(self, override_web_port)
+          Server.start_and_wait(override_web_port)
         end
       rescue Restart
         retry
@@ -49,10 +46,14 @@ module Gitdocs
       EM.stop
     end
 
-    # Logs and outputs to file or stdout based on debugging state
-    # log("message")
-    def log(msg, level = :info)
-      Initializer.debug ? puts(msg) : @logger.send(level, msg)
+    ############################################################################
+
+    private
+
+    # @param [String] msg
+    # @return [void]
+    def log(msg)
+      Gitdocs.logger.info(msg)
     end
   end
 end
