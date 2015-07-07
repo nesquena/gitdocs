@@ -65,6 +65,8 @@ module Gitdocs
     end
 
     def sync_changes
+      return unless @repository.valid?
+
       # Commit #################################################################
       @repository.commit if @share.sync_type == 'full'
 
