@@ -182,28 +182,11 @@ class Gitdocs::Repository
     mark_conflicts
   end
 
-  # Commit the working directory
-  #
-  # @return [nil] if the repository is invalid
-  # @return [Boolean] whether a commit was made or not
+  # @return [nil]
+  # @return (see Gitdocs::Repository::Comitter#commit)
   def commit
-    return nil unless valid?
-
-    # Do this first to allow the message file to be deleted, if it exists.
-    message = read_and_delete_commit_message_file
-
-    mark_empty_directories
-
-    return false unless dirty?
-
-    # Commit any changes in the working directory.
-    Dir.chdir(root) do
-      @rugged.index.add_all
-      @rugged.index.update_all
-    end
-    @rugged.index.write
-    @grit.commit_index(message)
-    true
+    return unless valid?
+    Committer.new(root).commit
   end
 
   # Push the repository
@@ -245,12 +228,11 @@ class Gitdocs::Repository
     {}
   end
 
-  # @param [String] message
+  # @param (see Gitdocs::Repository::Comitter#write_commit_message)
+  # @return [void]
   def write_commit_message(message)
-    return unless message
-    return if message.empty?
-
-    File.open(@commit_message_path, 'w') { |f| f.print(message) }
+    return unless valid?
+    Committer.new(root).write_commit_message(message)
   end
 
   # Excluding the initial commit (without a parent) which keeps things

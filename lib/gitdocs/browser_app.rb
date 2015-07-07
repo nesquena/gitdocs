@@ -123,18 +123,16 @@ module Gitdocs
     end
 
     put('/:id*') do
-      redirect_path =
+      commit_message =
         if params[:revision] # revert
           path.revert(params[:revision])
-          "/#{id}/#{path.relative_path}"
+          "Reverting '#{path.relative_path}' to #{params[:revision]}"
         elsif params[:data] && params[:message] # save
-          path.write(params[:data], params[:message])
-          "/#{id}/#{path.relative_path}"
-        else
-          # No valid inputs, do nothing and redirect.
-          "/#{id}/#{path.relative_path}"
+          path.write(params[:data])
+          params[:message]
         end
-      redirect to(redirect_path)
+      repository.write_commit_message(commit_message)
+      redirect to("/#{id}/#{path.relative_path}")
     end
 
     delete('/:id*') do

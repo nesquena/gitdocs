@@ -23,12 +23,10 @@ class Gitdocs::Repository::Path
   # Write the content to the path and create any necessary directories.
   #
   # @param [String] content
-  # @param [String] commit_message
-  def write(content, commit_message)
+  # @return [void]
+  def write(content)
     FileUtils.mkdir_p(File.dirname(@absolute_path))
     File.open(@absolute_path, 'w') { |f| f.puts(content) }
-
-    @repository.write_commit_message(commit_message)
   end
 
   # Touch and path and create any necessary directories.
@@ -147,7 +145,7 @@ class Gitdocs::Repository::Path
     # TODO: should consider throwing an exception on this condition
     return unless blob
 
-    write(blob.text, "Reverting '#{@relative_path}' to #{ref}")
+    write(blob.text)
   end
 
   #############################################################################

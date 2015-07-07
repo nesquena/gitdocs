@@ -20,6 +20,8 @@ require 'gitdocs/manager'
 require 'gitdocs/notifier'
 require 'gitdocs/repository'
 require 'gitdocs/repository/path'
+require 'gitdocs/repository/invalid_error'
+require 'gitdocs/repository/committer'
 require 'gitdocs/search'
 
 module Gitdocs
