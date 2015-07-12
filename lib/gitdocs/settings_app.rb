@@ -10,18 +10,20 @@ module Gitdocs
     get('/') do
       haml(
         :settings,
-        locals: { conf: settings.manager, nav_state: 'settings' }
+        locals: { nav_state: 'settings' }
       )
     end
 
     post('/') do
-      settings.manager.update_all(request.POST)
+      Configuration.update(request.POST['config'])
+      Share.update_all(request.POST['share'])
+      EM.add_timer(0.1) { Gitdocs.restart }
       redirect to('/')
     end
 
     delete('/:id') do
       id = params[:id].to_i
-      halt(404) unless settings.manager.remove_by_id(id)
+      halt(404) unless Share.remove_by_id(id)
       redirect to('/')
     end
   end

@@ -21,6 +21,8 @@ describe 'gitdocs runner' do
   describe '#sync_changes' do
     subject { runner.sync_changes }
 
+    before { repository.expects(:valid?).returns(true) }
+
     describe 'fetch sync' do
       before do
         share.stubs(:sync_type).returns('fetch')

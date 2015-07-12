@@ -11,8 +11,8 @@ module Gitdocs
     def initialize(share)
       @share = share
       @polling_interval = share.polling_interval
-      @notifier         = Gitdocs::Notifier.new(@share.notification)
-      @repository       = Gitdocs::Repository.new(share)
+      @notifier         = Notifier.new(@share.notification)
+      @repository       = Repository.new(share)
     end
 
     def root
@@ -65,6 +65,8 @@ module Gitdocs
     end
 
     def sync_changes
+      return unless @repository.valid?
+
       # Commit #################################################################
       @repository.commit if @share.sync_type == 'full'
 

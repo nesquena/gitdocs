@@ -3,8 +3,8 @@
 %p Select a share to browse:
 
 %table#shares
-  - shares.each_with_index do |share, idx|
+  - Gitdocs::Share.all.each do |share|
     %tr
       %td
-        %a{ href: "/#{idx}" }
-          = share.root
+        %a{ href: "/#{share.id}" }
+          = share.path

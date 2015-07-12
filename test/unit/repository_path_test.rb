@@ -20,8 +20,7 @@ describe Gitdocs::Repository::Path do
   end
 
   describe '#write' do
-    subject { path.write('foobar', :message) }
-    before { repository.expects(:write_commit_message).with(:message) }
+    subject { path.write('foobar') }
 
     describe 'directory missing' do
       before { subject }
@@ -342,7 +341,7 @@ describe Gitdocs::Repository::Path do
 
     describe 'blob present' do
       let(:blob) { stub(text: 'deadbeef') }
-      before { path.expects(:write).with('deadbeef', "Reverting '#{relative_path}' to ref") }
+      before { path.expects(:write).with('deadbeef') }
       it { subject }
     end
   end

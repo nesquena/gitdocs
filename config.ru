@@ -10,12 +10,12 @@ use Rack::Static,
   root: './lib/gitdocs/public'
 use Rack::MethodOverride
 
-config_root = './tmp/web'
-FileUtils.mkdir_p(config_root)
-Gitdocs::SettingsApp.set :manager, Gitdocs::Manager.new(config_root, true)
+Gitdocs::Initializer.root_dirname = './tmp/web'
+Gitdocs::Initializer.initialize_database
+
 Gitdocs::SettingsApp.set :logging, true
 map('/settings') { run Gitdocs::SettingsApp }
 
-Gitdocs::BrowserApp.set :repositories, Gitdocs::Configuration.new(config_root).shares.map { |x| Gitdocs::Repository.new(x) }
+Gitdocs::BrowserApp.set :repositories, Gitdocs::Share.all.map { |x| Gitdocs::Repository.new(x) }
 Gitdocs::BrowserApp.set :logging, true
 map('/') { run Gitdocs::BrowserApp }

@@ -507,70 +507,18 @@ describe Gitdocs::Repository do
   describe '#commit' do
     subject { repository.commit }
 
-    let(:path_or_share) do
-      stub(
-        path:        local_repo_path,
-        remote_name: 'origin',
-        branch_name: 'master'
-      )
-    end
-
     describe 'when invalid' do
       let(:path_or_share) { 'tmp/unit/missing' }
       it { subject.must_be_nil }
     end
 
-    # TODO: should test the paths which use the message file
-
-    describe 'no previous commits' do
-      describe 'nothing to commit' do
-        it { subject.must_equal false }
-      end
-
-      describe 'changes to commit' do
-        before do
-          write('file1', 'foobar')
-          mkdir('directory')
-        end
-        it { subject.must_equal true }
-
-        describe 'side effects' do
-          before { subject }
-          it { local_file_exist?('directory/.gitignore').must_equal true }
-          it { commit_count(local_repo).must_equal 1 }
-          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
-          it { local_repo_clean?.must_equal true }
-        end
-      end
-    end
-
-    describe 'previous commits' do
+    describe 'when valid' do
+      let(:path_or_share) { local_repo_path }
       before do
-        write_and_commit('file1', 'foobar', 'initial commit', author1)
-        write_and_commit('file2', 'deadbeef', 'second commit', author1)
+        Gitdocs::Repository::Committer.expects(:new).returns(committer = mock)
+        committer.expects(:commit).returns(:result)
       end
-
-      describe 'nothing to commit' do
-        it { subject.must_equal false }
-      end
-
-      describe 'changes to commit' do
-        before do
-          write('file1', 'foobar')
-          rm_rf('file2')
-          write('file3', 'foobar')
-          mkdir('directory')
-        end
-        it { subject.must_equal true }
-
-        describe 'side effects' do
-          before { subject }
-          it { local_file_exist?('directory/.gitignore').must_equal true }
-          it { commit_count(local_repo).must_equal 3 }
-          it { head_commit(local_repo).message.must_equal "Auto-commit from gitdocs\n" }
-          it { local_repo_clean?.must_equal true }
-        end
-      end
+      it { subject.must_equal(:result) }
     end
   end
 
@@ -710,22 +658,20 @@ describe Gitdocs::Repository do
   end
 
   describe '#write_commit_message' do
-    subject { repository.write_commit_message(commit_message) }
-    before { subject }
+    subject { repository.write_commit_message(:message) }
 
-    describe 'with missing message' do
-      let(:commit_message) { nil }
-      it { local_file_exist?('.gitmessage~').must_equal(false) }
+    describe 'when invalid' do
+      let(:path_or_share) { 'tmp/unit/missing' }
+      it { subject.must_be_nil }
     end
 
-    describe 'with empty message' do
-      let(:commit_message) { '' }
-      it { local_file_exist?('.gitmessage~').must_equal(false) }
-    end
-
-    describe 'with valid message' do
-      let(:commit_message) { 'foobar' }
-      it { local_file_content('.gitmessage~').must_equal('foobar') }
+    describe 'when valid' do
+      let(:path_or_share) { local_repo_path }
+      before do
+        Gitdocs::Repository::Committer.expects(:new).returns(committer = mock)
+        committer.expects(:write_commit_message).with(:message).returns(:result)
+      end
+      it { subject.must_equal(:result) }
     end
   end
 
@@ -838,19 +784,6 @@ describe Gitdocs::Repository do
     0
   end
 
-  def head_commit(repo)
-    walker = Rugged::Walker.new(repo)
-    walker.push(repo.head.target)
-    walker.first
-  rescue Rugged::ReferenceError
-    # The repo does not have a head => no commits => no head commit.
-    nil
-  end
-
-  def head_tree_files(repo)
-    head_commit(repo).tree.map { |x| x[:name] }
-  end
-
   # NOTE: This method is ignoring hidden files.
   def local_file_count
     files = Dir.chdir(local_repo_path) { Dir.glob('*') }
@@ -859,10 +792,6 @@ describe Gitdocs::Repository do
 
   def local_repo_remote_branch
     Rugged::Branch.lookup(local_repo, 'origin/master', :remote)
-  end
-
-  def local_repo_clean?
-    local_repo.diff_workdir(local_repo.head.target, include_untracked: true).deltas.empty?
   end
 
   def local_file_exist?(*path_elements)

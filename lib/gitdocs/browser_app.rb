@@ -10,31 +10,7 @@ module Gitdocs
   class BrowserApp < Sinatra::Base
     set :haml, format: :html5
 
-    helpers Gitdocs::RenderingHelper
-
-    get('/') do
-      if settings.repositories.size == 1
-        redirect to('/0/')
-      else
-        haml(
-          :home,
-          locals: {
-            shares:    settings.repositories,
-            nav_state: 'home'
-          }
-        )
-      end
-    end
-
-    get('/search') do
-      haml(
-        :search,
-        locals: {
-          results: Gitdocs::Search.new(settings.repositories).search(params[:q]),
-          nav_state: nil
-        }
-      )
-    end
+    helpers RenderingHelper
 
     helpers do
       # @return [Integer]
@@ -43,18 +19,40 @@ module Gitdocs
       end
 
       # @return [Gitdocs::Repository::Path]
+      def repository
+        @repository ||= Repository.new(Share.find(id))
+      end
+
+      # @return [Gitdocs::Repository::Path]
       def path
-        halt(404) unless settings.repositories[id]
-        @path ||= Gitdocs::Repository::Path.new(
-          settings.repositories[id], URI.unescape(params[:splat].first)
+        halt(404) unless repository
+        @path ||= Repository::Path.new(
+          repository, URI.unescape(params[:splat].first)
         )
       end
     end
 
+    get('/') do
+      if Share.all.count == 1
+        redirect to("/#{Share.first.id}/")
+      else
+        haml(:home, locals: { nav_state: 'home' })
+      end
+    end
+
+    get('/search') do
+      haml(
+        :search,
+        locals: {
+          results:   Search.search(params[:q]),
+          nav_state: nil
+        }
+      )
+    end
+
     get('/:id*') do
       default_locals = {
-        idx:       id,
-        root:      settings.repositories[id].root,
+        root:      repository.root,
         nav_state: nil
       }
 
@@ -125,18 +123,16 @@ module Gitdocs
     end
 
     put('/:id*') do
-      redirect_path =
+      commit_message =
         if params[:revision] # revert
           path.revert(params[:revision])
-          "/#{id}/#{path.relative_path}"
+          "Reverting '#{path.relative_path}' to #{params[:revision]}"
         elsif params[:data] && params[:message] # save
-          path.write(params[:data], params[:message])
-          "/#{id}/#{path.relative_path}"
-        else
-          # No valid inputs, do nothing and redirect.
-          "/#{id}/#{path.relative_path}"
+          path.write(params[:data])
+          params[:message]
         end
-      redirect to(redirect_path)
+      repository.write_commit_message(commit_message)
+      redirect to("/#{id}/#{path.relative_path}")
     end
 
     delete('/:id*') do
