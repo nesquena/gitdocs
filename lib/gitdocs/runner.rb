@@ -64,47 +64,22 @@ module Gitdocs
       @state = nil
     end
 
+    # @return [void]
     def sync_changes
       return unless @repository.valid?
 
-      # Commit #################################################################
       @repository.commit if @share.sync_type == 'full'
 
-      # Fetch ##################################################################
-      fetch_result = @repository.fetch
-      return unless fetch_result == :ok
-      return if @share.sync_type == 'fetch'
-
-      # Merge ##################################################################
-      merge_result = @repository.merge
-      merge_result = latest_author_count if merge_result == :ok
+      merge_result, push_result = Repository::Syncronizer.new(@share).sync
       @notifier.merge_notification(merge_result, root)
-      return if merge_result.is_a?(String)
-
-      # Push ###################################################################
-      result = @repository.push
-      result = latest_author_count if result == :ok
-      @notifier.push_notification(result, root)
+      @notifier.push_notification(push_result, root)
+      nil
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
-    end
-
-    ############################################################################
-
-    private
-
-    # Update the author count for the last synced changes, and then update the
-    # last synced revision id.
-    #
-    # @return [Hash<String,Int>]
-    def latest_author_count
-      last_oid = @last_synced_revision
-      @last_synced_revision = @repository.current_oid
-
-      @repository.author_count(last_oid)
+      nil
     end
   end
 end

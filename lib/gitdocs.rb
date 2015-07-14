@@ -22,6 +22,7 @@ require 'gitdocs/repository'
 require 'gitdocs/repository/path'
 require 'gitdocs/repository/invalid_error'
 require 'gitdocs/repository/committer'
+require 'gitdocs/repository/syncronizer'
 require 'gitdocs/search'
 
 module Gitdocs

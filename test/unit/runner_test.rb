@@ -21,103 +21,50 @@ describe 'gitdocs runner' do
   describe '#sync_changes' do
     subject { runner.sync_changes }
 
-    before { repository.expects(:valid?).returns(true) }
-
-    describe 'fetch sync' do
-      before do
-        share.stubs(:sync_type).returns('fetch')
-        repository.expects(:fetch).returns(fetch_result)
-      end
-
-      describe('fetch failure') { let(:fetch_result) { :not_ok } ; it { subject } }
-      describe('fetch success') { let(:fetch_result) { :ok }     ; it { subject } }
+    let(:syncronizer) { stub }
+    before do
+      repository.expects(:valid?).returns(valid)
+      share.stubs(:sync_type).returns(sync_type)
+      Gitdocs::Repository::Syncronizer.stubs(:new)
+        .with(share)
+        .returns(syncronizer)
     end
 
-    describe 'full sync' do
+    describe 'invalid repository' do
+      let(:valid)     { false }
+      let(:sync_type) { nil }
+      it { subject.must_be_nil }
+    end
+
+    describe 'exception' do
+      let(:valid)     { true }
+      let(:sync_type) { 'other' }
       before do
-        share.stubs(:sync_type).returns('full')
-        repository.expects(:commit)
-        repository.expects(:fetch).returns(fetch_result)
+        exception = StandardError.new
+        syncronizer.expects(:sync).raises(exception)
+        notifier.expects(:error)
+          .with('Unexpected error syncing changes in root_path', exception.to_s)
+      end
+      it { subject.must_be_nil }
+    end
+
+    describe 'run' do
+      let(:valid) { true }
+      before do
+        syncronizer.expects(:sync).returns([:merge_result, :push_result])
+        notifier.expects(:merge_notification).with(:merge_result, 'root_path')
+        notifier.expects(:push_notification).with(:push_result, 'root_path')
       end
 
-      describe 'fetch failure' do
-        let(:fetch_result) { :not_ok }
-        it { subject }
+      describe 'with fetch' do
+        let(:sync_type) { 'full' }
+        before { repository.expects(:commit) }
+        it { subject.must_be_nil }
       end
 
-      describe 'when merge error' do
-        let(:fetch_result) { :ok }
-        before do
-          repository.expects(:merge).returns('error')
-          notifier.expects(:merge_notification).with('error', 'root_path')
-        end
-        it { subject }
-      end
-
-      describe 'when merge not_ok' do
-        let(:fetch_result) { :ok }
-        before do
-          repository.expects(:merge).returns(:not_ok)
-          notifier.expects(:merge_notification).with(:not_ok, 'root_path')
-          repository.expects(:push).returns(push_result)
-        end
-
-        describe 'and push is not_ok' do
-          let(:push_result) { :not_ok }
-          before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
-          it { subject }
-        end
-
-        describe 'and push is ok' do
-          let(:push_result) { :ok }
-          before do
-            runner.instance_variable_set(:@last_synced_revision, :oid)
-            repository.stubs(:current_oid).returns(:next_oid)
-            changes = { 'Alice' => 1, 'Bob' => 2 }
-            repository.stubs(:author_count).with(:oid).returns(changes)
-            notifier.expects(:push_notification).with(changes, 'root_path')
-
-            subject
-          end
-          it { runner.instance_variable_get(:@last_synced_revision).must_equal :next_oid }
-        end
-      end
-
-      describe 'merge ok' do
-        let(:fetch_result) { :ok }
-
-        before do
-          repository.stubs(:current_oid).returns(:merge_oid, :push_oid)
-
-          repository.expects(:merge).returns(:ok)
-          runner.instance_variable_set(:@last_synced_revision, :oid)
-          changes = { 'Alice' => 1, 'Bob' => 3 }
-          repository.stubs(:author_count).with(:oid).returns(changes)
-          notifier.expects(:merge_notification).with(changes, 'root_path')
-          repository.expects(:push).returns(push_result)
-        end
-
-        describe 'and push is not_ok' do
-          let(:push_result) { :not_ok }
-          before do
-            notifier.expects(:push_notification).with(:not_ok, 'root_path')
-
-            subject
-          end
-          it { runner.instance_variable_get(:@last_synced_revision).must_equal :merge_oid }
-        end
-
-        describe 'and push is ok' do
-          let(:push_result) { :ok }
-          before do
-            changes = { 'Charlie' => 5, 'Dan' =>  7 }
-            repository.stubs(:author_count).with(:merge_oid).returns(changes)
-            notifier.expects(:push_notification).with(changes, 'root_path')
-
-            subject
-          end
-          it { runner.instance_variable_get(:@last_synced_revision).must_equal :push_oid }
-        end
+      describe 'without fetch' do
+        let(:sync_type) { 'other' }
+        it { subject.must_be_nil }
       end
     end
   end
