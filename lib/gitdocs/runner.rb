@@ -9,9 +9,8 @@ module Gitdocs
     end
 
     def initialize(share)
-      @share = share
+      @share            = share
       @polling_interval = share.polling_interval
-      @notifier         = Notifier.new(@share.notification)
       @repository       = Repository.new(share)
     end
 
@@ -25,8 +24,6 @@ module Gitdocs
       @last_synced_revision = @repository.current_oid
 
       mutex = Mutex.new
-
-      @notifier.info('Running gitdocs!', "Running gitdocs in '#{root}'")
 
       # Pull changes from remote repository
       syncer = proc do
@@ -71,14 +68,17 @@ module Gitdocs
       @repository.commit if @share.sync_type == 'full'
 
       merge_result, push_result = Repository::Syncronizer.new(@share).sync
-      @notifier.merge_notification(merge_result, root)
-      @notifier.push_notification(push_result, root)
+      Notifier.sync_result(merge_result, push_result, root, @share.notification)
       nil
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
+      Notifier.error(
+        "Unexpected error syncing changes in #{root}",
+        "#{e}",
+        @share.notification
+      )
       nil
     end
   end

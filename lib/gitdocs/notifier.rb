@@ -4,10 +4,30 @@
 class Gitdocs::Notifier
   INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
 
-  # Wrapper around #error for a single call to the notifier.
-  # @param (see #error)
-  def self.error(title, message)
-    Gitdocs::Notifier.new(true).error(title, message)
+  # @overload error(title, message)
+  #   @param [String] title
+  #   @param [String] message
+  #
+  # @overload error(title, message, show_notification)
+  #   @param [String] title
+  #   @param [String] message
+  #   @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.error(title, message, show_notification = true)
+    Gitdocs::Notifier.new(show_notification).error(title, message)
+  end
+
+  # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] merge_result
+  # @param [nil, Symbol, Hash<String => Integer>, #to_s] push_result
+  # @param [String] root
+  # @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.sync_result(merge_result, push_result, root, show_notification)
+    notifier = Gitdocs::Notifier.new(show_notification)
+    notifier.merge_notification(merge_result, root)
+    notifier.push_notification(push_result, root)
   end
 
   # @param [Boolean] show_notifications

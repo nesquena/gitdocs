@@ -6,10 +6,8 @@ describe 'gitdocs runner' do
   let(:runner) { Gitdocs::Runner.new(share) }
 
   let(:share)      { stub(polling_interval: 1, notification: true) }
-  let(:notifier)   { stub }
   let(:repository) { stub(root: 'root_path') }
   before do
-    Gitdocs::Notifier.stubs(:new).with(true).returns(notifier)
     Gitdocs::Repository.stubs(:new).with(share).returns(repository)
   end
 
@@ -42,8 +40,9 @@ describe 'gitdocs runner' do
       before do
         exception = StandardError.new
         syncronizer.expects(:sync).raises(exception)
-        notifier.expects(:error)
-          .with('Unexpected error syncing changes in root_path', exception.to_s)
+        Gitdocs::Notifier.expects(:error).with(
+          'Unexpected error syncing changes in root_path', exception.to_s, true
+        )
       end
       it { subject.must_be_nil }
     end
@@ -52,8 +51,8 @@ describe 'gitdocs runner' do
       let(:valid) { true }
       before do
         syncronizer.expects(:sync).returns([:merge_result, :push_result])
-        notifier.expects(:merge_notification).with(:merge_result, 'root_path')
-        notifier.expects(:push_notification).with(:push_result, 'root_path')
+        Gitdocs::Notifier.expects(:sync_result)
+          .with(:merge_result, :push_result, 'root_path', true)
       end
 
       describe 'with fetch' do

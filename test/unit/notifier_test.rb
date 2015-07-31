@@ -4,12 +4,37 @@ require File.expand_path('../test_helper', __FILE__)
 describe Gitdocs::Notifier do
   let(:notifier) { Gitdocs::Notifier.new(show_notifications) }
 
-  describe '#error' do
-    subject { Gitdocs::Notifier.error(:title, :message) }
-    before do
-      Gitdocs::Notifier.expects(:new).with(true).returns(notifier = mock)
-      notifier.expects(:error).with(:title, :message)
+  describe '.error' do
+    describe 'with default show' do
+      subject { Gitdocs::Notifier.error(:title, :message) }
+      before do
+        Gitdocs::Notifier.expects(:new).with(true).returns(notifier = mock)
+        notifier.expects(:error).with(:title, :message)
+      end
+      it { subject }
     end
+
+    describe 'with specified show' do
+      subject { Gitdocs::Notifier.error(:title, :message, :show) }
+      before do
+        Gitdocs::Notifier.expects(:new).with(:show).returns(notifier = mock)
+        notifier.expects(:error).with(:title, :message)
+      end
+      it { subject }
+    end
+  end
+
+  describe '.sync_result' do
+    subject do
+      Gitdocs::Notifier.sync_result(:merge_result, :push_result, :root, :show)
+    end
+
+    before do
+      Gitdocs::Notifier.expects(:new).with(:show).returns(notifier = mock)
+      notifier.expects(:merge_notification).with(:merge_result, :root)
+      notifier.expects(:push_notification).with(:push_result, :root)
+    end
+
     it { subject }
   end
 
