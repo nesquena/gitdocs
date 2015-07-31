@@ -95,7 +95,7 @@ module Helper
       share.update_attributes(polling_interval: 0.1, notification: false)
     end
 
-    start_cmd = 'gitdocs start --debug --pid=gitdocs.pid --port 7777'
+    start_cmd = 'gitdocs start --pid=gitdocs.pid --port 7777'
     run(start_cmd, 15)
     assert_success(true)
     assert_partial_output('Started gitdocs', output_from(start_cmd))
