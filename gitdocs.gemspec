@@ -23,7 +23,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9'
 
   s.add_dependency 'joshbuddy-guard', '~> 0.10.0'
-  s.add_dependency 'thin',            '~> 1.6.2'
   s.add_dependency 'sinatra',         '~> 1.4.5'
   s.add_dependency 'redcarpet',       '~> 3.2.2'
   s.add_dependency 'thor',            '~> 0.14.6'
@@ -36,10 +35,13 @@ Gem::Specification.new do |s|
   s.add_dependency 'grit',            '~> 2.5.0'
   s.add_dependency 'shell_tools',     '~> 0.1.0'
   s.add_dependency 'mimetype-fu',     '~> 0.1.2'
-  s.add_dependency 'eventmachine',    '>= 1.0.3'
   s.add_dependency 'launchy',         '~> 2.4.2'
   s.add_dependency 'rugged',          '~> 0.19.0'
   s.add_dependency 'table_print',     '~> 1.5.1'
+
+  s.add_dependency 'celluloid',       '~> 0.16.0'
+  s.add_dependency 'listen',          '~> 3.0.2'
+  s.add_dependency 'reel-rack',       '~> 0.2.2'
 
   s.add_development_dependency 'minitest',               '~> 5.5.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
