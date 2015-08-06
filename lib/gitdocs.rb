@@ -104,6 +104,12 @@ module Gitdocs
     Celluloid.logger
   end
 
+  # @return [:polling, :notification]
+  def self.file_system_watch_method
+    return :polling if Listen::Adapter.select == Listen::Adapter::Polling
+    :notification
+  end
+
   private_class_method
 
   # @return [void]
