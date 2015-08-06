@@ -14,10 +14,10 @@ require 'capybara/poltergeist'
 Capybara.app_host          = 'http://localhost:7777/'
 Capybara.default_driver    = :poltergeist
 Capybara.run_server        = false
-Capybara.default_wait_time = 20
+Capybara.default_wait_time = 60
 
 Capybara.register_driver :poltergeist do |app|
-  Capybara::Poltergeist::Driver.new(app, timeout: 20)
+  Capybara::Poltergeist::Driver.new(app, timeout: Capybara.default_wait_time)
 end
 
 module MiniTest::Aruba
