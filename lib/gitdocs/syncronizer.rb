@@ -9,10 +9,9 @@ module Gitdocs
       return unless repository.valid?
       repository.commit if share.sync_type == 'full'
 
-      merge_result, push_result = Repository::Syncronizer.new(share).sync
-      Notifier.sync_result(
-        merge_result, push_result, root, share.notification
-      )
+      merge_result, push_result =
+        Repository::Syncronizer.new(share).sync
+      SyncronizationNotifier.notify(merge_result, push_result, share)
       nil
     rescue => e
      # Rescue any standard exceptions which come from the push related

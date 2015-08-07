@@ -18,18 +18,6 @@ class Gitdocs::Notifier
     Gitdocs::Notifier.new(show_notification).error(title, message)
   end
 
-  # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] merge_result
-  # @param [nil, Symbol, Hash<String => Integer>, #to_s] push_result
-  # @param [String] root
-  # @param [Boolean] show_notification
-  #
-  # @return [void]
-  def self.sync_result(merge_result, push_result, root, show_notification)
-    notifier = Gitdocs::Notifier.new(show_notification)
-    notifier.merge_notification(merge_result, root)
-    notifier.push_notification(push_result, root)
-  end
-
   # @param [Boolean] show_notifications
   def initialize(show_notifications)
     @show_notifications = show_notifications
@@ -70,72 +58,5 @@ class Gitdocs::Notifier
     end
   rescue # rubocop:disable Lint/HandleExceptions
     # Prevent StandardErrors from stopping the daemon.
-  end
-
-  # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] result
-  # @param [String] root
-  def merge_notification(result, root)
-    return if result.nil?
-    return if result == :no_remote
-    return if result == :ok
-    return if result == {}
-
-    if result.is_a?(Array)
-      warn(
-        'There were some conflicts',
-        result.map { |f| "* #{f}" }.join("\n")
-      )
-    elsif result.is_a?(Hash)
-      info(
-        "Updated with #{change_to_s(result)}",
-        "In #{root}:\n#{author_list(result)}"
-      )
-    else
-      error(
-        'There was a problem synchronizing this gitdoc',
-        "A problem occurred in #{root}:\n#{result}"
-      )
-    end
-  end
-
-  # @param [nil, Symbol, Hash<String => Integer>, #to_s] result push operation
-  # @param [String] root
-  def push_notification(result, root)
-    return if result.nil?
-    return if result == :no_remote
-    return if result == :nothing
-
-    if result == :conflict
-      warn("There was a conflict in #{root}, retrying", '')
-    elsif result.is_a?(Hash)
-      info("Pushed #{change_to_s(result)}", "#{root} has been pushed")
-    else
-      error("BAD Could not push changes in #{root}", result.to_s)
-    end
-  end
-
-  ##############################################################################
-
-  private
-
-  # @param [Hash<String => Integer>] changes
-  # @return [String]
-  def author_list(changes)
-    changes
-      .map { |author, count| "* #{author} (#{change_to_s(count)})" }
-      .join("\n")
-  end
-
-  # @param [Integer, Hash<String => Integer>] count_or_hash
-  # @return [String]
-  def change_to_s(count_or_hash)
-    count =
-      if count_or_hash.respond_to?(:values)
-        count_or_hash.values.reduce(:+)
-      else
-        count_or_hash
-      end
-
-    "#{count} change#{count == 1 ? '' : 's'}"
   end
 end
