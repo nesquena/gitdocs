@@ -29,7 +29,7 @@ class Gitdocs::Share < ActiveRecord::Base
     all.select do |share|
       # Just in case the path of the share is a symlink. We want to find the
       # real path before comparing it to the include paths, because the paths
-      # from Guard::Listen will re real paths.
+      # from Listen will real paths.
       realpath =
         if File.exist?(share.path)
           Pathname.new(share.path).realpath.to_s
