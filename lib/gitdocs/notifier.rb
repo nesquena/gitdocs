@@ -2,8 +2,6 @@
 
 # Wrapper for the UI notifier
 class Gitdocs::Notifier
-  INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
-
   # @overload error(title, message)
   #   @param [String] title
   #   @param [String] message
@@ -21,40 +19,49 @@ class Gitdocs::Notifier
   # @param [Boolean] show_notifications
   def initialize(show_notifications)
     @show_notifications = show_notifications
-    Guard::Notifier.turn_on if @show_notifications
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def info(title, message)
-    if @show_notifications
-      Guard::Notifier.notify(message, title: title, image: INFO_ICON)
-    else
-      puts("#{title}: #{message}")
-    end
-  rescue # rubocop:disable Lint/HandleExceptions
-    # Prevent StandardErrors from stopping the daemon.
+    notify_or_warn(title, message, :success)
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def warn(title, message)
-    if @show_notifications
-      Guard::Notifier.notify(message, title: title)
-    else
-      Kernel.warn("#{title}: #{message}")
-    end
-  rescue # rubocop:disable Lint/HandleExceptions
-    # Prevent StandardErrors from stopping the daemon.
+    notify_or_warn(title, message, :pending)
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def error(title, message)
+    notify_or_warn(title, message, :failed)
+  end
+
+  private
+
+  # @param [String] title
+  # @param [String] message
+  # @param [String] image
+  #
+  # @return [void]
+  def notify_or_warn(title, message, image)
     if @show_notifications
-      Guard::Notifier.notify(message, title: title, image: :failure)
+      Gitdocs.notify(message, title: title, image: image)
     else
-      Kernel.warn("#{title}: #{message}")
+      output = "#{title}: #{message}"
+      if image == :success
+        puts(output)
+      else
+        Kernel.warn(output)
+      end
     end
   rescue # rubocop:disable Lint/HandleExceptions
     # Prevent StandardErrors from stopping the daemon.

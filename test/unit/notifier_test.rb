@@ -2,8 +2,6 @@
 require File.expand_path('../test_helper', __FILE__)
 
 describe Gitdocs::Notifier do
-  let(:notifier) { Gitdocs::Notifier.new(show_notifications) }
-
   describe '.error' do
     describe 'with default show' do
       subject { Gitdocs::Notifier.error(:title, :message) }
@@ -24,29 +22,27 @@ describe Gitdocs::Notifier do
     end
   end
 
-  describe '#info' do
-    subject { notifier.info('title', 'message') }
+  describe 'instance methods' do
+    let(:notifier) { Gitdocs::Notifier.new(show_notifications) }
 
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { notifier.expects(:puts).with('title: message') }
-      it { subject }
-    end
+    describe '#info' do
+      subject { notifier.info('title', 'message') }
 
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify)
-          .with(
-            'message',
-            title: 'title',
-            image: File.expand_path('../../../lib/img/icon.png', __FILE__)
-          )
+      describe 'without notifications' do
+        let(:show_notifications) { false }
+        before { notifier.expects(:puts).with('title: message') }
+        it { subject }
       end
-      it { subject }
+
+      describe 'with notifications' do
+        let(:show_notifications) { true }
+        before do
+          Gitdocs.expects(:notify)
+            .with('message', title: 'title', image: :success)
+        end
+        it { subject }
+      end
     end
-  end
 
   describe '#warn' do
     subject { notifier.warn('title', 'message') }
@@ -60,8 +56,8 @@ describe Gitdocs::Notifier do
     describe 'with notifications' do
       let(:show_notifications) { true }
       before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify).with('message', title: 'title')
+        Gitdocs.expects(:notify)
+          .with('message', title: 'title', image: :pending)
       end
       it { subject }
     end
@@ -79,10 +75,11 @@ describe Gitdocs::Notifier do
     describe 'with notifications' do
       let(:show_notifications) { true }
       before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify).with('message', title: 'title', image: :failure)
+        Gitdocs.expects(:notify)
+          .with('message', title: 'title', image: :failed)
       end
       it { subject }
     end
+  end
   end
 end

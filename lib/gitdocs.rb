@@ -13,6 +13,7 @@ require 'celluloid'
 require 'listen'
 require 'reel/rack'
 require 'sinatra/base'
+require 'notiffany'
 
 require 'gitdocs/version'
 require 'gitdocs/initializer'
@@ -20,6 +21,7 @@ require 'gitdocs/share'
 require 'gitdocs/configuration'
 require 'gitdocs/cli'
 require 'gitdocs/syncronizer'
+require 'gitdocs/cells/notifier'
 require 'gitdocs/notifier'
 require 'gitdocs/syncronization_notifier'
 require 'gitdocs/settings_app'
@@ -51,6 +53,7 @@ module Gitdocs
     Celluloid.boot unless Celluloid.running?
     @supervisor = Celluloid::SupervisionGroup.run!
     @supervisor.add(Gitdocs::Syncronizer, as: :syncronizer)
+    @supervisor.add(Gitdocs::Cells::Notifier, as: :notifier)
 
     @supervisor.add(Timer, as: :timer)
     Share.which_need_fetch.each do |share|
@@ -103,6 +106,12 @@ module Gitdocs
   # @return [Logger]
   def self.logger
     Celluloid.logger
+  end
+
+  # @param (see Gitdocs::Celluloid::Notifier#notify)
+  # @return (see Gitdocs::Celluloid::Notifier#notify)
+  def self.notify(*args)
+    Celluloid::Actor[:notifier].notify(*args)
   end
 
   # @return [:polling, :notification]

@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'listen',          '~> 3.0.2'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
+  s.add_dependency 'notiffany',       '~> 0.0.7'
 
   s.add_development_dependency 'minitest',               '~> 5.5.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
