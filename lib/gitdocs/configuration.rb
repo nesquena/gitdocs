@@ -21,9 +21,12 @@ class Gitdocs::Configuration
   # NOTE: This record has been kept as a subclass to avoid changing the
   # database table. There are other ways to achieve this, but this seemed most
   # clear for now. [2015-06-26 -- acant]
+  #
+  # @!attribute start_web_frontend
+  #   @return [Boolean] default to true
+  # @!attribute web_frontend_port
+  #   @return [Integer] default to 888
   class Config < ActiveRecord::Base
-    # attr_accessible :start_web_frontend, :web_frontend_port
-
     # @return [Gitdocs::Configuration::Config]
     def self.global
       fail if all.size > 1
@@ -32,5 +35,3 @@ class Gitdocs::Configuration
     end
   end
 end
-
-

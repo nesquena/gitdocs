@@ -301,15 +301,6 @@ class Gitdocs::Repository
     message
   end
 
-  def mark_empty_directories
-    Find.find(root).each do |path| # rubocop:disable Style/Next
-      Find.prune if File.basename(path) == '.git'
-      if File.directory?(path) && Dir.entries(path).count == 2
-        FileUtils.touch(File.join(path, '.gitignore'))
-      end
-    end
-  end
-
   def mark_conflicts
     # assert(@rugged.index.conflicts?)
 

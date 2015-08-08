@@ -30,15 +30,6 @@ describe 'fully synchronizing repositories' do
     wait_for_exact_file_content('clone3/file', "testing\nfoobar")
   end
 
-  it 'should sync empty directories' do
-    in_current_dir { _mkdir('clone1/empty_dir') }
-    wait_for_clean_workdir('clone1')
-
-    wait_for_directory('clone1/empty_dir')
-    wait_for_directory('clone2/empty_dir')
-    wait_for_directory('clone3/empty_dir')
-  end
-
   it 'should mark unresolvable conflicts' do
     write_file('clone1/file', 'testing')
     wait_for_clean_workdir('clone1')

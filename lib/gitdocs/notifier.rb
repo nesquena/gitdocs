@@ -2,120 +2,68 @@
 
 # Wrapper for the UI notifier
 class Gitdocs::Notifier
-  INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
-
-  # Wrapper around #error for a single call to the notifier.
-  # @param (see #error)
-  def self.error(title, message)
-    Gitdocs::Notifier.new(true).error(title, message)
+  # @overload error(title, message)
+  #   @param [String] title
+  #   @param [String] message
+  #
+  # @overload error(title, message, show_notification)
+  #   @param [String] title
+  #   @param [String] message
+  #   @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.error(title, message, show_notification = true)
+    Gitdocs::Notifier.new(show_notification).error(title, message)
   end
 
   # @param [Boolean] show_notifications
   def initialize(show_notifications)
     @show_notifications = show_notifications
-    Guard::Notifier.turn_on if @show_notifications
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def info(title, message)
-    if @show_notifications
-      Guard::Notifier.notify(message, title: title, image: INFO_ICON)
-    else
-      puts("#{title}: #{message}")
-    end
-  rescue # rubocop:disable Lint/HandleExceptions
-    # Prevent StandardErrors from stopping the daemon.
+    notify_or_warn(title, message, :success)
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def warn(title, message)
-    if @show_notifications
-      Guard::Notifier.notify(message, title: title)
-    else
-      Kernel.warn("#{title}: #{message}")
-    end
-  rescue # rubocop:disable Lint/HandleExceptions
-    # Prevent StandardErrors from stopping the daemon.
+    notify_or_warn(title, message, :pending)
   end
 
   # @param [String] title
   # @param [String] message
+  #
+  # @return [void]
   def error(title, message)
-    if @show_notifications
-      Guard::Notifier.notify(message, title: title, image: :failure)
-    else
-      Kernel.warn("#{title}: #{message}")
-    end
-  rescue # rubocop:disable Lint/HandleExceptions
-    # Prevent StandardErrors from stopping the daemon.
+    notify_or_warn(title, message, :failed)
   end
-
-  # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] result
-  # @param [String] root
-  def merge_notification(result, root)
-    return if result.nil?
-    return if result == :no_remote
-    return if result == :ok
-    return if result == {}
-
-    if result.is_a?(Array)
-      warn(
-        'There were some conflicts',
-        result.map { |f| "* #{f}" }.join("\n")
-      )
-    elsif result.is_a?(Hash)
-      info(
-        "Updated with #{change_to_s(result)}",
-        "In #{root}:\n#{author_list(result)}"
-      )
-    else
-      error(
-        'There was a problem synchronizing this gitdoc',
-        "A problem occurred in #{root}:\n#{result}"
-      )
-    end
-  end
-
-  # @param [nil, Symbol, Hash<String => Integer>, #to_s] result push operation
-  # @param [String] root
-  def push_notification(result, root)
-    return if result.nil?
-    return if result == :no_remote
-    return if result == :nothing
-
-    if result == :conflict
-      warn("There was a conflict in #{root}, retrying", '')
-    elsif result.is_a?(Hash)
-      info("Pushed #{change_to_s(result)}", "#{root} has been pushed")
-    else
-      error("BAD Could not push changes in #{root}", result.to_s)
-    end
-  end
-
-  ##############################################################################
 
   private
 
-  # @param [Hash<String => Integer>] changes
-  # @return [String]
-  def author_list(changes)
-    changes
-      .map { |author, count| "* #{author} (#{change_to_s(count)})" }
-      .join("\n")
-  end
-
-  # @param [Integer, Hash<String => Integer>] count_or_hash
-  # @return [String]
-  def change_to_s(count_or_hash)
-    count =
-      if count_or_hash.respond_to?(:values)
-        count_or_hash.values.reduce(:+)
+  # @param [String] title
+  # @param [String] message
+  # @param [String] image
+  #
+  # @return [void]
+  def notify_or_warn(title, message, image)
+    if @show_notifications
+      Gitdocs.notify(message, title: title, image: image)
+    else
+      output = "#{title}: #{message}"
+      if image == :success
+        puts(output)
       else
-        count_or_hash
+        Kernel.warn(output)
       end
-
-    "#{count} change#{count == 1 ? '' : 's'}"
+    end
+  rescue # rubocop:disable Lint/HandleExceptions
+    # Prevent StandardErrors from stopping the daemon.
   end
 end

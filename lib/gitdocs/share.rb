@@ -1,16 +1,52 @@
 # -*- encoding : utf-8 -*-
 
+require 'pathname'
 require 'active_record'
 
+# @!attribute path
+#   @return [String]
+# @!attribute polling_interval
+#   @return [Double] defaults to 15.0
+# @!attribute notification
+#   @return [Boolean] default to true
+# @!attribute remote_name
+#   @return [String] default to 'origin'
+# @!attribute remote_branch
+#   @return [String] default to 'master'
+# @attribute sync_type
+#   @return ['full','fetch']
 class Gitdocs::Share < ActiveRecord::Base
-  # @param [#to_i] index
+  # @return [Array<String>]
+  def self.paths_to_sync
+    all.map(&:path)
+  end
+
+  # Return all the shares which contain the specified paths.
   #
-  # @return [Share]
-  def self.at(index)
-    all[index.to_i]
+  # @param [Array<String>] paths
+  # @return [Array<Share>]
+  def self.which_include(paths)
+    all.select do |share|
+      # Just in case the path of the share is a symlink. We want to find the
+      # real path before comparing it to the include paths, because the paths
+      # from Listen will real paths.
+      realpath =
+        if File.exist?(share.path)
+          Pathname.new(share.path).realpath.to_s
+        else
+          share.path
+        end
+      paths.any? { |x| x.start_with?(realpath) }
+    end
+  end
+
+  # @return [Array<Share>]
+  def self.which_need_fetch
+    all
   end
 
   # @param [String] path
+  # @return [Boolean]
   def self.create_by_path!(path)
     new(path: File.expand_path(path)).save!
   end
@@ -27,8 +63,9 @@ class Gitdocs::Share < ActiveRecord::Base
       share_config['remote_name'], share_config['branch_name'] =
         remote_branch.split('/', 2) if remote_branch
 
-      at(index).update_attributes(share_config)
+      all[index.to_i].update_attributes(share_config)
     end
+    nil
   end
 
   # @param [Integer] id of the share to remove

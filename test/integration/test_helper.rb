@@ -14,10 +14,10 @@ require 'capybara/poltergeist'
 Capybara.app_host          = 'http://localhost:7777/'
 Capybara.default_driver    = :poltergeist
 Capybara.run_server        = false
-Capybara.default_wait_time = 20
+Capybara.default_wait_time = 60
 
 Capybara.register_driver :poltergeist do |app|
-  Capybara::Poltergeist::Driver.new(app, timeout: 20)
+  Capybara::Poltergeist::Driver.new(app, timeout: Capybara.default_wait_time)
 end
 
 module MiniTest::Aruba
@@ -95,7 +95,7 @@ module Helper
       share.update_attributes(polling_interval: 0.1, notification: false)
     end
 
-    start_cmd = 'gitdocs start --debug --pid=gitdocs.pid --port 7777'
+    start_cmd = 'gitdocs start --pid=gitdocs.pid --port 7777'
     run(start_cmd, 15)
     assert_success(true)
     assert_partial_output('Started gitdocs', output_from(start_cmd))
