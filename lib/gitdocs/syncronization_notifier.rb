@@ -7,9 +7,9 @@ class Gitdocs::SyncronizationNotifier
   #
   # @return [void]
   def self.notify(merge_result, push_result, share)
-    notifier = Gitdocs::SyncronizationNotifier.new(share)
-    notifier.merge_notify(merge_result)
-    notifier.push_notify(push_result)
+    syncronization_notifier = Gitdocs::SyncronizationNotifier.new(share)
+    syncronization_notifier.merge_notify(merge_result)
+    syncronization_notifier.push_notify(push_result)
     nil
   end
 
