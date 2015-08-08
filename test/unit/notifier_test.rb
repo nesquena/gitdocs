@@ -44,42 +44,42 @@ describe Gitdocs::Notifier do
       end
     end
 
-  describe '#warn' do
-    subject { notifier.warn('title', 'message') }
+    describe '#warn' do
+      subject { notifier.warn('title', 'message') }
 
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { Kernel.expects(:warn).with('title: message') }
-      it { subject }
-    end
-
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Gitdocs.expects(:notify)
-          .with('message', title: 'title', image: :pending)
+      describe 'without notifications' do
+        let(:show_notifications) { false }
+        before { Kernel.expects(:warn).with('title: message') }
+        it { subject }
       end
-      it { subject }
-    end
-  end
 
-  describe '#error' do
-    subject { notifier.error('title', 'message') }
-
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { Kernel.expects(:warn).with('title: message') }
-      it { subject }
-    end
-
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Gitdocs.expects(:notify)
-          .with('message', title: 'title', image: :failed)
+      describe 'with notifications' do
+        let(:show_notifications) { true }
+        before do
+          Gitdocs.expects(:notify)
+            .with('message', title: 'title', image: :pending)
+        end
+        it { subject }
       end
-      it { subject }
     end
-  end
+
+    describe '#error' do
+      subject { notifier.error('title', 'message') }
+
+      describe 'without notifications' do
+        let(:show_notifications) { false }
+        before { Kernel.expects(:warn).with('title: message') }
+        it { subject }
+      end
+
+      describe 'with notifications' do
+        let(:show_notifications) { true }
+        before do
+          Gitdocs.expects(:notify)
+            .with('message', title: 'title', image: :failed)
+        end
+        it { subject }
+      end
+    end
   end
 end
