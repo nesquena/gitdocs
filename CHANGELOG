@@ -1,3 +1,7 @@
+0.6.0.pre1
+ * upgrade gems redcarpet, poltergeist (@acant)
+ * add 'rake daemon' task for development and debugging (@acant)
+
 0.5.0 (May 2nd 2015)
  * upgrade gems activerecord, minitest, haml-lint, redcarpet (@acant)
  * convert web interface to use Sinatra instead of renee (@acant)
