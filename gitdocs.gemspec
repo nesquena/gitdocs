@@ -43,7 +43,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'minitest',               '~> 5.5.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
-  s.add_development_dependency 'poltergeist',            '~> 1.5.1'
+  s.add_development_dependency 'poltergeist',            '~> 1.6.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'fakeweb'
