@@ -23,7 +23,7 @@ describe 'browse and edit repository file through the UI' do
     write_file('local/README.md', 'hello i am a README')
     repository.commit
 
-    start_daemon
+    gitdocs_start
 
     visit 'http://localhost:7777/'
     click_link('Home')

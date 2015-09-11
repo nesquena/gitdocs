@@ -4,8 +4,8 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe 'fully synchronizing repositories' do
   before do
-    git_clone_and_gitdocs_add(git_init_remote, 'clone1', 'clone2', 'clone3')
-    start_daemon
+    gitdocs_create(git_init_remote, 'clone1', 'clone2', 'clone3')
+    gitdocs_start
   end
 
   it 'should sync new files' do

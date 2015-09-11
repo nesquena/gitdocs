@@ -6,23 +6,22 @@ describe 'Manage which shares are being watched' do
   it 'should add a local repository' do
     git_init_local
     gitdocs_add
-    gitdocs_status
-    assert_gitdocs_status_contains(abs_current_dir('local'))
+    gitdocs_assert_status_contains('local')
   end
 
   it 'should add a remote repository' do
     git_init_remote
-    abs_remote_path = abs_current_dir('remote')
-    cmd = "gitdocs create local #{abs_remote_path} --pid=gitdocs.pid"
-    run_simple(cmd, true, 15)
-    assert_success(true)
-    assert_partial_output('Added path local to doc list', output_from(cmd))
+    gitdocs_command(
+      'create',
+      "local #{abs_current_dir('remote')}",
+      'Added path local to doc list'
+    )
   end
 
   it 'should update a share through the UI' do
     git_init_local
     gitdocs_add
-    start_daemon
+    gitdocs_start
     visit('http://localhost:7777/')
     click_link('Settings')
 
@@ -54,17 +53,12 @@ describe 'Manage which shares are being watched' do
     end
 
     it 'through CLI' do
-      cmd = 'gitdocs rm local --pid=gitdocs.pid'
-      run_simple(cmd, true, 15)
-      assert_success(true)
-      assert_partial_output('Removed path local from doc list', output_from(cmd))
-
-      gitdocs_status
-      assert_gitdocs_status_not_contain(abs_current_dir('local'))
+      gitdocs_command('rm', 'local', 'Removed path local from doc list')
+      gitdocs_assert_status_not_contain('local')
     end
 
     it 'through UI' do
-      start_daemon
+      gitdocs_start
       visit('http://localhost:7777/')
       click_link('Settings')
 
@@ -82,14 +76,7 @@ describe 'Manage which shares are being watched' do
       gitdocs_add(path)
     end
 
-    cmd = 'gitdocs clear --pid=gitdocs.pid'
-    run_simple(cmd, true, 15)
-    assert_success(true)
-    assert_partial_output('Cleared paths from gitdocs', output_from(cmd))
-
-    gitdocs_status
-    assert_gitdocs_status_not_contain(abs_current_dir('local1'))
-    assert_gitdocs_status_not_contain(abs_current_dir('local2'))
-    assert_gitdocs_status_not_contain(abs_current_dir('local3'))
+    gitdocs_command('clear', '', 'Cleared paths from gitdocs')
+    gitdocs_assert_status_not_contain('local1', 'local2', 'local3')
   end
 end
