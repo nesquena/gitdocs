@@ -3,20 +3,19 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe Gitdocs::Repository::Path do
   let(:path) { Gitdocs::Repository::Path.new(repository, relative_path) }
-  let(:repository) { stub(root: local_repo_path) }
-  let(:local_repo_path) { 'tmp/unit/local' }
-
+  let(:repository) { stub(root: GitFactory.expand_path(:local)) }
   let(:relative_path) { 'directory/file' }
 
   before do
     FileUtils.rm_rf('tmp/unit')
+    GitFactory.init(:local)
   end
 
   describe '#join' do
     subject { path.join('new_file') }
     before { subject }
-    it { path.relative_path.must_equal('directory/file/new_file') }
-    it { path.absolute_path.must_equal(absolute_local_path('new_file')) }
+    it { path.relative_path.must_equal(File.join(relative_path, 'new_file')) }
+    it { path.absolute_path.must_equal(GitFactory.expand_path(:local, relative_path, 'new_file')) }
   end
 
   describe '#write' do
@@ -24,23 +23,23 @@ describe Gitdocs::Repository::Path do
 
     describe 'directory missing' do
       before { subject }
-      it { local_file_content.must_equal "foobar\n" }
+      it { GitInspector.file_content(:local, relative_path).must_equal "foobar\n" }
     end
 
     describe 'directory exists' do
       before do
-        mkdir('directory')
+        mkdir(File.dirname(relative_path))
         subject
       end
-      it { local_file_content.must_equal "foobar\n" }
+      it { GitInspector.file_content(:local, relative_path).must_equal "foobar\n" }
     end
 
     describe 'file exists' do
       before do
-        write('directory/file', 'deadbeef')
+        write(relative_path, 'deadbeef')
         subject
       end
-      it { local_file_content.must_equal "foobar\n" }
+      it { GitInspector.file_content(:local, relative_path).must_equal "foobar\n" }
     end
   end
 
@@ -49,23 +48,23 @@ describe Gitdocs::Repository::Path do
 
     describe 'when directory does not exist' do
       before { subject }
-      it { local_file_content.must_equal '' }
+      it { GitInspector.file_content(:local, relative_path).must_equal '' }
     end
 
     describe 'when directory already exists' do
       before do
-        mkdir('directory')
+        mkdir(File.dirname(relative_path))
         subject
       end
-      it { local_file_content.must_equal '' }
+      it { GitInspector.file_content(:local, relative_path).must_equal '' }
     end
 
     describe 'when file already exists' do
       before do
-        write('directory/file', 'test')
+        write(relative_path, 'test')
         subject
       end
-      it { local_file_content.must_equal 'test' }
+      it { GitInspector.file_content(:local, relative_path).must_equal 'test' }
     end
   end
 
@@ -74,19 +73,19 @@ describe Gitdocs::Repository::Path do
 
     describe 'directory does not exist' do
       before { subject }
-      it { File.directory?(File.join(local_repo_path, 'directory', 'file')) }
+      it { File.directory?(GitFactory.expand_path(:local, relative_path)) }
     end
 
     describe 'directory does exist' do
       before do
-        mkdir('directory/file')
+        mkdir(relative_path)
         subject
       end
-      it { File.directory?(File.join(local_repo_path, 'directory', 'file')) }
+      it { File.directory?(GitFactory.expand_path(:local, relative_path)) }
     end
 
     describe 'already exists as a file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { assert_raises(Errno::EEXIST) { subject } }
     end
   end
@@ -99,16 +98,16 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'directory' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_be_nil }
     end
 
     describe 'file' do
       before do
-        write('directory/file', 'foobar')
+        write(relative_path, 'foobar')
         subject
       end
-      it { local_file_exist?.must_equal false }
+      it { GitInspector.file_exist?(:local, relative_path).must_equal false }
     end
   end
 
@@ -120,22 +119,22 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'directory' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_equal false }
     end
 
     describe 'not a text file' do
-      let(:relative_path) { 'directory/file.png' }
+      let(:relative_path) { 'file.png' }
       it { subject.must_equal false }
     end
 
     describe 'empty file' do
-      before { write('directory/file', '') }
+      before { write(relative_path, '') }
       it { subject.must_equal true }
     end
 
     describe 'text file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { subject.must_equal true }
     end
   end
@@ -154,20 +153,20 @@ describe Gitdocs::Repository::Path do
     describe 'on a 'do
       let(:commit) { stub(author: { name: :name, time: :time }) }
       before do
-        write('directory0/file0', '')
-        write('directory/file1', 'foo')
-        write('directory/file2', 'bar')
+        write(File.join(%w(directory0 file0)), '')
+        write(File.join(%w(directory file1)), 'foo')
+        write(File.join(%w(directory file2)), 'bar')
       end
 
       describe 'file size 0' do
-        let(:relative_path) { 'directory0/file0' }
+        let(:relative_path) { File.join(%w(directory0 file0)) }
         it { subject[:author].must_equal :name }
         it { subject[:size].must_equal(-1) }
         it { subject[:modified].must_equal :time }
       end
 
       describe 'file non-zero size' do
-        let(:relative_path) { 'directory/file1' }
+        let(:relative_path) { File.join(%w(directory file1)) }
         it { subject[:author].must_equal :name }
         it { subject[:size].must_equal(3) }
         it { subject[:modified].must_equal :time }
@@ -197,12 +196,12 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'directory' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_equal true }
     end
 
     describe 'file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { subject.must_equal true }
     end
   end
@@ -215,12 +214,12 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'directory' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_equal true }
     end
 
     describe 'file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { subject.must_equal false }
     end
   end
@@ -230,7 +229,7 @@ describe Gitdocs::Repository::Path do
 
     describe 'no revision' do
       let(:ref) { nil }
-      it { subject.must_equal absolute_local_path }
+      it { subject.must_equal GitFactory.expand_path(:local, relative_path) }
     end
 
     describe 'with revision' do
@@ -257,13 +256,13 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'no README' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_be_nil }
     end
 
     describe 'with README.md' do
-      before { write('directory/file/README.md', 'foobar') }
-      it { subject.must_equal absolute_local_path('README.md') }
+      before { write(File.join(relative_path, 'README.md'), 'foobar') }
+      it { subject.must_equal GitFactory.expand_path(:local, relative_path, 'README.md') }
     end
   end
 
@@ -275,21 +274,20 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { subject.must_be_nil }
     end
 
     describe 'directory' do
       before do
-        write('directory/file/.hidden', 'beef')
-        mkdir('directory/file/dir1')
-        write('directory/file/file1', 'foo')
-        write('directory/file/file2', 'bar')
+        write(File.join(relative_path, '.hidden'), 'beef')
+        mkdir(File.join(relative_path, 'dir1'))
+        write(File.join(relative_path, 'file1'), 'foo')
+        write(File.join(relative_path, 'file2'), 'bar')
 
         # Paths which should not be included
-        write('directory/file/.git', 'test')
-        write('directory/file/.gitignore', 'test')
-        write('directory/file/.gitmessage~', 'test')
+        write(File.join(relative_path, '.gitignore'), 'test')
+        write(File.join(relative_path, '.gitmessage~'), 'test')
       end
 
       it { subject.size.must_equal 4 }
@@ -306,12 +304,12 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'directory' do
-      before { mkdir('directory/file') }
+      before { mkdir(relative_path) }
       it { subject.must_be_nil }
     end
 
     describe 'file' do
-      before { write('directory/file', 'foobar') }
+      before { write(relative_path, 'foobar') }
       it { subject.must_equal 'foobar' }
     end
   end
@@ -351,24 +349,10 @@ describe Gitdocs::Repository::Path do
   private
 
   def write(filename, content)
-    mkdir(File.dirname(filename))
-    File.write(File.join(local_repo_path, filename), content)
+    GitFactory.write(:local, filename, content)
   end
 
-  def mkdir(*path)
-    FileUtils.mkdir_p(File.join(local_repo_path, *path))
-  end
-
-  def local_file_exist?
-    File.exist?(File.join(local_repo_path, relative_path))
-  end
-
-  def local_file_content
-    return nil unless local_file_exist?
-    File.read(File.join(local_repo_path, relative_path))
-  end
-
-  def absolute_local_path(*path_elements)
-    File.join(File.absolute_path(local_repo_path), relative_path, *path_elements)
+  def mkdir(path)
+    GitFactory.mkdir(:local, path)
   end
 end
