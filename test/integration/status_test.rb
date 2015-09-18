@@ -8,7 +8,7 @@ describe 'CLI with display daemon and share status' do
   end
 
   it 'should display information about the shares' do
-    gitdocs_create(git_init_remote, 'clone1', 'clone2', 'clone3')
+    gitdocs_create_from_remote('clone1', 'clone2', 'clone3')
     gitdocs_assert_status_contains('clone1', 'clone2', 'clone3')
   end
 end

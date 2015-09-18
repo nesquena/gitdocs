@@ -4,23 +4,16 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe 'Manage which shares are being watched' do
   it 'should add a local repository' do
-    git_init_local
-    gitdocs_add
+    gitdocs_add('local')
     gitdocs_assert_status_contains('local')
   end
 
   it 'should add a remote repository' do
-    git_init_remote
-    gitdocs_command(
-      'create',
-      "local #{abs_current_dir('remote')}",
-      'Added path local to doc list'
-    )
+    gitdocs_create_from_remote('local')
   end
 
   it 'should update a share through the UI' do
-    git_init_local
-    gitdocs_add
+    gitdocs_add('local')
     gitdocs_start
     visit('http://localhost:7777/')
     click_link('Settings')
@@ -47,10 +40,7 @@ describe 'Manage which shares are being watched' do
   end
 
   describe 'remove a share' do
-    before do
-      git_init_local
-      gitdocs_add
-    end
+    before { gitdocs_add('local') }
 
     it 'through CLI' do
       gitdocs_command('rm', 'local', 'Removed path local from doc list')
@@ -71,10 +61,7 @@ describe 'Manage which shares are being watched' do
   end
 
   it 'should clear all existing shares' do
-    %w(local1 local2 local3).each do |path|
-      git_init_local(path)
-      gitdocs_add(path)
-    end
+    %w(local1 local2 local3).each { |x| gitdocs_add(x) }
 
     gitdocs_command('clear', '', 'Cleared paths from gitdocs')
     gitdocs_assert_status_not_contain('local1', 'local2', 'local3')

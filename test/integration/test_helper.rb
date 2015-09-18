@@ -10,6 +10,9 @@ require 'timeout'
 require 'capybara'
 require 'capybara_minitest_spec'
 require 'capybara/poltergeist'
+Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |filename|
+  require_relative filename
+end
 
 Capybara.app_host              = 'http://localhost:7777/'
 Capybara.default_driver        = :poltergeist
@@ -52,6 +55,7 @@ module Helper
   def before_setup
     FileUtils.rm_rf(current_dir)
     set_env('HOME', abs_current_dir)
+    GitFactory.working_directory = abs_current_dir
   end
 
   def teardown
@@ -114,20 +118,6 @@ module Helper
   def abs_current_dir(relative_path = nil)
     return File.absolute_path(File.join(current_dir)) unless relative_path
     File.absolute_path(File.join(current_dir, relative_path))
-  end
-
-  # @return [String] the absolute path for the repository
-  def git_init_local(path = 'local')
-    abs_path = abs_current_dir(path)
-    Rugged::Repository.init_at(abs_path)
-    abs_path
-  end
-
-  # @return [String] the absolute path for the repository
-  def git_init_remote(path = 'remote')
-    abs_path = abs_current_dir(path)
-    Rugged::Repository.init_at(abs_path, :bare)
-    abs_path
   end
 
   def wait_for_clean_workdir(path)
@@ -208,10 +198,15 @@ module Helper
     end
   end
 
-  def gitdocs_add(path = 'local')
+  # @param [String] path
+  #
+  # @return [#gitdocs_command]
+  def gitdocs_add(path)
+    GitFactory.init(path)
     gitdocs_command('add', path, "Added path #{path} to doc list")
   end
 
+  # @deprecated
   # @param [String] remote_repository_path
   # @param [Array<String>] destination_paths
   def gitdocs_create(remote_repository_path, *destination_paths)
@@ -222,6 +217,17 @@ module Helper
         "Added path #{destination_path} to doc list"
       )
     end
+  end
+
+  # @param [Array<String>] destination_paths
+  #
+  # @return [void]
+  def gitdocs_create_from_remote(*destination_paths)
+    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
+    remote_repository_path = GitFactory.init_bare(:remote)
+    gitdocs_create(
+      remote_repository_path, *full_destination_paths
+    )
   end
 
   def gitdocs_assert_status_contains(*expected_outputs)

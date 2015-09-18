@@ -4,12 +4,12 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe 'fully synchronizing repositories' do
   before do
-    gitdocs_create(git_init_remote, 'clone1', 'clone2', 'clone3')
+    gitdocs_create_from_remote('clone1', 'clone2', 'clone3')
     gitdocs_start
   end
 
   it 'should sync new files' do
-    write_file('clone1/newfile', 'testing')
+    GitFactory.write(:clone1, 'newfile', 'testing')
     wait_for_clean_workdir('clone1')
 
     wait_for_exact_file_content('clone1/newfile', 'testing')
@@ -18,11 +18,11 @@ describe 'fully synchronizing repositories' do
   end
 
   it 'should sync changes to an existing file' do
-    write_file('clone1/file', 'testing')
+    GitFactory.write(:clone1, 'file', 'testing')
     wait_for_clean_workdir('clone1')
 
     wait_for_exact_file_content('clone3/file', 'testing')
-    append_to_file('clone3/file', "\nfoobar")
+    GitFactory.append(:clone3, 'file', "\nfoobar")
     wait_for_clean_workdir('clone3')
 
     wait_for_exact_file_content('clone1/file', "testing\nfoobar")
@@ -31,7 +31,7 @@ describe 'fully synchronizing repositories' do
   end
 
   it 'should sync empty directories' do
-    in_current_dir { _mkdir('clone1/empty_dir') }
+    GitFactory.mkdir(:clone1, 'empty_dir')
     wait_for_clean_workdir('clone1')
 
     wait_for_directory('clone1/empty_dir')
@@ -40,11 +40,11 @@ describe 'fully synchronizing repositories' do
   end
 
   it 'should mark unresolvable conflicts' do
-    write_file('clone1/file', 'testing')
+    GitFactory.write(:clone1, 'file', 'testing')
     wait_for_clean_workdir('clone1')
 
-    append_to_file('clone2/file', 'foobar')
-    append_to_file('clone3/file', 'deadbeef')
+    GitFactory.append(:clone2, 'file', 'foobar')
+    GitFactory.append(:clone3, 'file', 'deadbeef')
     wait_for_clean_workdir('clone2')
     wait_for_clean_workdir('clone3')
 

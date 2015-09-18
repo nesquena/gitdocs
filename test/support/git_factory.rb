@@ -111,6 +111,17 @@ module GitFactory
 
     # @param [#to_s] repo_name
     # @param [String] filename
+    # @param [String] content
+    #
+    # @return [void]
+    def append(repo_name, filename, content)
+      file_path = expand_path(repo_name, filename)
+      FileUtils.mkdir_p(File.dirname(file_path))
+      File.open(file_path, 'a') { |f| f << content }
+    end
+
+    # @param [#to_s] repo_name
+    # @param [String] filename
     #
     # @return [void]
     def rm(repo_name, filename)
