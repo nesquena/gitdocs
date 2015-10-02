@@ -81,6 +81,30 @@ module Helper
       end
       FileUtils.rm_rf(PID_FILE)
     end
+
+    # Report gitdocs execution details on failure
+    unless passed?
+      puts "\n\n----------------------------------"
+      puts "Aruba details for failure: #{name}"
+      puts "#{failures.inspect}"
+
+      log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
+      if File.exist?(log_filename)
+        puts "Log file: #{log_filename}"
+        puts File.read(log_filename)
+      end
+
+      if Dir.exist?(abs_current_dir)
+        puts '----------------------------------'
+        puts 'Aruba current directory file list:'
+        Find.find(abs_current_dir) do |path|
+          Find.prune if path =~ %r(.git/?$)
+          puts "  #{path}"
+        end
+      end
+
+      puts "----------------------------------\n\n"
+    end
   end
 
   # @param [String] method pass to the CLI
