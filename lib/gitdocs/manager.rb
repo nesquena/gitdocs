@@ -6,15 +6,15 @@ module Gitdocs
   class Manager
     # @param [nil, #to_i] override_web_port
     def start(override_web_port)
-      log("Starting Gitdocs v#{VERSION}...")
-      log("Using configuration root: '#{Initializer.root_dirname}'")
+      Gitdocs.log_info("Starting Gitdocs v#{VERSION}...")
+      Gitdocs.log_info("Using configuration root: '#{Initializer.root_dirname}'")
+
       shares = Share.all
-      log("Shares: (#{shares.length}) #{shares.map(&:inspect).join(', ')}")
+      Gitdocs.log_info("Monitoring shares(#{shares.length})")
+      shares.each { |share| Gitdocs.log_debug("* #{share.inspect}") }
 
       begin
         EM.run do
-          log('Starting EM loop...')
-
           @runners = Runner.start_all(shares)
           Server.start_and_wait(override_web_port)
         end
@@ -22,16 +22,17 @@ module Gitdocs
         retry
       end
     rescue Exception => e # rubocop:disable RescueException
-      # Report all errors in log
-      log("#{e.class.inspect} - #{e.inspect} - #{e.message.inspect}", :error)
-      log(e.backtrace.join("\n"), :error)
+      Gitdocs.log_error(
+        "#{e.class.inspect} - #{e.inspect} - #{e.message.inspect}"
+      )
+      Gitdocs.log_error(e.backtrace.join("\n"))
       Notifier.error(
         'Unexpected exit',
         'Something went wrong. Please see the log for details.'
       )
       raise
     ensure
-      log("Gitdocs is terminating...goodbye\n\n")
+      Gitdocs.log_info("Gitdocs is terminating...goodbye\n\n")
     end
 
     def restart
@@ -44,16 +45,6 @@ module Gitdocs
 
     def stop
       EM.stop
-    end
-
-    ############################################################################
-
-    private
-
-    # @param [String] msg
-    # @return [void]
-    def log(msg)
-      Gitdocs.logger.info(msg)
     end
   end
 end

@@ -40,6 +40,34 @@ module Gitdocs
     @manager.stop
   end
 
+  # @param [String] message
+  # @return [void]
+  def self.log_debug(message)
+    logger.debug(message)
+  end
+
+  # @param [String] message
+  # @return [void]
+  def self.log_info(message)
+    logger.info(message)
+  end
+
+  # @param [String] message
+  # @return [void]
+  def self.log_warn
+    logger.warn(message)
+  end
+
+  # @param [String] message
+  # @return [void]
+  def self.log_error
+    logger.error(message)
+  end
+
+  ##############################################################################
+
+  private_class_method
+
   # @return [Logger]
   def self.logger
     return @logger if @logger
