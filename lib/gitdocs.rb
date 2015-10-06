@@ -45,7 +45,7 @@ module Gitdocs
     return @logger if @logger
 
     output =
-      if Initializer::debug
+      if Initializer.foreground
         STDOUT
       else
         File.expand_path('log', Initializer.root_dirname)

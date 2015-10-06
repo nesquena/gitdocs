@@ -61,13 +61,13 @@ module Gitdocs
     end
 
     # @return [Boolean]
-    def self.debug
-      @debug ||= false
+    def self.foreground
+      @foreground ||= false
     end
 
     # @param [Boolean] value
-    def self.debug=(value)
-      @debug = value
+    def self.foreground=(value)
+      @foreground = value
     end
 
     # @return [Boolean]
