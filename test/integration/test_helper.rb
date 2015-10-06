@@ -131,7 +131,7 @@ module Helper
     end
 
     FileUtils.rm_rf(PID_FILE)
-    gitdocs_command('start', '--port 7777', 'Started gitdocs')
+    gitdocs_command('start', '--verbose --port=7777', 'Started gitdocs')
   end
 
   # @overload abs_current_dir

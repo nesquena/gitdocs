@@ -69,5 +69,15 @@ module Gitdocs
     def self.debug=(value)
       @debug = value
     end
+
+    # @return [Boolean]
+    def self.verbose
+      @verbose ||= false
+    end
+
+    # @param [Boolean] value
+    def self.verbose=(value)
+      @verbose = !!value
+    end
   end
 end

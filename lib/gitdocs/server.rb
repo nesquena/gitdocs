@@ -24,7 +24,7 @@ module Gitdocs
     end
 
     def start
-      Thin::Logging.debug = Initializer.debug
+      Thin::Logging.debug = Initializer.verbose
       Thin::Server.start('127.0.0.1', @port) do
         use Rack::Static,
           urls: %w(/css /js /img /doc),

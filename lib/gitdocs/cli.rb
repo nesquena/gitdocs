@@ -13,20 +13,24 @@ module Gitdocs
     end
 
     desc 'start', 'Starts a daemonized gitdocs process'
-    method_option :debug, type: :boolean, aliases: '-D'
-    method_option :port, type: :string, aliases: '-p'
-    method_option :pid, type: :string, aliases: '-P'
+    method_option :debug,   type: :boolean, aliases: '-D'
+    method_option :verbose, type: :boolean, aliases: '-v'
+    method_option :port,    type: :string,  aliases: '-p'
+    method_option :pid,     type: :string,  aliases: '-P'
     def start
       unless stopped?
         say 'Gitdocs is already running, please use restart', :red
         return
       end
 
+      Gitdocs::Initializer.verbose = options[:verbose]
+
       if options[:debug]
         say 'Starting in debug mode', :yellow
         Gitdocs::Initializer.debug = true
         Gitdocs.start(options[:port])
       else
+        ARGV.clear
         runner.execute { Gitdocs.start(options[:port]) }
         if running?
           say 'Started gitdocs', :green

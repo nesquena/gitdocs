@@ -51,5 +51,7 @@ module Gitdocs
         File.expand_path('log', Initializer.root_dirname)
       end
     @logger = Logger.new(output)
+    @logger.level = Initializer.verbose ? Logger::DEBUG : Logger::INFO
+    @logger
   end
 end
