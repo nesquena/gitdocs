@@ -32,6 +32,8 @@ describe Gitdocs::Repository::Committer do
   describe '#commit' do
     subject { committer.commit }
 
+    before { Gitdocs.stubs(:log_debug) }
+
     # TODO: should test the paths which use the message file
 
     describe 'no previous commits' do
