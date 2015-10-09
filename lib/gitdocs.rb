@@ -26,10 +26,11 @@ require 'gitdocs/search'
 
 module Gitdocs
   # @param [nil, Integer] override_web_port
-  def self.start(override_web_port)
+  # @param [nil, String] override_web_host
+  def self.start(override_web_port, override_web_host)
     @manager.stop if @manager
     @manager = Manager.new
-    @manager.start(override_web_port)
+    @manager.start(override_web_port, override_web_host)
   end
 
   def self.restart

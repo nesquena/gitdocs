@@ -13,6 +13,11 @@ class Gitdocs::Configuration
     Config.global.web_frontend_port
   end
 
+  # @return [String]
+  def self.web_frontend_host
+    Config.global.web_frontend_host
+  end
+
   # @param [Hash] new_config
   def self.update(new_config)
     Config.global.update_attributes(new_config)
@@ -32,5 +37,3 @@ class Gitdocs::Configuration
     end
   end
 end
-
-

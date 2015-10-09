@@ -15,6 +15,7 @@ module Gitdocs
     desc 'start', 'Starts a daemonized gitdocs process'
     method_option :debug, type: :boolean, aliases: '-D'
     method_option :port, type: :string, aliases: '-p'
+    method_option :host, type: :string, aliases: '-h'
     method_option :pid, type: :string, aliases: '-P'
     def start
       unless stopped?
@@ -25,9 +26,9 @@ module Gitdocs
       if options[:debug]
         say 'Starting in debug mode', :yellow
         Gitdocs::Initializer.debug = true
-        Gitdocs.start(options[:port])
+        Gitdocs.start(options[:port], options[:host])
       else
-        runner.execute { Gitdocs.start(options[:port]) }
+        runner.execute { Gitdocs.start(options[:port], options[:host]) }
         if running?
           say 'Started gitdocs', :green
         else
@@ -114,6 +115,7 @@ module Gitdocs
 
     desc 'open', 'Open the Web UI'
     method_option :port, type: :string, aliases: '-p'
+    method_option :host, type: :string, aliases: '-h'
     def open
       unless running?
         say 'Gitdocs is not running, cannot open the UI', :red
@@ -122,7 +124,9 @@ module Gitdocs
 
       web_port = options[:port]
       web_port ||= Configuration.web_frontend_port
-      Launchy.open("http://localhost:#{web_port}/")
+      web_host = options[:host]
+      web_host ||= Configuration.web_frontend_host
+      Launchy.open("http://#{web_host}:#{web_port}/")
     end
 
     # TODO: make this work
