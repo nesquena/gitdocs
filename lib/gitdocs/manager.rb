@@ -5,7 +5,8 @@ module Gitdocs
 
   class Manager
     # @param [nil, #to_i] override_web_port
-    def start(override_web_port)
+    # @param [nil, String] override_web_host
+    def start(override_web_port, override_web_host)
       log("Starting Gitdocs v#{VERSION}...")
       log("Using configuration root: '#{Initializer.root_dirname}'")
       shares = Share.all
@@ -16,7 +17,7 @@ module Gitdocs
           log('Starting EM loop...')
 
           @runners = Runner.start_all(shares)
-          Server.start_and_wait(override_web_port)
+          Server.start_and_wait(override_web_port, override_web_host)
         end
       rescue Restart
         retry
