@@ -26,8 +26,6 @@ module Gitdocs
 
       mutex = Mutex.new
 
-      @notifier.info('Running gitdocs!', "Running gitdocs in '#{root}'")
-
       # Pull changes from remote repository
       syncer = proc do
         EM.defer(proc do
