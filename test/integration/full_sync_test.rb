@@ -10,57 +10,87 @@ describe 'fully synchronizing repositories' do
 
   it 'should sync new files' do
     GitFactory.write(:clone1, 'newfile', 'testing')
-    wait_for_clean_workdir('clone1')
+    assert_clean(:clone1)
 
-    wait_for_exact_file_content('clone1/newfile', 'testing')
-    wait_for_exact_file_content('clone2/newfile', 'testing')
-    wait_for_exact_file_content('clone3/newfile', 'testing')
+    assert_file_content(:clone1, 'newfile', 'testing')
+    assert_file_content(:clone2, 'newfile', 'testing')
+    assert_file_content(:clone3, 'newfile', 'testing')
   end
 
   it 'should sync changes to an existing file' do
     GitFactory.write(:clone1, 'file', 'testing')
-    wait_for_clean_workdir('clone1')
+    assert_clean(:clone1)
 
-    wait_for_exact_file_content('clone3/file', 'testing')
+    assert_file_content(:clone3, 'file', 'testing')
     GitFactory.append(:clone3, 'file', "\nfoobar")
-    wait_for_clean_workdir('clone3')
+    assert_clean(:clone3)
 
-    wait_for_exact_file_content('clone1/file', "testing\nfoobar")
-    wait_for_exact_file_content('clone2/file', "testing\nfoobar")
-    wait_for_exact_file_content('clone3/file', "testing\nfoobar")
+    assert_file_content(:clone1, 'file', "testing\nfoobar")
+    assert_file_content(:clone2, 'file', "testing\nfoobar")
+    assert_file_content(:clone3, 'file', "testing\nfoobar")
   end
 
   it 'should sync empty directories' do
     GitFactory.mkdir(:clone1, 'empty_dir')
-    wait_for_clean_workdir('clone1')
+    assert_clean(:clone1)
 
-    wait_for_directory('clone1/empty_dir')
-    wait_for_directory('clone2/empty_dir')
-    wait_for_directory('clone3/empty_dir')
+    assert_file_exist(:clone1, 'empty_dir')
+    assert_file_exist(:clone2, 'empty_dir')
+    assert_file_exist(:clone3, 'empty_dir')
   end
 
   it 'should mark unresolvable conflicts' do
     GitFactory.write(:clone1, 'file', 'testing')
-    wait_for_clean_workdir('clone1')
+    assert_clean(:clone1)
 
     GitFactory.append(:clone2, 'file', 'foobar')
     GitFactory.append(:clone3, 'file', 'deadbeef')
-    wait_for_clean_workdir('clone2')
-    wait_for_clean_workdir('clone3')
+    assert_clean(:clone2)
+    assert_clean(:clone3)
 
     # HACK: Leaving in the sleep and standard checks.
     # Trying to wait for the conflicts to be resolved does not seem to
     # be working consistently when run on TravisCI. Hopefully this will.
-    sleep(6)
-    in_current_dir do
-      # Remember expected file counts include '.', '..', and '.git'
-      assert_includes(5..6, Dir.entries('clone1').count)
-      assert_includes(5..6, Dir.entries('clone2').count)
-      assert_includes(5..6, Dir.entries('clone3').count)
+    #sleep(6)
+
+    %w(clone2 clone3 clone1).each do |repo_name|
+      assert_file_exist(repo_name, 'file (9a2c773)')
+      assert_file_exist(repo_name, 'file (f6ea049)')
+      assert_file_exist(repo_name, 'file (e8b5f82)')
     end
-    # TODO: Want to convert to these methods in the future
-    # wait_for_conflict_markers('clone1/file')
-    # wait_for_conflict_markers('clone2/file')
-    # wait_for_conflict_markers('clone3/file')
   end
+end
+
+################################################################################
+
+def wait_for(&block)
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    begin
+      block.call
+    rescue Minitest::Assertion
+      sleep(0.1)
+      retry
+    end
+  end
+rescue Timeout::Error
+  block.call
+end
+
+# @param (see GitInspector.clean?)
+def assert_clean(repo_name)
+  wait_for { GitInspector.clean?(repo_name).must_equal(true) }
+end
+
+# @param [#to_s] repo_name
+# @param [String] filename
+# @param [String] content
+def assert_file_content(repo_name, filename, content)
+  wait_for do
+    GitInspector.file_content(repo_name, filename).must_equal(content)
+  end
+end
+
+# @param (see GitInspector.file_exist?)
+def assert_file_exist(repo_name, filename)
+  wait_for { GitInspector.file_exist?(repo_name, filename).must_equal(true) }
 end
