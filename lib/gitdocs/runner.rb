@@ -11,8 +11,8 @@ module Gitdocs
     def initialize(share)
       @share = share
       @polling_interval = share.polling_interval
-      @notifier         = Notifier.new(@share.notification)
       @repository       = Repository.new(share)
+      @git_notifier     = GitNotifier.new(share.path, share.notification)
     end
 
     def root
@@ -76,18 +76,18 @@ module Gitdocs
       # Merge ##################################################################
       merge_result = @repository.merge
       merge_result = latest_author_count if merge_result == :ok
-      @notifier.merge_notification(merge_result, root)
+      @git_notifier.for_merge(merge_result)
       return if merge_result.is_a?(String)
 
       # Push ###################################################################
       result = @repository.push
       result = latest_author_count if result == :ok
-      @notifier.push_notification(result, root)
+      @git_notifier.for_push(result)
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
-      @notifier.error("Unexpected error syncing changes in #{root}", "#{e}")
+      @git_notifier.on_error(e)
     end
 
     ############################################################################

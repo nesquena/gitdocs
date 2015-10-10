@@ -5,12 +5,16 @@ require File.expand_path('../test_helper', __FILE__)
 describe 'gitdocs runner' do
   let(:runner) { Gitdocs::Runner.new(share) }
 
-  let(:share)      { stub(polling_interval: 1, notification: true) }
-  let(:notifier)   { stub }
-  let(:repository) { stub(root: 'root_path') }
+  let(:share) do
+    stub(polling_interval: 1, path: 'root_path', notification: :notification)
+  end
+  let(:repository)   { stub(root: 'root_path') }
+  let(:git_notifier) { stub }
   before do
-    Gitdocs::Notifier.stubs(:new).with(true).returns(notifier)
-    Gitdocs::Repository.stubs(:new).with(share).returns(repository)
+    Gitdocs::Repository.expects(:new).with(share).returns(repository)
+    Gitdocs::GitNotifier.expects(:new)
+      .with('root_path', :notification)
+      .returns(git_notifier)
   end
 
   describe '#root' do
@@ -49,7 +53,7 @@ describe 'gitdocs runner' do
         let(:fetch_result) { :ok }
         before do
           repository.expects(:merge).returns('error')
-          notifier.expects(:merge_notification).with('error', 'root_path')
+          git_notifier.expects(:for_merge).with('error')
         end
         it { subject }
       end
@@ -58,13 +62,13 @@ describe 'gitdocs runner' do
         let(:fetch_result) { :ok }
         before do
           repository.expects(:merge).returns(:not_ok)
-          notifier.expects(:merge_notification).with(:not_ok, 'root_path')
+          git_notifier.expects(:for_merge).with(:not_ok)
           repository.expects(:push).returns(push_result)
         end
 
         describe 'and push is not_ok' do
           let(:push_result) { :not_ok }
-          before { notifier.expects(:push_notification).with(:not_ok, 'root_path') }
+          before { git_notifier.expects(:for_push).with(:not_ok) }
           it { subject }
         end
 
@@ -75,7 +79,7 @@ describe 'gitdocs runner' do
             repository.stubs(:current_oid).returns(:next_oid)
             changes = { 'Alice' => 1, 'Bob' => 2 }
             repository.stubs(:author_count).with(:oid).returns(changes)
-            notifier.expects(:push_notification).with(changes, 'root_path')
+            git_notifier.expects(:for_push).with(changes)
 
             subject
           end
@@ -93,14 +97,14 @@ describe 'gitdocs runner' do
           runner.instance_variable_set(:@last_synced_revision, :oid)
           changes = { 'Alice' => 1, 'Bob' => 3 }
           repository.stubs(:author_count).with(:oid).returns(changes)
-          notifier.expects(:merge_notification).with(changes, 'root_path')
+          git_notifier.expects(:for_merge).with(changes)
           repository.expects(:push).returns(push_result)
         end
 
         describe 'and push is not_ok' do
           let(:push_result) { :not_ok }
           before do
-            notifier.expects(:push_notification).with(:not_ok, 'root_path')
+            git_notifier.expects(:for_push).with(:not_ok)
 
             subject
           end
@@ -112,7 +116,7 @@ describe 'gitdocs runner' do
           before do
             changes = { 'Charlie' => 5, 'Dan' =>  7 }
             repository.stubs(:author_count).with(:merge_oid).returns(changes)
-            notifier.expects(:push_notification).with(changes, 'root_path')
+            git_notifier.expects(:for_push).with(changes)
 
             subject
           end
