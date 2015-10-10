@@ -56,6 +56,10 @@ module Helper
     FileUtils.rm_rf(current_dir)
     set_env('HOME', abs_current_dir)
     GitFactory.working_directory = abs_current_dir
+
+    FileUtils.mkdir_p(abs_current_dir)
+    Rugged::Config.global['user.name']  = GitFactory.users[0][:name]
+    Rugged::Config.global['user.email'] = GitFactory.users[0][:email]
   end
 
   def teardown
