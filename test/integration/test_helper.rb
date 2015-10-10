@@ -10,15 +10,20 @@ require 'timeout'
 require 'capybara'
 require 'capybara_minitest_spec'
 require 'capybara/poltergeist'
+Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |filename|
+  require_relative filename
+end
 
-Capybara.app_host          = 'http://localhost:7777/'
-Capybara.default_driver    = :poltergeist
-Capybara.run_server        = false
-Capybara.default_wait_time = 20
+Capybara.app_host              = 'http://localhost:7777/'
+Capybara.default_driver        = :poltergeist
+Capybara.run_server            = false
+Capybara.default_max_wait_time = 30
 
 Capybara.register_driver :poltergeist do |app|
-  Capybara::Poltergeist::Driver.new(app, timeout: 20)
+  Capybara::Poltergeist::Driver.new(app, timeout: Capybara.default_max_wait_time)
 end
+
+PID_FILE = File.expand_path('../../../tmp/gitdocs.pid', __FILE__)
 
 module MiniTest::Aruba
   class ArubaApiWrapper
@@ -40,19 +45,6 @@ module MiniTest::Aruba
   def method_missing(method, *args, &block)
     aruba.send(method, *args, &block)
   end
-
-  def before_setup
-    super
-    original = (ENV['PATH'] || '').split(File::PATH_SEPARATOR)
-    set_env('PATH', ([File.expand_path('bin')] + original).join(File::PATH_SEPARATOR))
-    FileUtils.rm_rf(current_dir)
-  end
-
-  def after_teardown
-    super
-    restore_env
-    processes.clear
-  end
 end
 
 module Helper
@@ -61,9 +53,13 @@ module Helper
   include Capybara::RSpecMatchers
 
   def before_setup
-    super
+    FileUtils.rm_rf(current_dir)
     set_env('HOME', abs_current_dir)
-    ENV['TEST'] = nil
+    GitFactory.working_directory = abs_current_dir
+
+    FileUtils.mkdir_p(abs_current_dir)
+    Rugged::Config.global['user.name']  = GitFactory.users[0][:name]
+    Rugged::Config.global['user.email'] = GitFactory.users[0][:email]
   end
 
   def teardown
@@ -72,13 +68,14 @@ module Helper
   end
 
   def after_teardown
-    super
+    restore_env
+    processes.clear
 
     terminate_processes!
     prep_for_fs_check do
-      next unless File.exist?('gitdocs.pid')
+      next unless File.exist?(PID_FILE)
 
-      pid = IO.read('gitdocs.pid').to_i
+      pid = IO.read(PID_FILE).to_i
       Process.kill('KILL', pid)
       begin
         Process.wait(pid)
@@ -86,19 +83,59 @@ module Helper
         # This means that the process is already gone.
         # Nothing to do.
       end
+      FileUtils.rm_rf(PID_FILE)
+    end
+
+    # Report gitdocs execution details on failure
+    unless passed?
+      puts "\n\n----------------------------------"
+      puts "Aruba details for failure: #{name}"
+      puts "#{failures.inspect}"
+
+      log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
+      if File.exist?(log_filename)
+        puts "Log file: #{log_filename}"
+        puts File.read(log_filename)
+      end
+
+      if Dir.exist?(abs_current_dir)
+        puts '----------------------------------'
+        puts 'Aruba current directory file list:'
+        Find.find(abs_current_dir) do |path|
+          Find.prune if path =~ %r(.git/?$)
+          puts "  #{path}"
+        end
+      end
+
+      puts "----------------------------------\n\n"
     end
   end
 
-  def start_daemon
+  # @param [String] method pass to the CLI
+  # @param [String] arguments which will be passed to the CLI in addition
+  # @param [String] expected_output that the CLI should return
+  #
+  # @return [String] full text of the command being executed
+  def gitdocs_command(method, arguments, expected_output)
+    binary_path  = File.expand_path('../../../bin/gitdocs', __FILE__)
+    full_command = "#{binary_path} #{method} #{arguments} --pid=#{PID_FILE}"
+
+    run(full_command, 15)
+    assert_success(true)
+    assert_partial_output(expected_output, output_from(full_command))
+
+    full_command
+  end
+
+  # @return [void]
+  def gitdocs_start
     Gitdocs::Initializer.initialize_database
     Gitdocs::Share.all.each do |share|
       share.update_attributes(polling_interval: 0.1, notification: false)
     end
 
-    start_cmd = 'gitdocs start --pid=gitdocs.pid --port 7777'
-    run(start_cmd, 15)
-    assert_success(true)
-    assert_partial_output('Started gitdocs', output_from(start_cmd))
+    FileUtils.rm_rf(PID_FILE)
+    gitdocs_command('start', '--verbose --port=7777', 'Started gitdocs')
   end
 
   # @overload abs_current_dir
@@ -111,23 +148,9 @@ module Helper
     File.absolute_path(File.join(current_dir, relative_path))
   end
 
-  # @return [String] the absolute path for the repository
-  def git_init_local(path = 'local')
-    abs_path = abs_current_dir(path)
-    Rugged::Repository.init_at(abs_path)
-    abs_path
-  end
-
-  # @return [String] the absolute path for the repository
-  def git_init_remote(path = 'remote')
-    abs_path = abs_current_dir(path)
-    Rugged::Repository.init_at(abs_path, :bare)
-    abs_path
-  end
-
   def wait_for_clean_workdir(path)
     dirty = true
-    Timeout.timeout(20) do
+    Timeout.timeout(Capybara.default_max_wait_time) do
       while dirty
         begin
           sleep(0.1)
@@ -149,7 +172,7 @@ module Helper
   def wait_for_exact_file_content(file, exact_content)
     in_current_dir do
       begin
-        Timeout.timeout(20) do
+        Timeout.timeout(Capybara.default_max_wait_time) do
           sleep(0.1) until File.exist?(file) && IO.read(file) == exact_content
         end
       rescue Timeout::Error
@@ -168,7 +191,9 @@ module Helper
   def wait_for_directory(path)
     in_current_dir do
       begin
-        Timeout.timeout(20) { sleep(0.1) until Dir.exist?(path) }
+        Timeout.timeout(Capybara.default_max_wait_time) do
+          sleep(0.1) until Dir.exist?(path)
+        end
       rescue Timeout::Error
         nil
       end
@@ -180,7 +205,9 @@ module Helper
   def wait_for_conflict_markers(path)
     in_current_dir do
       begin
-        Timeout.timeout(20) { sleep(0.1) if File.exist?(path) }
+        Timeout.timeout(Capybara.default_max_wait_time) do
+          sleep(0.1) if File.exist?(path)
+        end
       rescue Timeout::Error
         nil
       ensure
@@ -188,7 +215,9 @@ module Helper
       end
 
       begin
-        Timeout.timeout(20) { sleep(0.1) if Dir.glob("#{path} (*)").empty? }
+        Timeout.timeout(Capybara.default_max_wait_time) do
+          sleep(0.1) if Dir.glob("#{path} (*)").empty?
+        end
       rescue Timeout::Error
         nil
       ensure
@@ -197,39 +226,50 @@ module Helper
     end
   end
 
-  def gitdocs_add(path = 'local')
-    add_cmd = "gitdocs add #{path} --pid=gitdocs.pid"
-    run_simple(add_cmd, true, 15)
-    assert_success(true)
-    assert_partial_output("Added path #{path} to doc list", output_from(add_cmd))
+  # @param [String] path
+  #
+  # @return [#gitdocs_command]
+  def gitdocs_add(path)
+    GitFactory.init(path)
+    gitdocs_command('add', path, "Added path #{path} to doc list")
   end
 
-  def git_clone_and_gitdocs_add(remote_path, *clone_paths)
-    clone_paths.each do |clone_path|
-      abs_clone_path = abs_current_dir(clone_path)
-      FileUtils.rm_rf(abs_clone_path)
-      repo = Rugged::Repository.clone_at(
-        "file://#{remote_path}",
-        abs_clone_path
+  # @deprecated
+  # @param [String] remote_repository_path
+  # @param [Array<String>] destination_paths
+  def gitdocs_create(remote_repository_path, *destination_paths)
+    destination_paths.each do |destination_path|
+      gitdocs_command(
+        'create',
+        "#{destination_path} #{remote_repository_path}",
+        "Added path #{destination_path} to doc list"
       )
-      repo.config['user.email'] = 'afish@example.com'
-      repo.config['user.name']  = 'Art T. Fish'
-      gitdocs_add(clone_path)
     end
   end
 
-  def gitdocs_status
-    @status_cmd = 'gitdocs status --pid=gitdocs.pid'
-    run(@status_cmd, 15)
-    assert_success(true)
+  # @param [Array<String>] destination_paths
+  #
+  # @return [void]
+  def gitdocs_create_from_remote(*destination_paths)
+    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
+    remote_repository_path = GitFactory.init_bare(:remote)
+    gitdocs_create(
+      remote_repository_path, *full_destination_paths
+    )
   end
 
-  def assert_gitdocs_status_contains(expected)
-    assert_partial_output(expected, output_from(@status_cmd))
+  def gitdocs_assert_status_contains(*expected_outputs)
+    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    expected_outputs.each do |expected_output|
+      assert_partial_output(expected_output, output_from(command))
+    end
   end
 
-  def assert_gitdocs_status_not_contain(expected)
-    assert_no_partial_output(expected, output_from(@status_cmd))
+  def gitdocs_assert_status_not_contain(*not_expected_outputs)
+    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    not_expected_outputs.each do |not_expected_output|
+      assert_no_partial_output(not_expected_output, output_from(command))
+    end
   end
 end
 

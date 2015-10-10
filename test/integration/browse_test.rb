@@ -4,26 +4,17 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe 'browse and edit repository file through the UI' do
   before do
-    git_init_local('repo1')
     gitdocs_add('repo1')
-
-    git_init_local
-    gitdocs_add
+    gitdocs_add('local')
 
     # Create the various commits, to be able to see revisions.
-    repository = Gitdocs::Repository.new(abs_current_dir('local'))
-    write_file('local/file1', 'fbadbeef')
-    repository.commit
-    write_file('local/file1', 'foobar')
-    repository.commit
-    write_file('local/file1', 'deadbeef')
-    repository.commit
-    write_file('local/file2', 'A5A5A5A5')
-    repository.commit
-    write_file('local/README.md', 'hello i am a README')
-    repository.commit
+    GitFactory.commit(:local, 'file1', 'fbadbeef')
+    GitFactory.commit(:local, 'file1', 'foobar')
+    GitFactory.commit(:local, 'file1', 'deadbeef')
+    GitFactory.commit(:local, 'file2', 'A5A5A5A5')
+    GitFactory.commit(:local, 'README.md', 'hello i am a README')
 
-    start_daemon
+    gitdocs_start
 
     visit 'http://localhost:7777/'
     click_link('Home')

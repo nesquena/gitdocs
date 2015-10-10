@@ -13,21 +13,28 @@ module Gitdocs
     end
 
     desc 'start', 'Starts a daemonized gitdocs process'
-    method_option :debug, type: :boolean, aliases: '-D'
-    method_option :port, type: :string, aliases: '-p'
-    method_option :pid, type: :string, aliases: '-P'
+    method_option :foreground, type: :boolean, aliases: '-fg'
+    method_option :verbose,    type: :boolean, aliases: '-v'
+    method_option :port,       type: :string,  aliases: '-p'
+    method_option :pid,        type: :string,  aliases: '-P'
     def start
       unless stopped?
         say 'Gitdocs is already running, please use restart', :red
         return
       end
 
-      if options[:debug]
-        say 'Starting in debug mode', :yellow
-        Gitdocs::Initializer.debug = true
+      Gitdocs::Initializer.verbose = options[:verbose]
+
+      if options[:foreground]
+        say 'Run in the foreground', :yellow
+        Gitdocs::Initializer.foreground = true
         Gitdocs.start(options[:port])
       else
+        # Clear the arguments so that they will not be processed by the
+        # Dante execution.
+        ARGV.clear
         runner.execute { Gitdocs.start(options[:port]) }
+
         if running?
           say 'Started gitdocs', :green
         else

@@ -19,6 +19,7 @@ class Gitdocs::Notifier
   # @param [String] title
   # @param [String] message
   def info(title, message)
+    Gitdocs.log_info("#{title}: #{message}")
     if @show_notifications
       Guard::Notifier.notify(message, title: title, image: INFO_ICON)
     else
@@ -31,6 +32,7 @@ class Gitdocs::Notifier
   # @param [String] title
   # @param [String] message
   def warn(title, message)
+    Gitdocs.log_warn("#{title}: #{message}")
     if @show_notifications
       Guard::Notifier.notify(message, title: title)
     else
@@ -43,6 +45,7 @@ class Gitdocs::Notifier
   # @param [String] title
   # @param [String] message
   def error(title, message)
+    Gitdocs.log_error("#{title}: #{message}")
     if @show_notifications
       Guard::Notifier.notify(message, title: title, image: :failure)
     else

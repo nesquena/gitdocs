@@ -16,6 +16,8 @@ describe Gitdocs::Notifier do
   describe '#info' do
     subject { notifier.info('title', 'message') }
 
+    before { Gitdocs.expects(:log_info).with('title: message') }
+
     describe 'without notifications' do
       let(:show_notifications) { false }
       before { notifier.expects(:puts).with('title: message') }
@@ -40,6 +42,8 @@ describe Gitdocs::Notifier do
   describe '#warn' do
     subject { notifier.warn('title', 'message') }
 
+    before { Gitdocs.expects(:log_warn).with('title: message') }
+
     describe 'without notifications' do
       let(:show_notifications) { false }
       before { Kernel.expects(:warn).with('title: message') }
@@ -58,6 +62,8 @@ describe Gitdocs::Notifier do
 
   describe '#error' do
     subject { notifier.error('title', 'message') }
+
+    before { Gitdocs.expects(:log_error).with('title: message') }
 
     describe 'without notifications' do
       let(:show_notifications) { false }

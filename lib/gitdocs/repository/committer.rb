@@ -21,6 +21,7 @@ class Gitdocs::Repository::Committer
 
     # FIXME: Consider a more appropriate location for the dirty check.
     return false unless Gitdocs::Repository.new(@root_dirname).dirty?
+    Gitdocs.log_debug("Repo #{@root_dirname} is dirty")
 
     # Commit any changes in the working directory.
     Dir.chdir(@root_dirname) do
@@ -28,7 +29,11 @@ class Gitdocs::Repository::Committer
       @rugged.index.update_all
     end
     @rugged.index.write
-    @grit.commit_index(message)
+    Gitdocs.log_debug("Index to be committed #{@rugged.index}")
+
+    commit_result = @grit.commit_index(message)
+    Gitdocs.log_debug("Commit result: <#{commit_result.inspect}>")
+
     true
   end
 

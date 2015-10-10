@@ -45,8 +45,8 @@ namespace :server do
 end
 
 desc 'Run the daemon in debugging mode'
-task :daemon do
-  exec('bin/gitdocs start -D --port 9999')
+task :debug do
+  exec('bin/gitdocs start --foreground --verbose --port 9999')
 end
 
 task default: 'test:integration'

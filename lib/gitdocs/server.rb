@@ -24,7 +24,7 @@ module Gitdocs
     end
 
     def start
-      Thin::Logging.debug = Initializer.debug
+      Thin::Logging.debug = Initializer.verbose
       Thin::Server.start('127.0.0.1', @port) do
         use Rack::Static,
           urls: %w(/css /js /img /doc),
@@ -41,15 +41,15 @@ module Gitdocs
         i = 0
         begin
           TCPSocket.open('127.0.0.1', @port).close
-          Gitdocs.logger.info('Web server running!')
+          Gitdocs.log_info('Web server running!')
         rescue Errno::ECONNREFUSED
           sleep 0.2
           i += 1
           if i <= 20
-            Gitdocs.logger.info('Retrying web server loop...')
+            Gitdocs.log_info('Retrying web server loop...')
             retry
           else
-            Gitdocs.logger.info('Web server failed to start')
+            Gitdocs.log_error('Web server failed to start')
           end
         end
       end
