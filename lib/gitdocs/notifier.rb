@@ -4,29 +4,15 @@
 class Gitdocs::Notifier
   INFO_ICON = File.expand_path('../../img/icon.png', __FILE__)
 
-  # @overload error(title, message)
-  #   @param (see #error)
-  #
-  # @overload error(title, message, show_notification)
-  #   @param (see #error)
-  #   @param [Boolean] show_notification
-  #
-  # @return (see #error)
-  def self.error(title, message, show_notification = true)
-    Gitdocs::Notifier.new(show_notification).error(title, message)
-  end
-
-  # @param [Boolean] show_notifications
-  def initialize(show_notifications)
-    @show_notifications = show_notifications
-    Guard::Notifier.turn_on if @show_notifications
-  end
-
   # @param [String] title
   # @param [String] message
-  def info(title, message)
+  # @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.info(title, message, show_notification)
     Gitdocs.log_info("#{title}: #{message}")
-    if @show_notifications
+    if show_notification
+      Guard::Notifier.turn_on
       Guard::Notifier.notify(message, title: title, image: INFO_ICON)
     else
       puts("#{title}: #{message}")
@@ -37,9 +23,13 @@ class Gitdocs::Notifier
 
   # @param [String] title
   # @param [String] message
-  def warn(title, message)
+  # @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.warn(title, message, show_notification)
     Gitdocs.log_warn("#{title}: #{message}")
-    if @show_notifications
+    if show_notification
+      Guard::Notifier.turn_on
       Guard::Notifier.notify(message, title: title)
     else
       Kernel.warn("#{title}: #{message}")
@@ -48,11 +38,21 @@ class Gitdocs::Notifier
     # Prevent StandardErrors from stopping the daemon.
   end
 
-  # @param [String] title
-  # @param [String] message
-  def error(title, message)
+  # @overload error(title, message)
+  #   @param [String] title
+  #   @param [String] message
+  #
+  # @overload error(title, message, show_notification)
+  #   @param [String] title
+  #   @param [String] message
+  #   @param [Boolean] show_notification
+  #
+  # @return [void]
+  def self.error(title, message, show_notification = true)
     Gitdocs.log_error("#{title}: #{message}")
-    if @show_notifications
+
+    if show_notification
+      Guard::Notifier.turn_on
       Guard::Notifier.notify(message, title: title, image: :failure)
     else
       Kernel.warn("#{title}: #{message}")

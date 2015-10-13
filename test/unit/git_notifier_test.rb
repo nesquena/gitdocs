@@ -4,22 +4,15 @@ require File.expand_path('../test_helper', __FILE__)
 describe Gitdocs::GitNotifier do
   let(:git_notifier) { Gitdocs::GitNotifier.new(:root, :show_notifications) }
 
-  let(:notifier) { mock }
-  before do
-    Gitdocs::Notifier.expects(:new)
-      .with(:show_notifications)
-      .returns(notifier)
-  end
-
   describe '.for_merge' do
     subject { git_notifier.for_merge(result) }
 
     describe 'with no changes' do
       before do
         # Ensure that the notification methods are not called.
-        notifier.stubs(:warn).raises
-        notifier.stubs(:info).raises
-        notifier.stubs(:error).raises
+        Gitdocs::Notifier.stubs(:warn).raises
+        Gitdocs::Notifier.stubs(:info).raises
+        Gitdocs::Notifier.stubs(:error).raises
       end
       describe('with nil')        { let(:result) { nil }        ; it { subject } }
       describe('with no_remote')  { let(:result) { :no_remote } ; it { subject } }
@@ -29,9 +22,10 @@ describe Gitdocs::GitNotifier do
     describe 'with changes' do
       let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
       before do
-        notifier.expects(:info).with(
+        Gitdocs::Notifier.expects(:info).with(
           'Updated with 4 changes',
-          "In root:\n* Alice (1 change)\n* Bob (3 changes)"
+          "In root:\n* Alice (1 change)\n* Bob (3 changes)",
+          :show_notifications
         )
       end
       it { subject }
@@ -40,9 +34,10 @@ describe Gitdocs::GitNotifier do
     describe 'with conflicts' do
       let(:result)  { ['file'] }
       before do
-        notifier.expects(:warn).with(
+        Gitdocs::Notifier.expects(:warn).with(
           'There were some conflicts',
-          '* file'
+          '* file',
+          :show_notifications
         )
       end
       it { subject }
@@ -51,9 +46,10 @@ describe Gitdocs::GitNotifier do
     describe 'with anything else' do
       let(:result) { 'error' }
       before do
-        notifier.expects(:error).with(
+        Gitdocs::Notifier.expects(:error).with(
           'There was a problem synchronizing this gitdoc',
-          "A problem occurred in root:\nerror"
+          "A problem occurred in root:\nerror",
+          :show_notifications
         )
       end
       it { subject }
@@ -66,9 +62,9 @@ describe Gitdocs::GitNotifier do
     describe 'with no changes' do
       before do
         # Ensure that the notification methods are not called.
-        notifier.stubs(:warn).raises
-        notifier.stubs(:info).raises
-        notifier.stubs(:error).raises
+        Gitdocs::Notifier.stubs(:warn).raises
+        Gitdocs::Notifier.stubs(:info).raises
+        Gitdocs::Notifier.stubs(:error).raises
       end
       describe('with nil')       { let(:result) { nil }        ; it { subject } }
       describe('with no_remote') { let(:result) { :no_remote } ; it { subject } }
@@ -78,8 +74,8 @@ describe Gitdocs::GitNotifier do
     describe 'with changes' do
       let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
       before do
-        notifier.expects(:info)
-          .with('Pushed 4 changes', 'root has been pushed')
+        Gitdocs::Notifier.expects(:info)
+          .with('Pushed 4 changes', 'root has been pushed', :show_notifications)
       end
       it { subject }
     end
@@ -87,8 +83,8 @@ describe Gitdocs::GitNotifier do
     describe 'with conflict' do
       let(:result) { :conflict }
       before do
-        notifier.expects(:warn)
-          .with('There was a conflict in root, retrying', '')
+        Gitdocs::Notifier.expects(:warn)
+          .with('There was a conflict in root, retrying', '', :show_notifications)
       end
       it { subject }
     end
@@ -96,8 +92,8 @@ describe Gitdocs::GitNotifier do
     describe 'with anything else' do
       let(:result) { 'error' }
       before do
-        notifier.expects(:error)
-          .with('BAD Could not push changes in root', 'error')
+        Gitdocs::Notifier.expects(:error)
+          .with('BAD Could not push changes in root', 'error', :show_notifications)
       end
       it { subject }
     end
@@ -106,8 +102,11 @@ describe Gitdocs::GitNotifier do
   describe '.on_error' do
     subject { git_notifier.on_error(:exception) }
     before do
-      notifier.expects(:error)
-        .with('Unexpected error when fetching/pushing in root', 'exception')
+      Gitdocs::Notifier.expects(:error).with(
+        'Unexpected error when fetching/pushing in root',
+        'exception',
+        :show_notifications
+      )
     end
     it { subject }
   end
