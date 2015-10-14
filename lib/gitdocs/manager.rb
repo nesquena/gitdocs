@@ -44,6 +44,7 @@ module Gitdocs
     end
 
     def stop
+      Notifier.disconnect
       EM.stop
     end
   end
