@@ -1,3 +1,6 @@
+0.6.0.pre2
+ * convert notification to use the Notiffany gem (@acant)
+
 0.6.0.pre1
  * upgrade gems redcarpet, poltergeist (@acant)
  * add 'rake debug' task for development and debugging (@acant)
