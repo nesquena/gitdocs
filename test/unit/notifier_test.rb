@@ -2,170 +2,100 @@
 require File.expand_path('../test_helper', __FILE__)
 
 describe Gitdocs::Notifier do
-  let(:notifier) { Gitdocs::Notifier.new(show_notifications) }
+  describe 'public methods' do
+    let(:notifier) { mock }
+    before { Gitdocs::Notifier.stubs(:instance).returns(notifier) }
 
-  describe '#error' do
-    subject { Gitdocs::Notifier.error(:title, :message) }
-    before do
-      Gitdocs::Notifier.expects(:new).with(true).returns(notifier = mock)
-      notifier.expects(:error).with(:title, :message)
-    end
-    it { subject }
-  end
+    describe '.info' do
+      subject { Gitdocs::Notifier.info('title', 'message', show_notification) }
 
-  describe '#info' do
-    subject { notifier.info('title', 'message') }
+      before { Gitdocs.expects(:log_info).with('title: message') }
 
-    before { Gitdocs.expects(:log_info).with('title: message') }
-
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { notifier.expects(:puts).with('title: message') }
-      it { subject }
-    end
-
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify)
-          .with(
-            'message',
-            title: 'title',
-            image: File.expand_path('../../../lib/img/icon.png', __FILE__)
-          )
+      describe 'without notifications' do
+        let(:show_notification) { false }
+        before { Gitdocs::Notifier.expects(:puts).with('title: message') }
+        it { subject }
       end
-      it { subject }
-    end
-  end
 
-  describe '#warn' do
-    subject { notifier.warn('title', 'message') }
-
-    before { Gitdocs.expects(:log_warn).with('title: message') }
-
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { Kernel.expects(:warn).with('title: message') }
-      it { subject }
-    end
-
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify).with('message', title: 'title')
+      describe 'with notifications' do
+        let(:show_notification) { true }
+        before { notifier.expects(:notify).with('title', 'message', :success) }
+        it { subject }
       end
-      it { subject }
-    end
-  end
-
-  describe '#error' do
-    subject { notifier.error('title', 'message') }
-
-    before { Gitdocs.expects(:log_error).with('title: message') }
-
-    describe 'without notifications' do
-      let(:show_notifications) { false }
-      before { Kernel.expects(:warn).with('title: message') }
-      it { subject }
     end
 
-    describe 'with notifications' do
-      let(:show_notifications) { true }
-      before do
-        Guard::Notifier.expects(:turn_on)
-        Guard::Notifier.expects(:notify).with('message', title: 'title', image: :failure)
+    describe '.warn' do
+      subject { Gitdocs::Notifier.warn('title', 'message', show_notification) }
+
+      before { Gitdocs.expects(:log_warn).with('title: message') }
+
+      describe 'without notifications' do
+        let(:show_notification) { false }
+        before { Kernel.expects(:warn).with('title: message') }
+        it { subject }
       end
+
+      describe 'with notifications' do
+        let(:show_notification) { true }
+        before { notifier.expects(:notify).with('title', 'message', :pending) }
+        it { subject }
+      end
+    end
+
+    describe '.error' do
+      subject { Gitdocs::Notifier.error('title', 'message', show_notification) }
+
+      before { Gitdocs.expects(:log_error).with('title: message') }
+
+      describe 'without notifications' do
+        let(:show_notification) { false }
+        before { Kernel.expects(:warn).with('title: message') }
+        it { subject }
+      end
+
+      describe 'with notifications' do
+        let(:show_notification) { true }
+        before { notifier.expects(:notify).with('title', 'message', :failed) }
+        it { subject }
+      end
+    end
+
+    describe '.disconnect' do
+      subject { Gitdocs::Notifier.disconnect }
+      before { notifier.expects(:disconnect) }
       it { subject }
     end
   end
 
-  describe '#merge_notification' do
-    subject { notifier.merge_notification(result, 'root_path') }
+  describe 'private-ish instance methods' do
+    let(:notifier)  { Gitdocs::Notifier.send(:new) }
+    let(:notiffany) { mock }
 
-    let(:show_notifications) { false }
-
-    describe 'with no changes' do
+    describe '#notify' do
+      subject { notifier.notify(:title, :message, :type) }
       before do
-        # Ensure that the notification methods are not called.
-        notifier.stubs(:warn).raises
-        notifier.stubs(:info).raises
-        notifier.stubs(:error).raises
-      end
-      describe('with nil')        { let(:result) { nil }        ; it { subject } }
-      describe('with no_remote')  { let(:result) { :no_remote } ; it { subject } }
-      describe('with no changes') { let(:result) { {} }         ; it { subject } }
-    end
-
-    describe 'with changes' do
-      let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
-      before do
-        notifier.expects(:info).with(
-          'Updated with 4 changes',
-          "In root_path:\n* Alice (1 change)\n* Bob (3 changes)"
-        )
+        Notiffany.expects(:connect).returns(notiffany)
+        notiffany.expects(:notify).with(:message, title: :title, image: :type)
       end
       it { subject }
     end
 
-    describe 'with conflicts' do
-      let(:result)  { ['file'] }
-      before do
-        notifier.expects(:warn).with(
-          'There were some conflicts',
-          '* file'
-        )
+    describe '#disconnect' do
+      subject { notifier.disconnect }
+
+      describe 'not connected' do
+        before { subject }
+        it { notifier.instance_variable_get(:@notifier).must_equal(nil) }
       end
-      it { subject }
-    end
 
-    describe 'with anything else' do
-      let(:result) { 'error' }
-      before do
-        notifier.expects(:error).with(
-          'There was a problem synchronizing this gitdoc',
-          "A problem occurred in root_path:\nerror"
-        )
+      describe 'connect' do
+        before do
+          notifier.instance_variable_set(:@notifier, notiffany)
+          notiffany.expects(:disconnect)
+          subject
+        end
+        it { notifier.instance_variable_get(:@notifier).must_equal(nil) }
       end
-      it { subject }
-    end
-  end
-
-  describe '#push_notification' do
-    subject { notifier.push_notification(result, 'root_path') }
-
-    let(:show_notifications) { false }
-
-    describe('with nil')       { let(:result) { nil }        ; it { subject } }
-    describe('with no_remote') { let(:result) { :no_remote } ; it { subject } }
-    describe('with nothing')   { let(:result) { :nothing }   ; it { subject } }
-
-    describe 'with changes' do
-      let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
-      before do
-        notifier.expects(:info)
-          .with('Pushed 4 changes', 'root_path has been pushed')
-      end
-      it { subject }
-    end
-
-    describe 'with conflict' do
-      let(:result) { :conflict }
-      before do
-        notifier.expects(:warn)
-          .with('There was a conflict in root_path, retrying', '')
-      end
-      it { subject }
-    end
-
-    describe 'with anything else' do
-      let(:result) { 'error' }
-      before do
-        notifier.expects(:error)
-          .with('BAD Could not push changes in root_path', 'error')
-      end
-      it { subject }
     end
   end
 end

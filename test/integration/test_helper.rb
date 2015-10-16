@@ -148,84 +148,6 @@ module Helper
     File.absolute_path(File.join(current_dir, relative_path))
   end
 
-  def wait_for_clean_workdir(path)
-    dirty = true
-    Timeout.timeout(Capybara.default_max_wait_time) do
-      while dirty
-        begin
-          sleep(0.1)
-          rugged = Rugged::Repository.new(abs_current_dir(path))
-          dirty = !rugged.diff_workdir(rugged.head.target, include_untracked: true).deltas.empty?
-        rescue Rugged::ReferenceError
-          nil
-        rescue Rugged::InvalidError
-          nil
-        rescue Rugged::RepositoryError
-          nil
-        end
-      end
-    end
-  rescue Timeout::Error
-    assert(false, "#{path} workdir is still dirty")
-  end
-
-  def wait_for_exact_file_content(file, exact_content)
-    in_current_dir do
-      begin
-        Timeout.timeout(Capybara.default_max_wait_time) do
-          sleep(0.1) until File.exist?(file) && IO.read(file) == exact_content
-        end
-      rescue Timeout::Error
-        nil
-      end
-
-      assert(File.exist?(file), "Missing #{file}")
-      actual_content = IO.read(file)
-      assert(
-        actual_content == exact_content,
-        "Expected #{file} content: #{exact_content}\nActual content #{actual_content}"
-      )
-    end
-  end
-
-  def wait_for_directory(path)
-    in_current_dir do
-      begin
-        Timeout.timeout(Capybara.default_max_wait_time) do
-          sleep(0.1) until Dir.exist?(path)
-        end
-      rescue Timeout::Error
-        nil
-      end
-
-      assert(Dir.exist?(path), "Missing #{path}")
-    end
-  end
-
-  def wait_for_conflict_markers(path)
-    in_current_dir do
-      begin
-        Timeout.timeout(Capybara.default_max_wait_time) do
-          sleep(0.1) if File.exist?(path)
-        end
-      rescue Timeout::Error
-        nil
-      ensure
-        assert(!File.exist?(path), "#{path} should have been removed")
-      end
-
-      begin
-        Timeout.timeout(Capybara.default_max_wait_time) do
-          sleep(0.1) if Dir.glob("#{path} (*)").empty?
-        end
-      rescue Timeout::Error
-        nil
-      ensure
-        assert(!Dir.glob("#{path} (*)").empty?, "#{path} conflict marks should have been created")
-      end
-    end
-  end
-
   # @param [String] path
   #
   # @return [#gitdocs_command]
@@ -253,9 +175,7 @@ module Helper
   def gitdocs_create_from_remote(*destination_paths)
     full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
     remote_repository_path = GitFactory.init_bare(:remote)
-    gitdocs_create(
-      remote_repository_path, *full_destination_paths
-    )
+    gitdocs_create(remote_repository_path, *full_destination_paths)
   end
 
   def gitdocs_assert_status_contains(*expected_outputs)

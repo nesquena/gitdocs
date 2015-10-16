@@ -75,10 +75,10 @@ You need to start gitdocs in order for the monitoring to work:
 gitdocs start
 ```
 
-If the start command fails, you can check the logs in `~/.gitdocs/log` or run again with the debug flag:
+If the start command fails, you can check the logs in `~/.gitdocs/log` or run again in the foreground and increase logging to more easily see what is going wrong:
 
 ```
-gitdocs start -D
+gitdocs start --foreground --verbose
 ```
 
 Once gitdocs has been started and is monitoring the correct directories, simply start editing or adding files to your
