@@ -3,7 +3,6 @@
 require 'thread'
 require 'dante'
 require 'socket'
-require 'shell_tools'
 require 'guard'
 require 'grit'
 require 'rugged'
