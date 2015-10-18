@@ -209,11 +209,7 @@ module GitInspector
       repo.diff_workdir(
         repo.head.target, include_untracked: true
       ).deltas.empty?
-    rescue Rugged::ReferenceError
-      false
-    rescue Rugged::InvalidError
-      false
-    rescue Rugged::RepositoryError
+    rescue Rugged::Error
       false
     end
 
