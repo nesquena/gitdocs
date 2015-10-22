@@ -150,7 +150,8 @@ module Gitdocs
           'gitdocs',
           debug:     false,
           daemonize: true,
-          pid_path: pid_path
+          pid_path:  pid_path,
+          log_path:  Gitdocs.log_path
         )
       end
 
