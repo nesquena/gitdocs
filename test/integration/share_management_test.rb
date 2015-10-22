@@ -15,8 +15,7 @@ describe 'Manage which shares are being watched' do
   it 'should update a share through the UI' do
     gitdocs_add('local')
     gitdocs_start
-    visit('http://localhost:7777/')
-    click_link('Settings')
+    visit_and_click_link('Settings')
 
     within('#settings') do
       within('#share-0') do
@@ -49,8 +48,7 @@ describe 'Manage which shares are being watched' do
 
     it 'through UI' do
       gitdocs_start
-      visit('http://localhost:7777/')
-      click_link('Settings')
+      visit_and_click_link('Settings')
 
       within('#settings') do
         within('#share-0') { click_link('Delete') }

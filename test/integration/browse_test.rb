@@ -15,9 +15,8 @@ describe 'browse and edit repository file through the UI' do
     GitFactory.commit(:local, 'README.md', 'hello i am a README')
 
     gitdocs_start
+    visit_and_click_link('Home')
 
-    visit 'http://localhost:7777/'
-    click_link('Home')
     within('table#shares') do
       within('tbody') do
         click_link(abs_current_dir('local'))

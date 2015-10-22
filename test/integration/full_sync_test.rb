@@ -63,34 +63,21 @@ end
 
 ################################################################################
 
-def wait_for(&block)
-  Timeout.timeout(Capybara.default_max_wait_time) do
-    begin
-      block.call
-    rescue Minitest::Assertion
-      sleep(0.1)
-      retry
-    end
-  end
-rescue Timeout::Error
-  block.call
-end
-
 # @param (see GitInspector.clean?)
 def assert_clean(repo_name)
-  wait_for { GitInspector.clean?(repo_name).must_equal(true) }
+  wait_for_assert { GitInspector.clean?(repo_name).must_equal(true) }
 end
 
 # @param [#to_s] repo_name
 # @param [String] filename
 # @param [String] content
 def assert_file_content(repo_name, filename, content)
-  wait_for do
+  wait_for_assert do
     GitInspector.file_content(repo_name, filename).must_equal(content)
   end
 end
 
 # @param (see GitInspector.file_exist?)
 def assert_file_exist(repo_name, filename)
-  wait_for { GitInspector.file_exist?(repo_name, filename).must_equal(true) }
+  wait_for_assert { GitInspector.file_exist?(repo_name, filename).must_equal(true) }
 end

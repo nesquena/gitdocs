@@ -191,6 +191,41 @@ module Helper
       assert_no_partial_output(not_expected_output, output_from(command))
     end
   end
+
+  # @overload wait_for_assert
+  #   @yield to a block which executes Minitest assertion
+  #
+  # @overload wait_for_assert(interval)
+  #   @param [Float] interval
+  #   @yield to a block which executes Minitest assertion
+  #
+  # @raise [Minitest::Assertion]
+  #
+  # @return [void]
+  def wait_for_assert(interval = 0.1)
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      begin
+        yield
+      rescue Minitest::Assertion, Capybara::Poltergeist::Error
+        sleep(interval)
+        retry
+      end
+    end
+  rescue Timeout::Error
+    yield
+  end
+
+  # @param [String] locator
+  #
+  # @raise [Minitest::Assertion]
+  #
+  # @return [void]
+  def visit_and_click_link(locator)
+    wait_for_assert do
+      visit('http://localhost:7777/')
+      click_link(locator)
+    end
+  end
 end
 
 class MiniTest::Spec
