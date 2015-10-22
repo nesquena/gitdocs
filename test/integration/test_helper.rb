@@ -156,11 +156,14 @@ module Helper
     gitdocs_command('add', path, "Added path #{path} to doc list")
   end
 
-  # @deprecated
-  # @param [String] remote_repository_path
   # @param [Array<String>] destination_paths
-  def gitdocs_create(remote_repository_path, *destination_paths)
-    destination_paths.each do |destination_path|
+  #
+  # @return [void]
+  def gitdocs_create_from_remote(*destination_paths)
+    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
+    remote_repository_path = GitFactory.init_bare(:remote)
+
+    full_destination_paths.each do |destination_path|
       gitdocs_command(
         'create',
         "#{destination_path} #{remote_repository_path}",
@@ -169,15 +172,9 @@ module Helper
     end
   end
 
-  # @param [Array<String>] destination_paths
+  # @param [Array<String>] expected_outputs
   #
   # @return [void]
-  def gitdocs_create_from_remote(*destination_paths)
-    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
-    remote_repository_path = GitFactory.init_bare(:remote)
-    gitdocs_create(remote_repository_path, *full_destination_paths)
-  end
-
   def gitdocs_assert_status_contains(*expected_outputs)
     command = gitdocs_command('status', '', Gitdocs::VERSION)
     expected_outputs.each do |expected_output|
@@ -185,6 +182,9 @@ module Helper
     end
   end
 
+  # @param [Array<String>] not_expected_outputs
+  #
+  # @return [void]
   def gitdocs_assert_status_not_contain(*not_expected_outputs)
     command = gitdocs_command('status', '', Gitdocs::VERSION)
     not_expected_outputs.each do |not_expected_output|
