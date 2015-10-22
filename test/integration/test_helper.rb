@@ -156,11 +156,14 @@ module Helper
     gitdocs_command('add', path, "Added path #{path} to doc list")
   end
 
-  # @deprecated
-  # @param [String] remote_repository_path
   # @param [Array<String>] destination_paths
-  def gitdocs_create(remote_repository_path, *destination_paths)
-    destination_paths.each do |destination_path|
+  #
+  # @return [void]
+  def gitdocs_create_from_remote(*destination_paths)
+    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
+    remote_repository_path = GitFactory.init_bare(:remote)
+
+    full_destination_paths.each do |destination_path|
       gitdocs_command(
         'create',
         "#{destination_path} #{remote_repository_path}",
@@ -169,15 +172,9 @@ module Helper
     end
   end
 
-  # @param [Array<String>] destination_paths
+  # @param [Array<String>] expected_outputs
   #
   # @return [void]
-  def gitdocs_create_from_remote(*destination_paths)
-    full_destination_paths = destination_paths.map { |x| GitFactory.expand_path(x) }
-    remote_repository_path = GitFactory.init_bare(:remote)
-    gitdocs_create(remote_repository_path, *full_destination_paths)
-  end
-
   def gitdocs_assert_status_contains(*expected_outputs)
     command = gitdocs_command('status', '', Gitdocs::VERSION)
     expected_outputs.each do |expected_output|
@@ -185,10 +182,48 @@ module Helper
     end
   end
 
+  # @param [Array<String>] not_expected_outputs
+  #
+  # @return [void]
   def gitdocs_assert_status_not_contain(*not_expected_outputs)
     command = gitdocs_command('status', '', Gitdocs::VERSION)
     not_expected_outputs.each do |not_expected_output|
       assert_no_partial_output(not_expected_output, output_from(command))
+    end
+  end
+
+  # @overload wait_for_assert
+  #   @yield to a block which executes Minitest assertion
+  #
+  # @overload wait_for_assert(interval)
+  #   @param [Float] interval
+  #   @yield to a block which executes Minitest assertion
+  #
+  # @raise [Minitest::Assertion]
+  #
+  # @return [void]
+  def wait_for_assert(interval = 0.1)
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      begin
+        yield
+      rescue Minitest::Assertion, Capybara::Poltergeist::Error
+        sleep(interval)
+        retry
+      end
+    end
+  rescue Timeout::Error
+    yield
+  end
+
+  # @param [String] locator
+  #
+  # @raise [Minitest::Assertion]
+  #
+  # @return [void]
+  def visit_and_click_link(locator)
+    wait_for_assert do
+      visit('http://localhost:7777/')
+      click_link(locator)
     end
   end
 end

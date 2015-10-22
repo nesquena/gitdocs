@@ -5,6 +5,8 @@ require 'minitest/autorun'
 $LOAD_PATH.unshift File.expand_path('../../lib')
 require 'gitdocs'
 require 'mocha/setup'
+require 'shell_tools'
+
 Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |filename|
   require_relative filename
 end

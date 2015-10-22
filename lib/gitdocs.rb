@@ -3,7 +3,6 @@
 require 'thread'
 require 'dante'
 require 'socket'
-require 'shell_tools'
 require 'guard'
 require 'grit'
 require 'rugged'
@@ -42,6 +41,11 @@ module Gitdocs
     @manager.stop
   end
 
+  # @return [String]
+  def self.log_path
+    File.expand_path('log', Initializer.root_dirname)
+  end
+
   # @param [String] message
   # @return [void]
   def self.log_debug(message)
@@ -78,7 +82,7 @@ module Gitdocs
       if Initializer.foreground
         STDOUT
       else
-        File.expand_path('log', Initializer.root_dirname)
+        log_path
       end
     @logger = Logger.new(output)
     @logger.level = Initializer.verbose ? Logger::DEBUG : Logger::INFO
