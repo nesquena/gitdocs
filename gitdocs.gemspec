@@ -44,7 +44,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'minitest',               '~> 5.8.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
   s.add_development_dependency 'shell_tools',            '~> 0.1.0'
-  s.add_development_dependency 'poltergeist',            '~> 1.6.0'
+  s.add_development_dependency 'poltergeist',            '~> 1.7.0'
   s.add_development_dependency 'rake',                   '~> 10.4.2'
   s.add_development_dependency 'mocha',                  '~> 1.1.0'
   s.add_development_dependency 'aruba',                  '~> 0.6.1'
