@@ -2,10 +2,13 @@ require 'bundler/gem_tasks'
 require 'rake/testtask'
 require 'jslint/tasks'
 require 'haml_lint/rake_task'
+require 'rubocop/rake_task'
 
 JSLint.config_path = '.jslint.yml'
 
 HamlLint::RakeTask.new
+
+RuboCop::RakeTask.new
 
 namespace :test do
   # Separate the unit and integration tests when running the entire suite.
