@@ -221,7 +221,7 @@ module Helper
   #
   # @return [void]
   def visit_and_click_link(locator)
-    wait_for_assert do
+    wait_for_assert(1) do
       visit('http://localhost:7777/')
       click_link(locator)
     end
