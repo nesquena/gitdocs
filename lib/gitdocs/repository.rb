@@ -79,20 +79,20 @@ class Gitdocs::Repository
   # @return [Array<String>] sorted list of remote branches
   def available_remotes
     return nil unless valid?
-    Rugged::Branch.each_name(@rugged, :remote).sort
+    @rugged.branches.each_name(:remote).sort
   end
 
   # @return [nil] if the repository is invalid
   # @return [Array<String>] sorted list of local branches
   def available_branches
     return nil unless valid?
-    Rugged::Branch.each_name(@rugged, :local).sort
+    @rugged.branches.each_name(:local).sort
   end
 
   # @return [nil] if there are no commits present
   # @return [String] oid of the HEAD of the working directory
   def current_oid
-    @rugged.head.target
+    @rugged.head.target_id
   rescue Rugged::ReferenceError
     nil
   end
@@ -111,9 +111,7 @@ class Gitdocs::Repository
   def need_sync?
     return false unless valid?
     return false unless remote?
-
-    return !!current_oid unless remote_branch # rubocop:disable DoubleNegation
-    remote_branch.tip.oid != current_oid
+    remote_oid != current_oid
   end
 
   # @param [String] term
@@ -163,9 +161,8 @@ class Gitdocs::Repository
   def merge
     return nil        unless valid?
     return :no_remote unless remote?
-
-    return :ok        unless remote_branch
-    return :ok        if remote_branch.tip.oid == current_oid
+    return :ok        unless remote_oid
+    return :ok        if remote_oid == current_oid
 
     @grit.git.merge(
       { raise: true, chdir: root },
@@ -197,11 +194,10 @@ class Gitdocs::Repository
   # @return [String] if there is an error return the message
   # @return [:ok] if committed and pushed without errors or conflicts
   def push
-    return nil unless valid?
+    return            unless valid?
     return :no_remote unless remote?
-
-    return :nothing if current_oid.nil?
-    return :nothing if remote_branch && remote_branch.tip.oid == current_oid
+    return :nothing   unless current_oid
+    return :nothing   if remote_oid == current_oid
 
     @grit.git.push({ raise: true }, @remote_name, @branch_name)
     :ok
@@ -271,19 +267,17 @@ class Gitdocs::Repository
 
   private
 
+  # @return [Boolean]
   def remote?
     @rugged.remotes.any?
   end
 
-  # HACK: This will return nil if there are no commits in the remote branch.
-  # It is not the response that I would expect but it mostly gets the job
-  # done. This should probably be reviewed when upgrading to the next version
-  # of Rugged.
-  #
-  # @return [nil] if the remote branch does not exist
-  # @return [Rugged::Remote]
-  def remote_branch
-    Rugged::Branch.lookup(@rugged, "#{@remote_name}/#{@branch_name}", :remote)
+  # @return [nil]
+  # @return [String]
+  def remote_oid
+    branch = @rugged.branches["#{@remote_name}/#{@branch_name}"]
+    return unless branch
+    branch.target_id
   end
 
   def head_walker

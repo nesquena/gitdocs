@@ -2,14 +2,14 @@
 
 require 'rubygems'
 require 'minitest/autorun'
-$LOAD_PATH.unshift File.expand_path('../../lib')
-require 'gitdocs'
 require 'aruba'
 require 'aruba/api'
 require 'timeout'
 require 'capybara'
 require 'capybara_minitest_spec'
 require 'capybara/poltergeist'
+require 'find'
+require 'gitdocs/version'
 Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |filename|
   require_relative filename
 end
@@ -53,11 +53,26 @@ module Helper
   include Capybara::RSpecMatchers
 
   def before_setup
-    FileUtils.rm_rf(current_dir)
-    set_env('HOME', abs_current_dir)
-    GitFactory.working_directory = abs_current_dir
+    clean_current_dir
 
-    FileUtils.mkdir_p(abs_current_dir)
+    # HACK: In order to ensure that rugged/libgit2 see the expected HOME
+    # directory we must set it before requiring rugged. This seems to occur
+    # because libgit2 reads HOME only one the initial load.
+    set_env('HOME', abs_current_dir)
+    require 'rugged'
+
+    # Make sure that we are not accidentally overwriting an existing gitconfig.
+    if Rugged::Config.global['user.name'] || Rugged::Config.global['user.name']
+      puts 'Unexpected git config:'
+      puts "  user.name  = #{Rugged::Config.global['user.name']}"
+      puts "  user.email = #{Rugged::Config.global['user.email']}"
+      puts 'Something went wrong when setting the HOME directory and the test'
+      puts 'will not execute in isolation.'
+      puts 'EXITING'
+      exit
+    end
+
+    GitFactory.working_directory = abs_current_dir
     Rugged::Config.global['user.name']  = GitFactory.users[0][:name]
     Rugged::Config.global['user.email'] = GitFactory.users[0][:email]
   end
@@ -129,6 +144,11 @@ module Helper
 
   # @return [void]
   def gitdocs_start
+    # FIXME: Calling internal funcations directly because we cannot currently
+    # set polling or notification on the CLI. After that has been added this
+    # should be removed. [ASC 2015-10-26]
+    require 'gitdocs/initializer'
+    require 'gitdocs/share'
     Gitdocs::Initializer.initialize_database
     Gitdocs::Share.all.each do |share|
       share.update_attributes(polling_interval: 0.1, notification: false)

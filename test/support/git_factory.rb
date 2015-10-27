@@ -1,5 +1,3 @@
-require 'rugged'
-
 module GitFactory
   class << self
     attr_accessor :working_directory
@@ -218,7 +216,9 @@ module GitInspector
     # @return [String]
     def remote_oid(repo_name)
       repo = GitFactory.rugged_repository(repo_name)
-      Rugged::Branch.lookup(repo, 'origin/master', :remote).tip.oid
+      branch = repo.branches['origin/master']
+      return unless branch
+      branch.target_id
     end
 
     # @param [#to_s] repo_name
