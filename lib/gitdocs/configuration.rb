@@ -21,6 +21,11 @@ class Gitdocs::Configuration
   # NOTE: This record has been kept as a subclass to avoid changing the
   # database table. There are other ways to achieve this, but this seemed most
   # clear for now. [2015-06-26 -- acant]
+  #
+  # @!attribute start_frontend_port
+  #   @return [Boolean] defaults to true
+  # @!attribute web_frontend_port
+  #   @return [Integer] defaults to 8888
   class Config < ActiveRecord::Base
     # attr_accessible :start_web_frontend, :web_frontend_port
 
