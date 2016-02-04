@@ -4,6 +4,7 @@ require 'thor'
 require 'table_print'
 require 'dante'
 require 'guard'
+require 'launchy'
 
 # rubocop:disable LineLength, ClassLength
 
