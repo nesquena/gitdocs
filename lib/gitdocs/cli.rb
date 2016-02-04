@@ -1,10 +1,13 @@
 # -*- encoding : utf-8 -*-
 
+require 'thor'
+require 'table_print'
+require 'dante'
+require 'guard'
+
 # rubocop:disable LineLength, ClassLength
 
 module Gitdocs
-  require 'thor'
-
   class Cli < Thor
     include Thor::Actions
 

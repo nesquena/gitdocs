@@ -1,14 +1,5 @@
 # -*- encoding : utf-8 -*-
 
-require 'thread'
-require 'dante'
-require 'socket'
-require 'guard'
-require 'grit'
-require 'rugged'
-require 'table_print'
-require 'notiffany'
-
 require 'gitdocs/version'
 require 'gitdocs/initializer'
 require 'gitdocs/share'
@@ -20,9 +11,6 @@ require 'gitdocs/manager'
 require 'gitdocs/notifier'
 require 'gitdocs/git_notifier'
 require 'gitdocs/repository'
-require 'gitdocs/repository/path'
-require 'gitdocs/repository/invalid_error'
-require 'gitdocs/repository/committer'
 require 'gitdocs/search'
 
 module Gitdocs

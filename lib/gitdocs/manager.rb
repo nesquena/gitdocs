@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
 
+require 'thread'
+
 module Gitdocs
   Restart = Class.new(RuntimeError)
 

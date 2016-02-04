@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
 
 require 'thin'
+require 'socket'
 require 'gitdocs/browser_app'
 require 'gitdocs/settings_app'
 

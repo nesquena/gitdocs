@@ -1,9 +1,10 @@
-require './lib/gitdocs'
-require './lib/gitdocs/manager'
-require './lib/gitdocs/settings_app'
-require './lib/gitdocs/browser_app'
+require './lib/gitdocs/initializer'
+require './lib/gitdocs/share'
 require './lib/gitdocs/repository'
 require './lib/gitdocs/configuration'
+require './lib/gitdocs/settings_app'
+require './lib/gitdocs/browser_app'
+
 
 use Rack::Static,
   urls: %w(/css /js /img /doc),
