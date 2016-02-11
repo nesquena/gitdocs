@@ -16,6 +16,9 @@ module Gitdocs
   class Repository
     attr_reader :invalid_reason
 
+    class FetchError < StandardError ; end
+    class MergeError < StandardError ; end
+
     # Initialize the repository on the specified path. If the path is not valid
     # for some reason, the object will be initialized but it will be put into an
     # invalid state.
@@ -135,9 +138,10 @@ module Gitdocs
 
     # Fetch all the remote branches
     #
+    # @raise [FetchError] if there is an error return message
+    #
     # @return [nil] if the repository is invalid
     # @return [:no_remote] if the remote is not yet set
-    # @return [String] if there is an error return the message
     # @return [:ok] if the fetch worked
     def fetch
       return nil unless valid?
@@ -146,37 +150,39 @@ module Gitdocs
       @rugged.remotes.each { |x| @grit.remote_fetch(x.name) }
       :ok
     rescue Grit::Git::GitTimeout
-      "Fetch timed out for #{root}"
+      raise(FetchError, "Fetch timed out for #{root}")
     rescue Grit::Git::CommandFailed => e
-      e.err
+      raise(FetchError, e.err)
     end
 
     # Merge the repository
     #
+    # @raise [MergeError] if there is an error, it it will include the message
+    #
     # @return [nil] if the repository is invalid
     # @return [:no_remote] if the remote is not yet set
-    # @return [String] if there is an error return the message
     # @return [Array<String>] if there is a conflict return the Array of
     #   conflicted file names
-    # @return [:ok] if the merged with no errors or conflicts
+    # @return (see #author_count) if merged with no errors or conflicts
     def merge
       return nil        unless valid?
       return :no_remote unless remote?
       return :ok        unless remote_oid
       return :ok        if remote_oid == current_oid
 
+      last_oid = current_oid
       @grit.git.merge(
         { raise: true, chdir: root },
         "#{@remote_name}/#{@branch_name}"
       )
-      :ok
+      author_count(last_oid)
     rescue Grit::Git::GitTimeout
-      "Merge timed out for #{root}"
+      raise(MergeError, "Merge timed out for #{root}")
     rescue Grit::Git::CommandFailed => e
       # HACK: The rugged in-memory index will not have been updated after the
       # Grit merge command. Reload it before checking for conflicts.
       @rugged.index.reload
-      return e.err unless @rugged.index.conflicts?
+      raise(MergeError, e.err) unless @rugged.index.conflicts?
       mark_conflicts
     end
 
@@ -193,15 +199,16 @@ module Gitdocs
     # @return [:no_remote] if the remote is not yet set
     # @return [:nothing] if there was nothing to do
     # @return [String] if there is an error return the message
-    # @return [:ok] if committed and pushed without errors or conflicts
+    # @return (see #author_count) if committed and pushed without errors or conflicts
     def push
       return            unless valid?
       return :no_remote unless remote?
       return :nothing   unless current_oid
       return :nothing   if remote_oid == current_oid
 
+      last_oid = remote_oid
       @grit.git.push({ raise: true }, @remote_name, @branch_name)
-      :ok
+      author_count(last_oid)
     rescue Grit::Git::CommandFailed => e
       return :conflict if e.err[/\[rejected\]/]
       e.err # return the output on error

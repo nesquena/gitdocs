@@ -290,7 +290,12 @@ describe Gitdocs::Repository do
           Grit::Repo.any_instance.stubs(:remote_fetch)
             .raises(Grit::Git::GitTimeout.new)
         end
-        it { subject.must_equal "Fetch timed out for #{expand_path(:local)}" }
+        it do
+          assert_raises(
+            Gitdocs::Repository::FetchError,
+            "Fetch timed out for #{expand_path(:local)}"
+          ) { subject }
+        end
       end
 
       describe 'and command fails' do
@@ -298,7 +303,12 @@ describe Gitdocs::Repository do
           Grit::Repo.any_instance.stubs(:remote_fetch)
             .raises(Grit::Git::CommandFailed.new('', 1, 'fetch error output'))
         end
-        it { subject.must_equal 'fetch error output' }
+        it do
+          assert_raises(
+            Gitdocs::Repository::FetchError,
+            'fetch error output'
+          ) { subject }
+        end
       end
 
       describe 'and success' do
@@ -315,6 +325,8 @@ describe Gitdocs::Repository do
 
   describe '#merge' do
     subject { repository.merge }
+
+    before { repository.stubs(:author_count).returns(:author_counts) }
 
     describe 'when invalid' do
       let(:path_or_share) { 'tmp/unit/missing' }
@@ -339,7 +351,12 @@ describe Gitdocs::Repository do
         Grit::Git.any_instance.stubs(:merge)
           .raises(Grit::Git::GitTimeout.new)
       end
-      it { subject.must_equal "Merge timed out for #{expand_path(:local)}" }
+      it do
+        assert_raises(
+          Gitdocs::Repository::MergeError,
+          "Merge timed out for #{expand_path(:local)}"
+        ) { subject }
+      end
     end
 
     describe 'and fails, but does not conflict' do
@@ -351,7 +368,12 @@ describe Gitdocs::Repository do
         Grit::Git.any_instance.stubs(:merge)
           .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
       end
-      it { subject.must_equal 'merge error output' }
+      it do
+        assert_raises(
+          Gitdocs::Repository::MergeError,
+          'merge error output'
+        ) { subject }
+      end
     end
 
     describe 'and there is a conflict' do
@@ -401,7 +423,7 @@ describe Gitdocs::Repository do
         commit('file1', 'beef')
         repository.fetch
       end
-      it { subject.must_equal :ok }
+      it { subject.must_equal :author_counts }
 
       describe 'side effects' do
         before { subject }
@@ -416,7 +438,7 @@ describe Gitdocs::Repository do
         bare_commit('file2', 'deadbeef')
         repository.fetch
       end
-      it { subject.must_equal :ok }
+      it { subject.must_equal :author_counts }
 
       describe 'side effects' do
         before { subject }
@@ -445,6 +467,8 @@ describe Gitdocs::Repository do
 
   describe '#push' do
     subject { repository.push }
+
+    before { repository.stubs(:author_count).returns(:author_counts) }
 
     describe 'when invalid' do
       let(:path_or_share) { 'tmp/unit/missing' }
@@ -480,7 +504,7 @@ describe Gitdocs::Repository do
         end
 
         describe 'and the push succeeds' do
-          it { subject.must_equal :ok }
+          it { subject.must_equal :author_counts }
 
           describe 'side effects' do
             before { subject }
@@ -526,7 +550,7 @@ describe Gitdocs::Repository do
         end
 
         describe 'and the push succeeds' do
-          it { subject.must_equal :ok }
+          it { subject.must_equal :author_counts }
 
           describe 'side effects' do
             before { subject }
