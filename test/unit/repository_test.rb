@@ -594,6 +594,62 @@ describe Gitdocs::Repository do
     end
   end
 
+  describe '#synchronize' do
+    subject { repository.synchronize(type) }
+
+    describe 'invalid repository' do
+      let(:type) { :noop }
+      it { subject.must_equal(merge: nil, push: nil) }
+    end
+
+    describe 'fetch only' do
+      let(:type) { 'fetch' }
+
+      describe 'fetch failure' do
+        before do
+          repository.expects(:fetch).raises(Gitdocs::Repository::FetchError)
+        end
+        it { subject.must_equal(merge: nil, push: nil) }
+      end
+
+      describe 'success' do
+        before { repository.expects(:fetch) }
+        it { subject.must_equal(merge: nil, push: nil) }
+      end
+    end
+
+    describe 'full' do
+      let(:type) { 'full' }
+
+      describe 'fetch failure' do
+        before do
+          repository.expects(:commit)
+          repository.expects(:fetch).raises(Gitdocs::Repository::FetchError)
+        end
+        it { subject.must_equal(merge: nil, push: nil) }
+      end
+
+      describe 'merge failure' do
+        before do
+          repository.expects(:commit)
+          repository.expects(:fetch)
+          repository.expects(:merge).raises(Gitdocs::Repository::MergeError, 'error')
+        end
+        it { subject.must_equal(merge: 'error', push: nil) }
+      end
+
+      describe 'success' do
+        before do
+          repository.expects(:commit)
+          repository.expects(:fetch)
+          repository.expects(:merge).returns('merge')
+          repository.expects(:push).returns('push')
+        end
+        it { subject.must_equal(merge: 'merge', push: 'push') }
+      end
+    end
+  end
+
   describe '#write_commit_message' do
     subject { repository.write_commit_message(:message) }
 

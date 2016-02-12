@@ -232,6 +232,28 @@ module Gitdocs
       {}
     end
 
+    # @return [Hash{:merge,:push => Object}]
+    def synchronize(type)
+      result = { merge: nil, push: nil }
+      return result unless valid?
+
+      case type
+      when 'fetch'
+        fetch
+      when 'full'
+        commit
+        fetch
+        result[:merge] = merge
+        result[:push]  = push
+      end
+      result
+    rescue Gitdocs::Repository::FetchError
+      result
+    rescue Gitdocs::Repository::MergeError => e
+      result[:merge] = e.message
+      result
+    end
+
     # @param (see Gitdocs::Repository::Comitter#write_commit_message)
     # @return [void]
     def write_commit_message(message)

@@ -60,24 +60,9 @@ module Gitdocs
     def sync_changes
       return unless @repository.valid?
 
-      case @share.sync_type
-      when 'fetch'
-        @repository.fetch
-      when 'full'
-        @repository.commit
-
-        @repository.fetch
-
-        merge_result = @repository.merge
-        @git_notifier.for_merge(merge_result)
-
-        push_result = @repository.push
-        @git_notifier.for_push(push_result)
-      end
-    rescue Gitdocs::Repository::FetchError
-      nil
-    rescue Gitdocs::Repository::MergeError => e
-      @git_notifier.for_merge(e.message)
+      result = @repository.synchronize(@share.sync_type)
+      @git_notifier.for_merge(result[:merge])
+      @git_notifier.for_push(result[:push])
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
