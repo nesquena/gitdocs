@@ -26,57 +26,35 @@ describe 'gitdocs runner' do
     subject { runner.sync_changes }
 
     before do
-      repository.expects(:valid?).returns(true)
-      share.stubs(:sync_type).returns(sync_type)
+      repository.expects(:valid?).returns(valid)
+      share.stubs(:sync_type).returns(:sync_type)
     end
 
-    describe 'fetch sync' do
-      let(:sync_type) { 'fetch' }
-
-      describe('fetch failure') do
-        before { repository.expects(:fetch).raises(Gitdocs::Repository::FetchError) }
-        it { subject }
-      end
-
-      describe('fetch success') do
-        before { repository.expects(:fetch) }
-        it { subject }
-      end
+    describe 'invalid repostory' do
+      let(:valid) { false }
+      it { subject.must_equal(nil) }
     end
 
-    describe 'full sync' do
-      let(:sync_type) { 'full' }
-
-      before { repository.expects(:commit) }
-
-      describe 'with fetch failure' do
-        before { repository.expects(:fetch).raises(Gitdocs::Repository::FetchError) }
-        it { subject }
+    describe 'valid repository with error' do
+      let(:valid) { true }
+      before do
+        repository.expects(:synchronize)
+          .with(:sync_type)
+          .raises(error = StandardError.new)
+        git_notifier.expects(:on_error).with(error).returns(:results)
       end
+      it { subject.must_equal(:results) }
+    end
 
-      describe 'when merge error' do
-        before do
-          repository.expects(:fetch)
-          repository.expects(:merge).raises(Gitdocs::Repository::MergeError, 'error')
-          git_notifier.expects(:for_merge).with('error')
-        end
-        it { subject }
+    describe 'valid repository' do
+      let(:valid) { true }
+      before do
+        repository.expects(:synchronize).with(:sync_type)
+          .returns(merge: :merge, push: :push)
+        git_notifier.expects(:for_merge).with(:merge)
+        git_notifier.expects(:for_push).with(:push).returns(:result)
       end
-
-      describe 'when merge ok' do
-        let(:fetch_result) { :ok }
-
-        before do
-          repository.expects(:fetch)
-          repository.expects(:merge).returns(:merge_result)
-          git_notifier.expects(:for_merge).with(:merge_result)
-
-          repository.expects(:push).returns(:push_result)
-          git_notifier.expects(:for_push).with(:push_result)
-        end
-
-        it { subject }
-      end
+      it { subject.must_equal(:result) }
     end
   end
 end
