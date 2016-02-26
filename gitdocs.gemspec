@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
+  s.add_dependency 'listen',          '~> 3.0.5'
   # HACK: reel is still waiting for its dependencies on
   # HTTP::Response::STATUS_CODES to be fixed, so for the moment it will only
   # work with a <1.0.0 version of HTTP. This can be removed and the gems
