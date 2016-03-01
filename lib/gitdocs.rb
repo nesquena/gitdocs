@@ -8,6 +8,7 @@ require 'grit'
 require 'rugged'
 require 'table_print'
 require 'notiffany'
+require 'launchy'
 
 require 'gitdocs/version'
 require 'gitdocs/initializer'

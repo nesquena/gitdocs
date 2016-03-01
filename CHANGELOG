@@ -1,6 +1,7 @@
 0.6.0.pre2
  * convert notification to use the Notiffany gem (@acant)
  * upgrade rugged gem (@acant)
+ * fix missing dependency for the 'gitdocs open' command (@acant)
 
 0.6.0.pre1
  * upgrade gems redcarpet, poltergeist (@acant)
