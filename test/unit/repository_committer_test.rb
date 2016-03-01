@@ -89,7 +89,7 @@ describe Gitdocs::Repository::Committer do
   end
 
   describe '#write_commit_message' do
-    subject { result = committer.write_commit_message(commit_message) ; puts result; result}
+    subject { committer.write_commit_message(commit_message) }
 
     before { subject }
 
