@@ -3,6 +3,9 @@
 require 'redcarpet'
 require 'coderay'
 require 'tilt'
+require 'tilt/erb'
+require 'tilt/haml'
+require 'tilt/redcarpet'
 
 module Gitdocs
   module RenderingHelper
