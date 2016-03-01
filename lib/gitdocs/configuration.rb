@@ -2,6 +2,18 @@
 
 require 'active_record'
 
+# @!attribute path
+#   @return [String]
+# @!attribute polling_interval
+#   @return [Double] defaults to 15.0
+# @!attribute notification
+#   @return [Boolean] default to true
+# @!attribute remote_name
+#   @return [String] default to 'origin'
+# @!attribute remote_branch
+#   @return [String] default to 'master'
+# @attribute sync_type
+#   @return ['full','fetch']
 class Gitdocs::Configuration
   # @return [Boolean]
   def self.start_web_frontend
@@ -21,9 +33,12 @@ class Gitdocs::Configuration
   # NOTE: This record has been kept as a subclass to avoid changing the
   # database table. There are other ways to achieve this, but this seemed most
   # clear for now. [2015-06-26 -- acant]
+  #
+  # @!attribute start_frontend_port
+  #   @return [Boolean] defaults to true
+  # @!attribute web_frontend_port
+  #   @return [Integer] defaults to 8888
   class Config < ActiveRecord::Base
-    # attr_accessible :start_web_frontend, :web_frontend_port
-
     # @return [Gitdocs::Configuration::Config]
     def self.global
       fail if all.size > 1
