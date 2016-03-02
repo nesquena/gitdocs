@@ -16,8 +16,9 @@ module Gitdocs
   class Repository
     attr_reader :invalid_reason
 
-    class FetchError < StandardError ; end
-    class MergeError < StandardError ; end
+    class InvalidError < StandardError; end
+    class FetchError < StandardError; end
+    class MergeError < StandardError; end
 
     # Initialize the repository on the specified path. If the path is not valid
     # for some reason, the object will be initialized but it will be put into an
