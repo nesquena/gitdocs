@@ -26,27 +26,30 @@ end
 
 PID_FILE = File.expand_path('../../../tmp/gitdocs.pid', __FILE__)
 
-module MiniTest::Aruba
-  class ArubaApiWrapper
-    include Aruba::Api
-  end
+module MiniTest
+  module Aruba
+    class ArubaApiWrapper
+      include ::Aruba::Api
+    end
 
-  def aruba
-    @aruba ||= ArubaApiWrapper.new
-  end
+    def aruba
+      @aruba ||= ArubaApiWrapper.new
+    end
 
-  def run(*args)
-    if args.length == 0
-      super
-    else
-      aruba.run(*args)
+    def run(*args)
+      if args.length == 0
+        super
+      else
+        aruba.run(*args)
+      end
+    end
+
+    def method_missing(method, *args, &block)
+      aruba.send(method, *args, &block)
     end
   end
-
-  def method_missing(method, *args, &block)
-    aruba.send(method, *args, &block)
-  end
 end
+
 
 module Helper
   include MiniTest::Aruba
@@ -255,6 +258,8 @@ module Helper
   end
 end
 
-class MiniTest::Spec
-  include Helper
+module MiniTest
+  class Spec
+    include Helper
+  end
 end

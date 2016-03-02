@@ -1,4 +1,8 @@
 # -*- encoding : utf-8 -*-
 
-class Gitdocs::Repository::InvalidError < StandardError
+module Gitdocs
+  class Repository
+    class InvalidError < StandardError
+    end
+  end
 end
