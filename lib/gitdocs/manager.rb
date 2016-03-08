@@ -4,6 +4,19 @@ module Gitdocs
   Restart = Class.new(RuntimeError)
 
   class Manager
+    # @return [:notification, :polling]
+    def self.listen_method
+      if Guard::Listener.mac? && Guard::Darwin.usable?
+        :notification
+      elsif Guard::Listener.linux? && Guard::Linux.usable?
+        :notification
+      elsif Guard::Listener.windows? && Guard::Windows.usable?
+        :notification
+      else
+        :polling
+      end
+    end
+
     # @param [nil, #to_i] override_web_port
     def start(override_web_port)
       Gitdocs.log_info("Starting Gitdocs v#{VERSION}...")

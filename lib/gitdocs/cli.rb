@@ -97,7 +97,7 @@ module Gitdocs
     def status
       say "GitDoc v#{VERSION}"
       say "Running: #{running?}"
-      say "File System Watch Method: #{file_system_watch_method}"
+      say "File System Watch Method: #{Gitdocs::Manager.listen_method}"
       say 'Watched repositories:'
       tp.set(:max_width, 100)
       status_display = lambda do |share|
@@ -171,19 +171,6 @@ module Gitdocs
       # @return [String]
       def normalize_path(path)
         File.expand_path(path, Dir.pwd)
-      end
-
-      # @return [Symbol] to indicate how the file system is being watched
-      def file_system_watch_method # rubocop:disable CyclomaticComplexity
-        if Guard::Listener.mac? && Guard::Darwin.usable?
-          :notification
-        elsif Guard::Listener.linux? && Guard::Linux.usable?
-          :notification
-        elsif Guard::Listener.windows? && Guard::Windows.usable?
-          :notification
-        else
-          :polling
-        end
       end
     end
   end
