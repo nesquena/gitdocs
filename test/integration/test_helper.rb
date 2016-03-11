@@ -145,7 +145,7 @@ module Helper
     binary_path  = File.expand_path('../../../bin/gitdocs', __FILE__)
     full_command = "#{binary_path} #{method} #{arguments} --pid=#{PID_FILE}"
 
-    run(full_command, 15)
+    run(full_command, Capybara.default_max_wait_time)
     assert_success(true)
     assert_partial_output(expected_output, output_from(full_command))
 
