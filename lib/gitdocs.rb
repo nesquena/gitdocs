@@ -60,13 +60,13 @@ module Gitdocs
 
   # @param [String] message
   # @return [void]
-  def self.log_warn
+  def self.log_warn(message)
     logger.warn(message)
   end
 
   # @param [String] message
   # @return [void]
-  def self.log_error
+  def self.log_error(message)
     logger.error(message)
   end
 
