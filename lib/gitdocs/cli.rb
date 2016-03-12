@@ -28,12 +28,12 @@ module Gitdocs
       if options[:foreground]
         say 'Run in the foreground', :yellow
         Gitdocs::Initializer.foreground = true
-        Manager.start(options[:port])
+        Manager.start(web_port)
       else
         # Clear the arguments so that they will not be processed by the
         # Dante execution.
         ARGV.clear
-        runner.execute { Manager.start(options[:port]) }
+        runner.execute { Manager.start(web_port) }
 
         if running?
           say 'Started gitdocs', :green
@@ -127,8 +127,6 @@ module Gitdocs
         return
       end
 
-      web_port = options[:port]
-      web_port ||= Configuration.web_frontend_port
       Launchy.open("http://localhost:#{web_port}/")
     end
 
@@ -145,6 +143,7 @@ module Gitdocs
 
     # Helpers for thor
     no_tasks do
+      # @return [Dante::Runner]
       def runner
         Dante::Runner.new(
           'gitdocs',
@@ -155,16 +154,26 @@ module Gitdocs
         )
       end
 
+      # @return [Boolean]
       def running?
         runner.daemon_running?
       end
 
+      # @return [Boolean]
       def stopped?
         runner.daemon_stopped?
       end
 
+      # @return [String]
       def pid_path
         options[:pid] || '/tmp/gitdocs.pid'
+      end
+
+      # @return [Integer]
+      def web_port
+        result = options[:port]
+        result ||= Configuration.web_frontend_port
+        result.to_i
       end
 
       # @param [String] path
