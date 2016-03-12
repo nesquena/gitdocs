@@ -146,7 +146,7 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'when missing' do
-      let(:commit)        { nil }
+      let(:commit) { nil }
       it { assert_raises(RuntimeError) { subject } }
     end
 

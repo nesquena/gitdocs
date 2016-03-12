@@ -50,7 +50,6 @@ module MiniTest
   end
 end
 
-
 module Helper
   include MiniTest::Aruba
   include Capybara::DSL
@@ -97,7 +96,7 @@ module Helper
       pid = IO.read(PID_FILE).to_i
       begin
         Process.kill('KILL', pid)
-      rescue Errno::ESRCH  # rubocop:disable Lint/HandleExceptions
+      rescue Errno::ESRCH # rubocop:disable Lint/HandleExceptions
         # Nothing to do since the process is already gone.
       end
 
@@ -110,30 +109,30 @@ module Helper
       FileUtils.rm_rf(PID_FILE)
     end
 
+    return if passed?
+
     # Report gitdocs execution details on failure
-    unless passed?
-      puts "\n\n----------------------------------"
-      puts "Aruba details for failure: #{name}"
-      puts "#{failures.inspect}"
+    puts "\n\n----------------------------------"
+    puts "Aruba details for failure: #{name}"
+    puts "#{failures.inspect}"
 
-      log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
-      if File.exist?(log_filename)
-        puts '----------------------------------'
-        puts "Log file: #{log_filename}"
-        puts File.read(log_filename)
-      end
-
-      if Dir.exist?(abs_current_dir)
-        puts '----------------------------------'
-        puts 'Aruba current directory file list:'
-        Find.find(abs_current_dir) do |path|
-          Find.prune if path =~ %r(.git/?$)
-          puts "  #{path}"
-        end
-      end
-
-      puts "----------------------------------\n\n"
+    log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
+    if File.exist?(log_filename)
+      puts '----------------------------------'
+      puts "Log file: #{log_filename}"
+      puts File.read(log_filename)
     end
+
+    if Dir.exist?(abs_current_dir)
+      puts '----------------------------------'
+      puts 'Aruba current directory file list:'
+      Find.find(abs_current_dir) do |path|
+        Find.prune if path =~ %r{.git/?$}
+        puts "  #{path}"
+      end
+    end
+
+    puts "----------------------------------\n\n"
   end
 
   # @param [String] method pass to the CLI

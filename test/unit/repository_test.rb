@@ -588,7 +588,7 @@ describe Gitdocs::Repository do
       end
 
       describe 'missing oid' do
-        let(:last_oid) { 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'  }
+        let(:last_oid) { 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }
         it { subject.must_equal({}) }
       end
     end

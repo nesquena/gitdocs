@@ -53,7 +53,7 @@ module Gitdocs
       private
 
       def mark_empty_directories
-        Find.find(@root_dirname).each do |path| # rubocop:disable Style/Next
+        Find.find(@root_dirname).each do |path|
           Find.prune if File.basename(path) == '.git'
           if File.directory?(path) && Dir.entries(path).count == 2
             FileUtils.touch(File.join(path, '.gitignore'))
@@ -64,7 +64,9 @@ module Gitdocs
       # @return [String] either the message in the file, or the regular
       #   automatic commit message.
       def read_and_delete_commit_message_file
-        return 'Auto-commit from gitdocs' unless File.exist?(@commit_message_path)
+        return(
+          'Auto-commit from gitdocs'
+        ) unless File.exist?(@commit_message_path)
 
         message = File.read(@commit_message_path)
         File.delete(@commit_message_path)

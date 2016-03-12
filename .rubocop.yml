@@ -8,3 +8,8 @@ MethodLength:
 
 EachWithObject:
   Enabled: false
+
+LineLength:
+  Exclude:
+    - 'Rakefile'
+    - 'gitdocs.gemspec'

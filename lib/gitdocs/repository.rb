@@ -200,7 +200,7 @@ module Gitdocs
     # @return [:no_remote] if the remote is not yet set
     # @return [:nothing] if there was nothing to do
     # @return [String] if there is an error return the message
-    # @return (see #author_count) if committed and pushed without errors or conflicts
+    # @return (see #author_count) if pushed without errors or conflicts
     def push
       return            unless valid?
       return :no_remote unless remote?
@@ -294,7 +294,7 @@ module Gitdocs
       @rugged.blob_at(ref, relative_path)
     end
 
-    ##############################################################################
+    ############################################################################
 
     private
 
@@ -327,7 +327,7 @@ module Gitdocs
     end
 
     def mark_empty_directories
-      Find.find(root).each do |path| # rubocop:disable Style/Next
+      Find.find(root).each do |path|
         Find.prune if File.basename(path) == '.git'
         if File.directory?(path) && Dir.entries(path).count == 2
           FileUtils.touch(File.join(path, '.gitignore'))
@@ -339,18 +339,20 @@ module Gitdocs
       # assert(@rugged.index.conflicts?)
 
       # Collect all the index entries by their paths.
-      index_path_entries = Hash.new { |h, k| h[k] = Array.new }
+      index_path_entries = Hash.new { |h, k| h[k] = [] }
       @rugged.index.map do |index_entry|
         index_path_entries[index_entry[:path]].push(index_entry)
       end
 
       # Filter to only the conflicted entries.
-      conflicted_path_entries = index_path_entries.delete_if { |_k, v| v.length == 1 }
+      conflicted_path_entries =
+        index_path_entries.delete_if { |_k, v| v.length == 1 }
 
       conflicted_path_entries.each_pair do |path, index_entries|
         # Write out the different versions of the conflicted file.
         index_entries.each do |index_entry|
-          filename, extension = index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
+          filename, extension =
+            index_entry[:path].scan(/(.*?)(|\.[^\.]+)$/).first
           author       = ' original' if index_entry[:stage] == 1
           short_oid    = index_entry[:oid][0..6]
           new_filename = "#{filename} (#{short_oid}#{author})#{extension}"

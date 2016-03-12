@@ -5,6 +5,7 @@ require './lib/gitdocs/browser_app'
 require './lib/gitdocs/repository'
 require './lib/gitdocs/configuration'
 
+# rubocop:disable AlignParameters
 use Rack::Static,
   urls: %w(/css /js /img /doc),
   root: './lib/gitdocs/public'
@@ -16,6 +17,7 @@ Gitdocs::Initializer.initialize_database
 Gitdocs::SettingsApp.set :logging, true
 map('/settings') { run Gitdocs::SettingsApp }
 
-Gitdocs::BrowserApp.set :repositories, Gitdocs::Share.all.map { |x| Gitdocs::Repository.new(x) }
+repositories = Gitdocs::Share.all.map { |x| Gitdocs::Repository.new(x) }
+Gitdocs::BrowserApp.set :repositories, repositories
 Gitdocs::BrowserApp.set :logging, true
 map('/') { run Gitdocs::BrowserApp }

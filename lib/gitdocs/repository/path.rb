@@ -11,7 +11,7 @@ module Gitdocs
       # @param [String] relative_path
       def initialize(repository, relative_path)
         @repository    = repository
-        @relative_path = relative_path.gsub(/^\//, '')
+        @relative_path = relative_path.gsub(%r{^/}, '')
         @absolute_path = File.join(
           File.absolute_path(@repository.root), @relative_path
         )
@@ -52,7 +52,7 @@ module Gitdocs
       def text?
         return false unless File.file?(@absolute_path)
         mime_type = File.mime_type?(File.open(@absolute_path))
-        !!(mime_type =~ /text\/|x-empty/) # rubocop:disable DoubleNegation
+        !!(mime_type =~ %r{text/|x-empty}) # rubocop:disable DoubleNegation
       end
 
       # Returns file meta data based on relative file path
@@ -109,7 +109,7 @@ module Gitdocs
         return nil unless directory?
 
         Dir.glob(File.join(@absolute_path, '{*,.*}'))
-          .reject  { |x| x.match(/\/\.(\.|git|gitignore|gitmessage~)?$/) }
+          .reject  { |x| x.match(%r{/\.(\.|git|gitignore|gitmessage~)?$}) }
           .sort_by { |x| File.basename(x).sub(/^\./, '') }
           .map     { |x| DirEntry.new(File.basename(x), File.directory?(x)) }
       end

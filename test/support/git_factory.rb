@@ -23,9 +23,11 @@ module GitFactory
     #
     # @return [String]
     def expand_path(repo_name, *filename_path)
-      File.expand_path(File.join(
-        working_directory, repo_name.to_s, *filename_path
-      ))
+      File.expand_path(
+        File.join(
+          working_directory, repo_name.to_s, *filename_path
+        )
+      )
     end
 
     # @param [#to_s] repo_name

@@ -41,7 +41,9 @@ module Gitdocs
     # @return [void]
     def start(web_port)
       Gitdocs.log_info("Starting Gitdocs v#{VERSION}...")
-      Gitdocs.log_info("Using configuration root: '#{Initializer.root_dirname}'")
+      Gitdocs.log_info(
+        "Using configuration root: '#{Initializer.root_dirname}'"
+      )
 
       shares = Share.all
       Gitdocs.log_info("Monitoring shares(#{shares.length})")

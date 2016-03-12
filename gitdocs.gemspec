@@ -51,6 +51,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop',                '~> 0.34.2'
   s.add_development_dependency 'haml-lint',              '~> 0.13.0'
   s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
-  s.add_development_dependency 'codeclimate-test-reporter'
   s.add_development_dependency 'shotgun',                '~> 0.9.1'
+  s.add_development_dependency 'codeclimate-test-reporter'
 end

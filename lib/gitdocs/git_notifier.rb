@@ -10,7 +10,7 @@ module Gitdocs
       @show_notifications = show_notifications
     end
 
-    # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] result of merge
+    # @param [nil, Symbol, Array<String>, Hash<String => Integer>, #to_s] result
     #
     # @return [void]
     def for_merge(result)
@@ -83,7 +83,7 @@ module Gitdocs
       nil
     end
 
-    ##############################################################################
+    ############################################################################
 
     private
 
