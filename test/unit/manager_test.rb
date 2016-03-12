@@ -2,7 +2,33 @@
 
 require File.expand_path('../test_helper', __FILE__)
 
-describe 'gitdocs manager' do
+describe 'Gitdocs::Manager' do
+  describe '.start' do
+    let(:first_manager)  { stub('FirstManager') }
+    let(:second_manager) { stub('SecondManager') }
+    before do
+      Gitdocs::Manager.instance_variable_set(:@manager, nil)
+
+      Gitdocs::Manager.stubs(:new).returns(second_manager)
+      Gitdocs::Manager.stubs(:new).once.returns(first_manager)
+
+      first_manager.expects(:start).with(:web_port)
+
+      first_manager.expects(:stop)
+      second_manager.expects(:start).with(:web_port)
+    end
+
+    it do
+      Gitdocs::Manager.start(:web_port)
+      Gitdocs::Manager.instance_variable_get(:@manager).must_equal(first_manager)
+
+      Gitdocs::Manager.start(:web_port)
+      Gitdocs::Manager.instance_variable_get(:@manager).must_equal(second_manager)
+    end
+  end
+
+  # TODO: describe '.restart_synchronization' do
+
   describe '.listen_method' do
     subject { Gitdocs::Manager.listen_method }
 
@@ -64,4 +90,6 @@ describe 'gitdocs manager' do
       it { subject.must_equal :polling }
     end
   end
+
+  # TODO: describe '.start'
 end

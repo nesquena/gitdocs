@@ -28,12 +28,12 @@ module Gitdocs
       if options[:foreground]
         say 'Run in the foreground', :yellow
         Gitdocs::Initializer.foreground = true
-        Gitdocs.start(options[:port])
+        Manager.start(options[:port])
       else
         # Clear the arguments so that they will not be processed by the
         # Dante execution.
         ARGV.clear
-        runner.execute { Gitdocs.start(options[:port]) }
+        runner.execute { Manager.start(options[:port]) }
 
         if running?
           say 'Started gitdocs', :green

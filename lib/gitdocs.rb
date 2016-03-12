@@ -26,21 +26,6 @@ require 'gitdocs/repository/committer'
 require 'gitdocs/search'
 
 module Gitdocs
-  # @param [nil, Integer] override_web_port
-  def self.start(override_web_port)
-    @manager.stop if @manager
-    @manager = Manager.new
-    @manager.start(override_web_port)
-  end
-
-  def self.restart
-    @manager.restart
-  end
-
-  def self.stop
-    @manager.stop
-  end
-
   # @return [String]
   def self.log_path
     File.expand_path('log', Initializer.root_dirname)

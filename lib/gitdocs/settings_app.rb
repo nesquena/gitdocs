@@ -17,7 +17,7 @@ module Gitdocs
     post('/') do
       Configuration.update(request.POST['config'])
       Share.update_all(request.POST['share'])
-      EM.add_timer(0.1) { Gitdocs.restart }
+      Manager.restart_synchronization
       redirect to('/')
     end
 

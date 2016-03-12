@@ -4,6 +4,26 @@ module Gitdocs
   Restart = Class.new(RuntimeError)
 
   class Manager
+    # @param (see #start)
+    # @return [void]
+    def self.start(web_port)
+      @manager.stop if @manager
+      @manager = Manager.new
+      @manager.start(web_port)
+    end
+
+    # @return [void]
+    def self.restart_synchronization
+      EM.add_timer(0.1) do
+        Thread.new do
+          Thread.main.raise(Restart, 'restarting ... ')
+          sleep(0.1) while EM.reactor_running?
+
+          @manager.start
+        end
+      end
+    end
+
     # @return [:notification, :polling]
     def self.listen_method
       if Guard::Listener.mac? && Guard::Darwin.usable?
@@ -17,8 +37,9 @@ module Gitdocs
       end
     end
 
-    # @param [nil, #to_i] override_web_port
-    def start(override_web_port)
+    # @param [nil, #to_i] web_port
+    # @return [void]
+    def start(web_port)
       Gitdocs.log_info("Starting Gitdocs v#{VERSION}...")
       Gitdocs.log_info("Using configuration root: '#{Initializer.root_dirname}'")
 
@@ -29,7 +50,7 @@ module Gitdocs
       begin
         EM.run do
           @runners = Runner.start_all(shares)
-          Server.start_and_wait(override_web_port)
+          Server.start_and_wait(web_port)
         end
       rescue Restart
         retry
@@ -46,19 +67,6 @@ module Gitdocs
       raise
     ensure
       Gitdocs.log_info("Gitdocs is terminating...goodbye\n\n")
-    end
-
-    def restart
-      Thread.new do
-        Thread.main.raise Restart, 'restarting ... '
-        sleep 0.1 while EM.reactor_running?
-        start
-      end
-    end
-
-    def stop
-      Notifier.disconnect
-      EM.stop
     end
   end
 end
