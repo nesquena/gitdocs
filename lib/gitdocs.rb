@@ -8,6 +8,8 @@ require 'gitdocs/cli'
 require 'gitdocs/repository'
 require 'gitdocs/search'
 
+Celluloid.task_class = Celluloid::TaskThread
+
 module Gitdocs
   # @return [String]
   def self.log_path
