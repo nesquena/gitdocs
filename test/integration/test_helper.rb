@@ -7,6 +7,7 @@ require 'aruba/api'
 require 'timeout'
 require 'capybara'
 require 'capybara_minitest_spec'
+require 'capybara/dsl'
 require 'capybara/poltergeist'
 require 'find'
 require 'gitdocs/version'
@@ -91,7 +92,12 @@ module Helper
       next unless File.exist?(PID_FILE)
 
       pid = IO.read(PID_FILE).to_i
-      Process.kill('KILL', pid)
+      begin
+        Process.kill('KILL', pid)
+      rescue Errno::ESRCH  # rubocop:disable Lint/HandleExceptions
+        # Nothing to do since the process is already gone.
+      end
+
       begin
         Process.wait(pid)
       rescue SystemCallError # rubocop:disable Lint/HandleExceptions
@@ -109,6 +115,7 @@ module Helper
 
       log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
       if File.exist?(log_filename)
+        puts '----------------------------------'
         puts "Log file: #{log_filename}"
         puts File.read(log_filename)
       end

@@ -3,6 +3,7 @@
 require 'sinatra/base'
 require 'uri'
 require 'haml'
+require 'yaml'
 require 'mimetype_fu'
 require 'gitdocs/rendering_helper'
 
