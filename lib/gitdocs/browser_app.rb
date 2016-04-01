@@ -140,7 +140,7 @@ module Gitdocs
       parent = File.dirname(path.relative_path)
       parent = '' if parent == '/'
       parent = nil if parent == '.'
-      redirect to("/#{id}#{parent}")
+      redirect to("/#{id}/#{parent}")
     end
   end
 end
