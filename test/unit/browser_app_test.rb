@@ -253,10 +253,8 @@ describe Gitdocs::BrowserApp do
 
       describe 'upload' do
         before do
-          repository_path.stubs(absolute_path: :absolute_path)
           repository_path.expects(:join).with(File.basename(__FILE__))
-          FileUtils.expects(:mv)
-            .with(regexp_matches(/RackMultipart/), :absolute_path)
+          repository_path.expects(:mv).with(regexp_matches(/RackMultipart/))
 
           post '/1234/path1/path2', file: Rack::Test::UploadedFile.new(__FILE__, 'text/plain')
         end
@@ -327,7 +325,7 @@ describe Gitdocs::BrowserApp do
     describe 'delete /:id' do
       before do
         repository_path.expects(:remove)
-        repository_path.stubs(relative_path: 'path1/path2')
+        repository_path.stubs(relative_dirname: 'path1')
 
         delete '/1234/path1/path2'
       end

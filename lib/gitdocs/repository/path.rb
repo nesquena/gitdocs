@@ -17,6 +17,13 @@ module Gitdocs
         )
       end
 
+      # @return [String]
+      def relative_dirname
+        result = File.dirname(@relative_path)
+        return '' if result == '.'
+        result
+      end
+
       def join(path_fragment)
         @relative_path = File.join(@relative_path, path_fragment)
         @absolute_path = File.join(@absolute_path, path_fragment)
@@ -40,6 +47,13 @@ module Gitdocs
       # Create the path as a directory.
       def mkdir
         FileUtils.mkdir_p(@absolute_path)
+      end
+
+      # Move file to the repository path
+      # @param [String] filename
+      def mv(filename)
+        FileUtils.mkdir_p(File.dirname(@absolute_path))
+        FileUtils.mv(filename, @absolute_path)
       end
 
       # Remove the path, but only if it is a file.

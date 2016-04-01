@@ -103,7 +103,7 @@ module Gitdocs
       redirect_path =
         if params[:file] # upload
           path.join(params[:file][:filename])
-          FileUtils.mv(params[:file][:tempfile].path, path.absolute_path)
+          path.mv(params[:file][:tempfile].path)
           "/#{id}/#{path.relative_path}"
         elsif params[:filename] # add file/directory
           path.join(params[:filename])
@@ -137,10 +137,7 @@ module Gitdocs
 
     delete('/:id*') do
       path.remove
-      parent = File.dirname(path.relative_path)
-      parent = '' if parent == '/'
-      parent = nil if parent == '.'
-      redirect to("/#{id}/#{parent}")
+      redirect to("/#{id}/#{path.relative_dirname}")
     end
   end
 end
