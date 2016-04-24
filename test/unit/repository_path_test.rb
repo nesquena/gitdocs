@@ -2,13 +2,32 @@
 require File.expand_path('../test_helper', __FILE__)
 
 describe Gitdocs::Repository::Path do
-  let(:path) { Gitdocs::Repository::Path.new(repository, relative_path) }
+  let(:path) { Gitdocs::Repository::Path.new(repository, "/#{relative_path}") }
   let(:repository) { stub(root: GitFactory.expand_path(:local)) }
   let(:relative_path) { 'directory/file' }
 
   before do
     FileUtils.rm_rf('tmp/unit')
     GitFactory.init(:local)
+  end
+
+  describe '#relative_dirname' do
+    subject { path.relative_dirname }
+
+    describe 'root' do
+      let(:relative_path) { '' }
+      it { subject.must_equal('') }
+    end
+
+    describe 'root filename' do
+      let(:relative_path) { 'directory' }
+      it { subject.must_equal('') }
+    end
+
+    describe 'non-root filename' do
+      let(:relative_path) { 'directory1/directory2/file' }
+      it { subject.must_equal('directory1/directory2') }
+    end
   end
 
   describe '#join' do
@@ -90,6 +109,18 @@ describe Gitdocs::Repository::Path do
     end
   end
 
+  describe '#mv' do
+    subject { path.mv(source_filename) }
+    let(:source_filename) { File.join(GitFactory.working_directory, 'move_me') }
+    before do
+      FileUtils.mkdir_p(File.dirname(source_filename))
+      File.write(source_filename, 'foobar')
+
+      subject
+    end
+    it { GitInspector.file_content(:local, relative_path).must_equal('foobar') }
+  end
+
   describe '#remove' do
     subject { path.remove }
 
@@ -146,7 +177,7 @@ describe Gitdocs::Repository::Path do
     end
 
     describe 'when missing' do
-      let(:commit)        { nil }
+      let(:commit) { nil }
       it { assert_raises(RuntimeError) { subject } }
     end
 

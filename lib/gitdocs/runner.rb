@@ -22,8 +22,6 @@ module Gitdocs
     def run
       return false unless @repository.valid?
 
-      @last_synced_revision = @repository.current_oid
-
       mutex = Mutex.new
 
       # Pull changes from remote repository
@@ -58,51 +56,18 @@ module Gitdocs
       end, proc { EM.stop_reactor })
     end
 
-    def clear_state
-      @state = nil
-    end
-
+    # @return [void]
     def sync_changes
       return unless @repository.valid?
 
-      # Commit #################################################################
-      @repository.commit if @share.sync_type == 'full'
-
-      # Fetch ##################################################################
-      fetch_result = @repository.fetch
-      return unless fetch_result == :ok
-      return if @share.sync_type == 'fetch'
-
-      # Merge ##################################################################
-      merge_result = @repository.merge
-      merge_result = latest_author_count if merge_result == :ok
-      @git_notifier.for_merge(merge_result)
-      return if merge_result.is_a?(String)
-
-      # Push ###################################################################
-      result = @repository.push
-      result = latest_author_count if result == :ok
-      @git_notifier.for_push(result)
+      result = @repository.synchronize(@share.sync_type)
+      @git_notifier.for_merge(result[:merge])
+      @git_notifier.for_push(result[:push])
     rescue => e
       # Rescue any standard exceptions which come from the push related
       # commands. This will prevent problems on a single share from killing
       # the entire daemon.
       @git_notifier.on_error(e)
-    end
-
-    ############################################################################
-
-    private
-
-    # Update the author count for the last synced changes, and then update the
-    # last synced revision id.
-    #
-    # @return [Hash<String,Int>]
-    def latest_author_count
-      last_oid = @last_synced_revision
-      @last_synced_revision = @repository.current_oid
-
-      @repository.author_count(last_oid)
     end
   end
 end

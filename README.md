@@ -1,11 +1,11 @@
 # Gitdocs
 
-[![Gem Version](https://badge.fury.io/rb/gitdocs.png)](http://badge.fury.io/rb/gitdocs)
-[![Code Climate](https://codeclimate.com/github/bazaarlabs/gitdocs.png)](https://codeclimate.com/github/bazaarlabs/gitdocs)
+[![Gem Version](https://badge.fury.io/rb/gitdocs.svg)](http://badge.fury.io/rb/gitdocs)
+[![Code Climate](https://codeclimate.com/github/nesquena/gitdocs.svg)](https://codeclimate.com/github/nesquena/gitdocs)
 [![Build Status](https://travis-ci.org/nesquena/gitdocs.svg?branch=master)](https://travis-ci.org/nesquena/gitdocs)
-[![Inline docs](http://inch-ci.org/github/nesquena/gitdocs.png?branch=master)](http://inch-ci.org/github/nesquena/gitdocs)
+[![Inline docs](http://inch-ci.org/github/nesquena/gitdocs.svg?branch=master)](http://inch-ci.org/github/nesquena/gitdocs)
 [![Dependency Status](https://gemnasium.com/nesquena/gitdocs.svg)](https://gemnasium.com/nesquena/gitdocs)
-[![Coverage Status](https://coveralls.io/repos/nesquena/gitdocs/badge.png?branch=master)](https://coveralls.io/r/nesquena/gitdocs)
+[![Test Coverage](https://codeclimate.com/github/nesquena/gitdocs/badges/coverage.svg)](https://codeclimate.com/github/nesquena/gitdocs/coverage)
 
 Open-source dropbox alternative powered by git. Collaborate on files and tasks without any extra hassle.
 gitdocs will automatically keep everyone's repos in sync by pushing and pulling changes.

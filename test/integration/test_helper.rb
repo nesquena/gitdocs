@@ -7,6 +7,7 @@ require 'aruba/api'
 require 'timeout'
 require 'capybara'
 require 'capybara_minitest_spec'
+require 'capybara/dsl'
 require 'capybara/poltergeist'
 require 'find'
 require 'gitdocs/version'
@@ -17,7 +18,7 @@ end
 Capybara.app_host              = 'http://localhost:7777/'
 Capybara.default_driver        = :poltergeist
 Capybara.run_server            = false
-Capybara.default_max_wait_time = 30
+Capybara.default_max_wait_time = ENV['TRAVIS'] ? 60 : 15
 
 Capybara.register_driver :poltergeist do |app|
   Capybara::Poltergeist::Driver.new(app, timeout: Capybara.default_max_wait_time)
@@ -25,25 +26,27 @@ end
 
 PID_FILE = File.expand_path('../../../tmp/gitdocs.pid', __FILE__)
 
-module MiniTest::Aruba
-  class ArubaApiWrapper
-    include Aruba::Api
-  end
-
-  def aruba
-    @aruba ||= ArubaApiWrapper.new
-  end
-
-  def run(*args)
-    if args.length == 0
-      super
-    else
-      aruba.run(*args)
+module MiniTest
+  module Aruba
+    class ArubaApiWrapper
+      include ::Aruba::Api
     end
-  end
 
-  def method_missing(method, *args, &block)
-    aruba.send(method, *args, &block)
+    def aruba
+      @aruba ||= ArubaApiWrapper.new
+    end
+
+    def run(*args)
+      if args.length == 0
+        super
+      else
+        aruba.run(*args)
+      end
+    end
+
+    def method_missing(method, *args, &block)
+      aruba.send(method, *args, &block)
+    end
   end
 end
 
@@ -91,7 +94,12 @@ module Helper
       next unless File.exist?(PID_FILE)
 
       pid = IO.read(PID_FILE).to_i
-      Process.kill('KILL', pid)
+      begin
+        Process.kill('KILL', pid)
+      rescue Errno::ESRCH # rubocop:disable Lint/HandleExceptions
+        # Nothing to do since the process is already gone.
+      end
+
       begin
         Process.wait(pid)
       rescue SystemCallError # rubocop:disable Lint/HandleExceptions
@@ -101,29 +109,30 @@ module Helper
       FileUtils.rm_rf(PID_FILE)
     end
 
+    return if passed?
+
     # Report gitdocs execution details on failure
-    unless passed?
-      puts "\n\n----------------------------------"
-      puts "Aruba details for failure: #{name}"
-      puts "#{failures.inspect}"
+    puts "\n\n----------------------------------"
+    puts "Aruba details for failure: #{name}"
+    puts "#{failures.inspect}"
 
-      log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
-      if File.exist?(log_filename)
-        puts "Log file: #{log_filename}"
-        puts File.read(log_filename)
-      end
-
-      if Dir.exist?(abs_current_dir)
-        puts '----------------------------------'
-        puts 'Aruba current directory file list:'
-        Find.find(abs_current_dir) do |path|
-          Find.prune if path =~ %r(.git/?$)
-          puts "  #{path}"
-        end
-      end
-
-      puts "----------------------------------\n\n"
+    log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
+    if File.exist?(log_filename)
+      puts '----------------------------------'
+      puts "Log file: #{log_filename}"
+      puts File.read(log_filename)
     end
+
+    if Dir.exist?(abs_current_dir)
+      puts '----------------------------------'
+      puts 'Aruba current directory file list:'
+      Find.find(abs_current_dir) do |path|
+        Find.prune if path =~ %r{.git/?$}
+        puts "  #{path}"
+      end
+    end
+
+    puts "----------------------------------\n\n"
   end
 
   # @param [String] method pass to the CLI
@@ -135,7 +144,7 @@ module Helper
     binary_path  = File.expand_path('../../../bin/gitdocs', __FILE__)
     full_command = "#{binary_path} #{method} #{arguments} --pid=#{PID_FILE}"
 
-    run(full_command, 15)
+    run(full_command, Capybara.default_max_wait_time)
     assert_success(true)
     assert_partial_output(expected_output, output_from(full_command))
 
@@ -248,6 +257,8 @@ module Helper
   end
 end
 
-class MiniTest::Spec
-  include Helper
+module MiniTest
+  class Spec
+    include Helper
+  end
 end

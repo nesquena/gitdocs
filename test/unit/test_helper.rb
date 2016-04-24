@@ -14,7 +14,7 @@ end
 Gitdocs::Initializer.root_dirname = '/tmp/gitdocs'
 Gitdocs::Initializer.database     = ':memory:'
 
-require 'coveralls'
-Coveralls.wear!
+require 'codeclimate-test-reporter'
+CodeClimate::TestReporter.start
 
 GitFactory.working_directory = File.expand_path('../../../tmp/unit', __FILE__)

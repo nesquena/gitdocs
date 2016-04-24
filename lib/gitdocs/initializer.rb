@@ -30,7 +30,7 @@ module Gitdocs
       File.read(old_path_dirname).split("\n").each do |path|
         begin
           Share.create_by_path!(path)
-        rescue # rubocop:disable ExceptionHandling
+        rescue # rubocop:disable HandleExceptions
           # Nothing to do, because we want the process to keep going.
         end
       end
@@ -64,11 +64,7 @@ module Gitdocs
     def self.foreground
       @foreground ||= false
     end
-
-    # @param [Boolean] value
-    def self.foreground=(value)
-      @foreground = value
-    end
+    attr_writer :foreground
 
     # @return [Boolean]
     def self.verbose
@@ -77,7 +73,7 @@ module Gitdocs
 
     # @param [Boolean] value
     def self.verbose=(value)
-      @verbose = !!value
+      @verbose = !!value # rubocop:disable DoubleNegation
     end
   end
 end

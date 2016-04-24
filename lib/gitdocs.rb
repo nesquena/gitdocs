@@ -8,6 +8,7 @@ require 'grit'
 require 'rugged'
 require 'table_print'
 require 'notiffany'
+require 'launchy'
 
 require 'gitdocs/version'
 require 'gitdocs/initializer'
@@ -21,26 +22,10 @@ require 'gitdocs/notifier'
 require 'gitdocs/git_notifier'
 require 'gitdocs/repository'
 require 'gitdocs/repository/path'
-require 'gitdocs/repository/invalid_error'
 require 'gitdocs/repository/committer'
 require 'gitdocs/search'
 
 module Gitdocs
-  # @param [nil, Integer] override_web_port
-  def self.start(override_web_port)
-    @manager.stop if @manager
-    @manager = Manager.new
-    @manager.start(override_web_port)
-  end
-
-  def self.restart
-    @manager.restart
-  end
-
-  def self.stop
-    @manager.stop
-  end
-
   # @return [String]
   def self.log_path
     File.expand_path('log', Initializer.root_dirname)
@@ -60,13 +45,13 @@ module Gitdocs
 
   # @param [String] message
   # @return [void]
-  def self.log_warn
+  def self.log_warn(message)
     logger.warn(message)
   end
 
   # @param [String] message
   # @return [void]
-  def self.log_error
+  def self.log_error(message)
     logger.error(message)
   end
 

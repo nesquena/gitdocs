@@ -20,7 +20,7 @@ describe Gitdocs::GitNotifier do
     end
 
     describe 'with changes' do
-      let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
+      let(:result) { { 'Alice' => 1, 'Bob' => 3 } }
       before do
         Gitdocs::Notifier.expects(:info).with(
           'Updated with 4 changes',
@@ -32,7 +32,7 @@ describe Gitdocs::GitNotifier do
     end
 
     describe 'with conflicts' do
-      let(:result)  { ['file'] }
+      let(:result) { ['file'] }
       before do
         Gitdocs::Notifier.expects(:warn).with(
           'There were some conflicts',
@@ -72,7 +72,7 @@ describe Gitdocs::GitNotifier do
     end
 
     describe 'with changes' do
-      let(:result)  { { 'Alice' => 1, 'Bob' => 3 } }
+      let(:result) { { 'Alice' => 1, 'Bob' => 3 } }
       before do
         Gitdocs::Notifier.expects(:info)
           .with('Pushed 4 changes', 'root has been pushed', :show_notifications)
