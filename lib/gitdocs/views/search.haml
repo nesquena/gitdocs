@@ -10,7 +10,7 @@
       %dl
         - search_results.each do |res|
           %dt
-            %a{href: "/#{repo.index}/#{res.file}"}
+            %a{ href: "/#{repo.index}/#{res.file}" }
               = "/#{res.file}"
           %dd
             = res.context

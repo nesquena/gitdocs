@@ -3,7 +3,7 @@
 = haml(:_header, locals: { file: false })
 
 - if contents && contents.any?
-  %table#fileListing.condensed-table.zebra-striped
+  %table.condensed-table.zebra-striped#fileListing
     %thead
       %tr
         %th File
@@ -34,7 +34,7 @@
   .span8
     %form.add{ method: 'POST' }
       %p Add new file or directory
-      %input{ type: 'text',   name: 'filename', placeholder: 'somefile.md or somedir' }
+      %input{ type: 'text', name: 'filename', placeholder: 'somefile.md or somedir' }
       %input.btn.secondary{ type: 'submit', name: 'new_file', value: 'New file' }
       %input.btn.secondary{ type: 'submit', name: 'new_directory', value: 'New directory' }
 

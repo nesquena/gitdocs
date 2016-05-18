@@ -3,7 +3,7 @@
 
 %form#settings{ method: 'POST', action: url('/') }
   %h2 Gitdocs
-  #config.field.config
+  .field.config#config
     %dl
       %dt Web Frontend Port
       %dd
@@ -23,7 +23,7 @@
         %dt Sync Type
         %dd
           %select{ name: "share[#{idx}][sync_type]" }
-            %option{ value: 'full',  selected: (share.sync_type == 'full' ? 'selected' : nil) }
+            %option{ value: 'full', selected: (share.sync_type == 'full' ? 'selected' : nil) }
               Full
             %option{ value: 'fetch', selected: (share.sync_type == 'fetch' ? 'selected' : nil) }
               Fetch only
@@ -47,11 +47,11 @@
           %dd
             %input{ name: "share[#{idx}][branch_name]", value: share.branch_name }
       .notify.field
-        %input{ type: 'hidden',   value: '0', name: "share[#{idx}][notification]"}
+        %input{ type: 'hidden', value: '0', name: "share[#{idx}][notification]" }
         %input{ type: 'checkbox', value: '1', name: "share[#{idx}][notification]", checked: share.notification ? 'checked' : nil }
         %span Notifications?
       .delete
-        %a.remote_share.btn.danger{ href: url("/#{share.id}"), :'data-method' => 'delete' }
+        %a.remote_share.btn.danger{ href: url("/#{share.id}"), 'data-method' => 'delete' }
           Delete
 
   %input.btn.primary{ value: 'Save', type: 'submit' }
