@@ -37,7 +37,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'mimetype-fu',     '~> 0.1.2'
   s.add_dependency 'eventmachine',    '>= 1.0.3'
   s.add_dependency 'launchy',         '~> 2.4.2'
-  s.add_dependency 'rugged',          '~> 0.23.0'
+  s.add_dependency 'rugged',          '~> 0.24.0'
   s.add_dependency 'table_print',     '~> 1.5.1'
   s.add_dependency 'notiffany',       '~> 0.0.8'
 
