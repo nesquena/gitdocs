@@ -48,7 +48,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake',                   '~> 11.1.2'
   s.add_development_dependency 'mocha',                  '~> 1.1.0'
   s.add_development_dependency 'aruba',                  '~> 0.6.1'
-  s.add_development_dependency 'rubocop',                '~> 0.34.2'
+  s.add_development_dependency 'rubocop',                '~> 0.40.0'
   s.add_development_dependency 'haml_lint',              '~> 0.13.0'
   s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
   s.add_development_dependency 'shotgun',                '~> 0.9.1'
