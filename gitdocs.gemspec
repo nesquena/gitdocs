@@ -41,7 +41,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'table_print',     '~> 1.5.1'
   s.add_dependency 'notiffany',       '~> 0.0.8'
 
-  s.add_development_dependency 'minitest',               '~> 5.8.0'
+  s.add_development_dependency 'minitest',               '~> 5.9.0'
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
   s.add_development_dependency 'shell_tools',            '~> 0.1.0'
   s.add_development_dependency 'poltergeist',            '~> 1.7.0'
