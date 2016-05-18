@@ -78,10 +78,12 @@ module Gitdocs
       restart if running?
     end
 
+    method_option :pid, type: :string, aliases: '-P'
     desc 'clear', 'Clears all paths from gitdocs'
     def clear
       Share.destroy_all
       say 'Cleared paths from gitdocs'
+      restart if running?
     end
 
     method_option :pid, type: :string, aliases: '-P'
