@@ -12,7 +12,8 @@ describe 'gitdocs runner' do
   let(:git_notifier) { stub }
   before do
     Gitdocs::Repository.expects(:new).with(share).returns(repository)
-    Gitdocs::GitNotifier.expects(:new)
+    Gitdocs::GitNotifier
+      .expects(:new)
       .with('root_path', :notification)
       .returns(git_notifier)
   end
@@ -38,7 +39,8 @@ describe 'gitdocs runner' do
     describe 'valid repository with error' do
       let(:valid) { true }
       before do
-        repository.expects(:synchronize)
+        repository
+          .expects(:synchronize)
           .with(:sync_type)
           .raises(error = StandardError.new)
         git_notifier.expects(:on_error).with(error).returns(:results)
@@ -49,7 +51,9 @@ describe 'gitdocs runner' do
     describe 'valid repository' do
       let(:valid) { true }
       before do
-        repository.expects(:synchronize).with(:sync_type)
+        repository
+          .expects(:synchronize)
+          .with(:sync_type)
           .returns(merge: :merge, push: :push)
         git_notifier.expects(:for_merge).with(:merge)
         git_notifier.expects(:for_push).with(:push).returns(:result)

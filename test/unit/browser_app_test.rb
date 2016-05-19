@@ -91,13 +91,16 @@ describe Gitdocs::BrowserApp do
     let(:repository)      { stub(root: 'root_path') }
     let(:repository_path) { stub }
     before do
-      Gitdocs::Share.stubs(:find)
+      Gitdocs::Share
+        .stubs(:find)
         .with(1234)
         .returns(share = stub)
-      Gitdocs::Repository.stubs(:new)
+      Gitdocs::Repository
+        .stubs(:new)
         .with(share)
         .returns(repository)
-      Gitdocs::Repository::Path.stubs(:new)
+      Gitdocs::Repository::Path
+        .stubs(:new)
         .with(repository, '/path1/path2')
         .returns(repository_path)
     end
@@ -192,7 +195,9 @@ describe Gitdocs::BrowserApp do
               readme_path:  :readme_path,
               file_listing: file_listing
             )
-            app.any_instance.stubs(:file_content_render)
+            app
+              .any_instance
+              .stubs(:file_content_render)
               .with(:readme_path)
               .returns(:readme_content)
 
@@ -231,10 +236,13 @@ describe Gitdocs::BrowserApp do
         describe 'file' do
           before do
             repository_path.stubs(directory?: false)
-            repository_path.stubs(:absolute_path)
+            repository_path
+              .stubs(:absolute_path)
               .with('revision')
               .returns(:revision_path)
-            app.any_instance.stubs(:file_content_render)
+            app
+              .any_instance
+              .stubs(:file_content_render)
               .with(:revision_path)
               .returns(:content)
 

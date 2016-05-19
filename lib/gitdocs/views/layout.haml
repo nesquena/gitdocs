@@ -3,29 +3,29 @@
   %head
     %meta{ 'http-equiv' => 'content-type', content: 'text/html; charset=UTF-8' }
     %title Gitdocs #{Gitdocs::VERSION}
-    %link{ href: '/css/bootstrap.css', rel: 'stylesheet'}
-    %link{ href: '/css/app.css',       rel: 'stylesheet' }
-    %link{ href: '/css/tilt.css',      rel: 'stylesheet' }
-    %link{ href: '/css/coderay.css',   rel: 'stylesheet' }
-    %script{ src: '/js/util.js',               type: 'text/javascript', charset: 'utf-8' }
-    %script{ src: '/js/jquery.js',             type: 'text/javascript', charset: 'utf-8' }
+    %link{ href: '/css/bootstrap.css', rel: 'stylesheet' }
+    %link{ href: '/css/app.css', rel: 'stylesheet' }
+    %link{ href: '/css/tilt.css', rel: 'stylesheet' }
+    %link{ href: '/css/coderay.css', rel: 'stylesheet' }
+    %script{ src: '/js/util.js', type: 'text/javascript', charset: 'utf-8' }
+    %script{ src: '/js/jquery.js', type: 'text/javascript', charset: 'utf-8' }
     %script{ src: '/js/jquery.tablesorter.js', type: 'text/javascript', charset: 'utf-8' }
-    %script{ src: '/js/bootstrap-alerts.js',   type: 'text/javascript', charset: 'utf-8' }
-    %script{ src: '/js/app.js',                type: 'text/javascript', charset: 'utf-8' }
+    %script{ src: '/js/bootstrap-alerts.js', type: 'text/javascript', charset: 'utf-8' }
+    %script{ src: '/js/app.js', type: 'text/javascript', charset: 'utf-8' }
   %body
-    #nav.topbar
+    .topbar#nav
       .fill
         .container
-          %a.brand{ href: '/'} Gitdocs
+          %a.brand{ href: '/' } Gitdocs
           %ul.nav
             %li{ class: ('active' if nav_state == 'home') }
-              %a(href = "/") Home
+              %a{ href: '/' } Home
             %li{ class: ('active' if nav_state == 'settings') }
-              %a(href = "/settings") Settings
+              %a{ href: '/settings' } Settings
           %form.pull-left{ action: '/search', method: 'GET' }
             %input{ type: 'text', placeholder: 'Search', name: 'q' }
 
-    #main.container
+    .container#main
       .content
         - if @title
           .page-header

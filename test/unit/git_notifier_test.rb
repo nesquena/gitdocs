@@ -74,8 +74,9 @@ describe Gitdocs::GitNotifier do
     describe 'with changes' do
       let(:result) { { 'Alice' => 1, 'Bob' => 3 } }
       before do
-        Gitdocs::Notifier.expects(:info)
-          .with('Pushed 4 changes', 'root has been pushed', :show_notifications)
+        Gitdocs::Notifier.expects(:info).with(
+          'Pushed 4 changes', 'root has been pushed', :show_notifications
+        )
       end
       it { subject }
     end
@@ -83,8 +84,9 @@ describe Gitdocs::GitNotifier do
     describe 'with conflict' do
       let(:result) { :conflict }
       before do
-        Gitdocs::Notifier.expects(:warn)
-          .with('There was a conflict in root, retrying', '', :show_notifications)
+        Gitdocs::Notifier.expects(:warn).with(
+          'There was a conflict in root, retrying', '', :show_notifications
+        )
       end
       it { subject }
     end
@@ -92,8 +94,9 @@ describe Gitdocs::GitNotifier do
     describe 'with anything else' do
       let(:result) { 'error' }
       before do
-        Gitdocs::Notifier.expects(:error)
-          .with('BAD Could not push changes in root', 'error', :show_notifications)
+        Gitdocs::Notifier.expects(:error).with(
+          'BAD Could not push changes in root', 'error', :show_notifications
+        )
       end
       it { subject }
     end

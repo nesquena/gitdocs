@@ -3,7 +3,7 @@
 - if file
   %ul.tabs
     %li
-      %a{ href: "#{request.path}" } View
+      %a{ href: request.path } View
     %li
       %a{ href: '?mode=raw' } Raw
     %li
@@ -11,6 +11,6 @@
     %li
       %a{ href: '?mode=revisions' } Revisions
     %li
-      %form{ method: 'POST', :'data-confirm-submit' => 'Are you sure?' }
+      %form{ method: 'POST', 'data-confirm-submit' => 'Are you sure?' }
         %input{ name: '_method', type: 'hidden', value: 'delete' }
         %input.btn.danger{ type: 'submit', value: 'Delete' }

@@ -8,7 +8,9 @@ describe Gitdocs::Search do
       Gitdocs::Share.stubs(:all).returns([:share1, :share2])
       Gitdocs::Repository.stubs(:new).with(:share1).returns(:repository1)
       Gitdocs::Repository.stubs(:new).with(:share2).returns(:repository2)
-      Gitdocs::Search.stubs(:new).with([:repository1, :repository2])
+      Gitdocs::Search
+        .stubs(:new)
+        .with([:repository1, :repository2])
         .returns(search = mock)
       search.stubs(:search).with(:term).returns(:result)
     end

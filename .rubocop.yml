@@ -1,6 +1,7 @@
 Documentation:
   Enabled: false
 
+
 # Splitting method arguments across multiple lines can result in the containing
 # method looking long, but not actually increasing the complexity at all.
 MethodLength:
@@ -13,3 +14,6 @@ LineLength:
   Exclude:
     - 'Rakefile'
     - 'gitdocs.gemspec'
+
+SignalException:
+  EnforcedStyle: semantic

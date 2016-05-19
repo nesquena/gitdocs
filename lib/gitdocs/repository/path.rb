@@ -122,7 +122,8 @@ module Gitdocs
       def file_listing
         return nil unless directory?
 
-        Dir.glob(File.join(@absolute_path, '{*,.*}'))
+        Dir
+          .glob(File.join(@absolute_path, '{*,.*}'))
           .reject  { |x| x.match(%r{/\.(\.|git|gitignore|gitmessage~)?$}) }
           .sort_by { |x| File.basename(x).sub(/^\./, '') }
           .map     { |x| DirEntry.new(File.basename(x), File.directory?(x)) }

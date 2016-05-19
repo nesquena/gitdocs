@@ -12,7 +12,8 @@ describe Gitdocs::SettingsApp do
 
   describe 'get /' do
     before do
-      Gitdocs::Configuration.stubs(:web_frontend_port)
+      Gitdocs::Configuration
+        .stubs(:web_frontend_port)
         .returns(1111)
       share = stub(
         id:               :id,
@@ -24,7 +25,8 @@ describe Gitdocs::SettingsApp do
         branch_name:      'branch'
       )
       Gitdocs::Share.stubs(:all).returns([share])
-      Gitdocs::Repository.stubs(:new)
+      Gitdocs::Repository
+        .stubs(:new)
         .with(share)
         .returns(stub(available_remotes: [:remote]))
 
