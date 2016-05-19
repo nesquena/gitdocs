@@ -37,7 +37,7 @@ module MiniTest
     end
 
     def run(*args)
-      if args.length == 0
+      if args.empty?
         super
       else
         aruba.run(*args)
@@ -114,7 +114,7 @@ module Helper
     # Report gitdocs execution details on failure
     puts "\n\n----------------------------------"
     puts "Aruba details for failure: #{name}"
-    puts "#{failures.inspect}"
+    puts failures.inspect.to_s
 
     log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
     if File.exist?(log_filename)

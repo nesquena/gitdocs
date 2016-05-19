@@ -274,7 +274,7 @@ module Gitdocs
       # TODO: should add a filter here for checking that the commit actually has
       # an associated blob.
       commits = head_walker.select do |commit|
-        commit.parents.size == 1 && commit.diff(paths: [relative_path]).size > 0
+        commit.parents.size == 1 && changes?(commit, relative_path)
       end
       # TODO: should re-write this limit in a way that will skip walking all of
       # the commits.
@@ -285,7 +285,7 @@ module Gitdocs
     #
     # @return [Rugged::Commit]
     def last_commit_for(relative_path)
-      head_walker.find { |commit| commit.diff(paths: [relative_path]).size > 0 }
+      head_walker.find { |commit| changes?(commit, relative_path) }
     end
 
     # @param [String] relative_path
@@ -297,6 +297,13 @@ module Gitdocs
     ############################################################################
 
     private
+
+    # @param [Rugged::Commit] commit
+    # @param [String] relative_path
+    # @return [Boolean]
+    def changes?(commit, relative_path)
+      commit.diff(paths: [relative_path]).size > 0 # rubocop:disable ZeroLengthPredicate
+    end
 
     # @return [Boolean]
     def remote?

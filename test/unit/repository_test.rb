@@ -242,7 +242,9 @@ describe Gitdocs::Repository do
 
     describe 'timeout' do
       before do
-        Grit::Repo.any_instance.stubs(:remote_fetch)
+        Grit::Repo
+          .any_instance
+          .stubs(:remote_fetch)
           .raises(Grit::Git::GitTimeout.new)
       end
       it { subject ; @grep_result.must_equal([]) }
@@ -251,7 +253,9 @@ describe Gitdocs::Repository do
 
     describe 'command failure' do
       before do
-        Grit::Repo.any_instance.stubs(:remote_fetch)
+        Grit::Repo
+          .any_instance
+          .stubs(:remote_fetch)
           .raises(Grit::Git::CommandFailed.new('', 1, 'grep error output'))
       end
       it { subject ; @grep_result.must_equal([]) }
@@ -287,7 +291,9 @@ describe Gitdocs::Repository do
 
       describe 'and times out' do
         before do
-          Grit::Repo.any_instance.stubs(:remote_fetch)
+          Grit::Repo
+            .any_instance
+            .stubs(:remote_fetch)
             .raises(Grit::Git::GitTimeout.new)
         end
         it do
@@ -300,7 +306,9 @@ describe Gitdocs::Repository do
 
       describe 'and command fails' do
         before do
-          Grit::Repo.any_instance.stubs(:remote_fetch)
+          Grit::Repo
+            .any_instance
+            .stubs(:remote_fetch)
             .raises(Grit::Git::CommandFailed.new('', 1, 'fetch error output'))
         end
         it do
@@ -348,7 +356,9 @@ describe Gitdocs::Repository do
         bare_commit('file1', 'deadbeef')
         repository.fetch
 
-        Grit::Git.any_instance.stubs(:merge)
+        Grit::Git
+          .any_instance
+          .stubs(:merge)
           .raises(Grit::Git::GitTimeout.new)
       end
       it do
@@ -365,7 +375,9 @@ describe Gitdocs::Repository do
         bare_commit('file1', 'deadbeef')
         repository.fetch
 
-        Grit::Git.any_instance.stubs(:merge)
+        Grit::Git
+          .any_instance
+          .stubs(:merge)
           .raises(Grit::Git::CommandFailed.new('', 1, 'merge error output'))
       end
       it do
@@ -497,7 +509,9 @@ describe Gitdocs::Repository do
         describe 'and the push fails' do
           # Simulate an error occurring during the push
           before do
-            Grit::Git.any_instance.stubs(:push)
+            Grit::Git
+              .any_instance
+              .stubs(:push)
               .raises(Grit::Git::CommandFailed.new('', 1, 'error message'))
           end
           it { subject.must_equal 'error message' }
@@ -532,7 +546,9 @@ describe Gitdocs::Repository do
         describe 'and the push fails' do
           # Simulate an error occurring during the push
           before do
-            Grit::Git.any_instance.stubs(:push)
+            Grit::Git
+              .any_instance
+              .stubs(:push)
               .raises(Grit::Git::CommandFailed.new('', 1, 'error message'))
           end
           it { subject.must_equal 'error message' }
