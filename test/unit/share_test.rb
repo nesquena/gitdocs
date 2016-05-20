@@ -37,6 +37,35 @@ describe Gitdocs::Share do
     assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
   end
 
+  describe '.paths' do
+    before do
+      Gitdocs::Share.create_by_path!('/my/path')
+      Gitdocs::Share.create_by_path!('/my/path/2')
+      Gitdocs::Share.create_by_path!('/my/path/3')
+    end
+
+    it { Gitdocs::Share.paths.must_equal(%w(/my/path /my/path/2 /my/path/3))}
+  end
+
+  describe '.find_by_path' do
+    before do
+      Gitdocs::Share.create_by_path!('/my/path')
+      Gitdocs::Share.create_by_path!('/my/path/2')
+      Gitdocs::Share.create_by_path!('/my/path/3')
+    end
+
+    it 'finds a missing path' do
+      Gitdocs::Share.find_by_path('/missing/path').must_be_nil
+    end
+
+    it 'finds a real path' do
+      share = Gitdocs::Share.find_by_path('/my/path/2')
+      share.wont_be_nil
+      share.class.must_equal(Gitdocs::Share)
+      share.path.must_equal('/my/path/2')
+    end
+  end
+
   describe '#update_all' do
     before do
       Gitdocs::Share.create_by_path!('/my/path')

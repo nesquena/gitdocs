@@ -20,7 +20,7 @@ describe 'Gitdocs' do
       Gitdocs::Initializer.stubs(:verbose).returns(verbose)
       Gitdocs.stubs(:log_path).returns(:log_path)
 
-      Gitdocs.instance_variable_set(:@logger, nil)
+      Gitdocs.instance_variable_set(:@initialized, nil)
       Logger.stubs(:new).with(expected_path).returns(logger)
       logger.expects(:level=).with(expected_level)
     end
