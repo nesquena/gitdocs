@@ -64,7 +64,11 @@ module Gitdocs
     def self.foreground
       @foreground ||= false
     end
-    attr_writer :foreground
+
+    def self.foreground=(value)
+      return if value.nil?
+      @foreground = value
+    end
 
     # @return [Boolean]
     def self.verbose
