@@ -48,7 +48,7 @@ module Gitdocs
          args: [
            app,
            {
-             Host:  '0.0.0.0',
+             Host:  '127.0.0.1',
              Port:  web_port,
              quiet: true
            }
