@@ -21,7 +21,13 @@ Capybara.run_server            = false
 Capybara.default_max_wait_time = ENV['TRAVIS'] ? 60 : 15
 
 Capybara.register_driver :poltergeist do |app|
-  Capybara::Poltergeist::Driver.new(app, timeout: Capybara.default_max_wait_time)
+  Capybara::Poltergeist::Driver.new(
+    app,
+    timeout:   Capybara.default_max_wait_time,
+    # Disable catching javascript errors because of the possibility of errors
+    # from the Ace code.
+    js_errors: false
+  )
 end
 
 PID_FILE = File.expand_path('../../../tmp/gitdocs.pid', __FILE__)
