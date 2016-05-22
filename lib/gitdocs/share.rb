@@ -4,11 +4,23 @@ require 'active_record'
 
 module Gitdocs
   class Share < ActiveRecord::Base
+    # @return [Array<String>]
+    def self.paths
+      all.map(&:path)
+    end
+
     # @param [#to_i] index
     #
     # @return [Share]
     def self.at(index)
       all[index.to_i]
+    end
+
+    # @param [String] path
+    #
+    # @return [Share]
+    def self.find_by_path(path)
+      where(path: File.expand_path(path)).first
     end
 
     # @param [String] path

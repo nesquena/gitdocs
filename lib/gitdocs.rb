@@ -3,26 +3,29 @@
 require 'thread'
 require 'dante'
 require 'socket'
-require 'guard'
 require 'grit'
 require 'rugged'
 require 'table_print'
 require 'notiffany'
 require 'launchy'
+require 'celluloid'
+require 'listen'
+require 'reel/rack'
 
 require 'gitdocs/version'
 require 'gitdocs/initializer'
 require 'gitdocs/share'
 require 'gitdocs/configuration'
-require 'gitdocs/runner'
-require 'gitdocs/server'
 require 'gitdocs/cli'
 require 'gitdocs/manager'
+require 'gitdocs/synchronizer'
 require 'gitdocs/notifier'
 require 'gitdocs/git_notifier'
 require 'gitdocs/repository'
 require 'gitdocs/repository/path'
 require 'gitdocs/repository/committer'
+require 'gitdocs/settings_app'
+require 'gitdocs/browser_app'
 require 'gitdocs/search'
 
 module Gitdocs
@@ -34,43 +37,43 @@ module Gitdocs
   # @param [String] message
   # @return [void]
   def self.log_debug(message)
-    logger.debug(message)
+    init_log
+    Celluloid.logger.debug(message)
   end
 
   # @param [String] message
   # @return [void]
   def self.log_info(message)
-    logger.info(message)
+    init_log
+    Celluloid.logger.info(message)
   end
 
   # @param [String] message
   # @return [void]
   def self.log_warn(message)
-    logger.warn(message)
+    init_log
+    Celluloid.logger.warn(message)
   end
 
   # @param [String] message
   # @return [void]
   def self.log_error(message)
-    logger.error(message)
+    init_log
+    Celluloid.logger.error(message)
   end
 
   ##############################################################################
 
   private_class_method
 
-  # @return [Logger]
-  def self.logger
-    return @logger if @logger
+  # @return [void]
+  def self.init_log
+    return if @initialized
 
-    output =
-      if Initializer.foreground
-        STDOUT
-      else
-        log_path
-      end
-    @logger = Logger.new(output)
-    @logger.level = Initializer.verbose ? Logger::DEBUG : Logger::INFO
-    @logger
+    # Initialize the logger
+    log_output = Initializer.foreground ? STDOUT : log_path
+    Celluloid.logger = Logger.new(log_output)
+    Celluloid.logger.level = Initializer.verbose ? Logger::DEBUG : Logger::INFO
+    @initialized = true
   end
 end
