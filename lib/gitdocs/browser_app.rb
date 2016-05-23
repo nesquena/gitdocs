@@ -27,7 +27,7 @@ module Gitdocs
       def path
         halt(404) unless repository
         @path ||= Repository::Path.new(
-          repository, URI.unescape(params[:splat].first)
+          repository, URI.decode(params[:splat].first)
         )
       end
     end
