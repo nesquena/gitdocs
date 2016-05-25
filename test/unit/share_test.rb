@@ -44,7 +44,7 @@ describe Gitdocs::Share do
       Gitdocs::Share.create_by_path!('/my/path/3')
     end
 
-    it { Gitdocs::Share.paths.must_equal(%w(/my/path /my/path/2 /my/path/3))}
+    it { Gitdocs::Share.paths.must_equal(%w(/my/path /my/path/2 /my/path/3)) }
   end
 
   describe '.find_by_path' do

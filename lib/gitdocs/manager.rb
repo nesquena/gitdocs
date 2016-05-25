@@ -42,18 +42,18 @@ module Gitdocs
           map('/settings') { run SettingsApp }
           map('/')         { run BrowserApp }
         end
-       @supervisor.add(
-         Reel::Rack::Server,
-         as: :reel_rack_server,
-         args: [
-           app,
-           {
-             Host:  '127.0.0.1',
-             Port:  web_port,
-             quiet: true
-           }
-         ]
-       )
+      @supervisor.add(
+        Reel::Rack::Server,
+        as: :reel_rack_server,
+        args: [
+          app,
+          {
+            Host:  '127.0.0.1',
+            Port:  web_port,
+            quiet: true
+          }
+        ]
+      )
 
       # Start the synchronizers ################################################
       @synchronization_supervisor = Celluloid::SupervisionGroup.run!
@@ -67,7 +67,7 @@ module Gitdocs
       @listener =
         Listen.to(
           *Share.paths,
-          ignore: %r(#{File::SEPARATOR}\.git#{File::SEPARATOR})
+          ignore: /#{File::SEPARATOR}\.git#{File::SEPARATOR}/
         ) do |modified, added, removed|
           all_changes = modified + added + removed
           changed_repository_paths =
