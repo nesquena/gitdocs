@@ -14,7 +14,7 @@ module Gitdocs
       # Always to an initial synchronization when beginning.
       synchronize
 
-      @timer        = every(share.polling_interval) { synchronize }
+      @timer = every(share.polling_interval) { synchronize }
     end
 
     # @return [void]

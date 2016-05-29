@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 
-require File.expand_path('../test_helper', __FILE__)
+require File.expand_path('../../test_helper', __FILE__)
 
 describe 'CLI with display daemon and share status' do
   it 'should display information about the daemon' do

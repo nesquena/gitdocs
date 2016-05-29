@@ -72,12 +72,14 @@ module Helper
 
     # Make sure that we are not accidentally overwriting an existing gitconfig.
     if Rugged::Config.global['user.name'] || Rugged::Config.global['user.name']
-      puts 'Unexpected git config:'
-      puts "  user.name  = #{Rugged::Config.global['user.name']}"
-      puts "  user.email = #{Rugged::Config.global['user.email']}"
-      puts 'Something went wrong when setting the HOME directory and the test'
-      puts 'will not execute in isolation.'
-      puts 'EXITING'
+      puts <<-EOS.gsub(/^\s{8}/, '')
+        Unexpected git config:
+          user.name  = #{Rugged::Config.global['user.name']}
+          user.email = #{Rugged::Config.global['user.email']}
+        Something went wrong when setting the HOME directory and the test
+        will not execute in isolation.'
+        EXITING
+      EOS
       exit
     end
 

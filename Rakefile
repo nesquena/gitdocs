@@ -18,11 +18,22 @@ namespace :test do
     t.verbose = true
   end
 
-  Rake::TestTask.new(integration: :unit) do |t|
-    t.libs.push('lib')
-    t.test_files = FileList[File.expand_path('../test/integration/**/*_test.rb', __FILE__)]
-    t.verbose = true
+  namespace :integration do
+    Rake::TestTask.new(cli: 'test:unit') do |t|
+      t.libs.push('lib')
+      t.test_files = FileList[File.expand_path('../test/integration/cli/**/*_test.rb', __FILE__)]
+      t.verbose = true
+    end
+
+    Rake::TestTask.new(web: :cli) do |t|
+      t.libs.push('lib')
+      t.test_files = FileList[File.expand_path('../test/integration/web/**/*_test.rb', __FILE__)]
+      t.verbose = true
+    end
   end
+
+  desc 'Run all integration tests'
+  task integration: 'integration:web'
 end
 
 # Keep a default test task for manually running any test
@@ -55,4 +66,8 @@ task :debug do
   exec('bin/gitdocs start --foreground --verbose --port 9999')
 end
 
-task default: 'test:integration'
+if ENV['TRAVIS']
+  task default: 'test:integration:cli'
+else
+  task default: 'test:integration'
+end

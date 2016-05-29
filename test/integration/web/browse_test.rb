@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 
-require File.expand_path('../test_helper', __FILE__)
+require File.expand_path('../../test_helper', __FILE__)
 
 describe 'browse and edit repository file through the UI' do
   before do
@@ -49,10 +49,6 @@ describe 'browse and edit repository file through the UI' do
     end
 
     it 'should be able to browser a file revision' do
-      # FIXME: This test is failing on TravisCI, but succeeding locally so skip
-      # it for now and revisit in the future.
-      next if ENV['TRAVIS']
-
       within('table#revisions') do
         within('tbody') do
           page.must_have_css('tr', count: 2)
@@ -67,10 +63,6 @@ describe 'browse and edit repository file through the UI' do
     end
 
     it 'should allow file revert' do
-      # FIXME: This test is failing on TravisCI, but succeeding locally so skip
-      # it for now and revisit in the future.
-      next if ENV['TRAVIS']
-
       within('table#revisions') do
         within('tbody') do
           page.must_have_css('tr', count: 2)
