@@ -2,6 +2,8 @@
  * convert notification to use the Notiffany gem (@acant)
  * upgrade rugged gem (@acant)
  * fix missing dependency for the 'gitdocs open' command (@acant)
+ * convert to use Celluloid and the listen gem, and remove the old guard and
+   event-machine dependencies (@acant)
 
 0.6.0.pre1
  * upgrade gems redcarpet, poltergeist (@acant)
