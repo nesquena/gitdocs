@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'sinatra',         '~> 1.4.5'
   s.add_dependency 'redcarpet',       '~> 3.3.0'
-  s.add_dependency 'thor',            '~> 0.14.6'
+  s.add_dependency 'thor',            '~> 0.19.1'
   s.add_dependency 'coderay',         '~> 1.1.0'
   s.add_dependency 'dante',           '~> 0.2.0'
   s.add_dependency 'growl',           '~> 1.0.3'
