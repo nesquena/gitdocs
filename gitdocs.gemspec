@@ -22,8 +22,11 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.9'
 
+  # FIXME: celluloid v0.17 is not compatible with reel-rack/reel. It can only
+  # be upgraded once that is resolved.
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
+  # FIXME: listen cannot be upgraded until we drop support for Ruby <v2.1
   s.add_dependency 'listen',          '~> 3.0.5'
 
   s.add_dependency 'sinatra',         '~> 1.4.5'
