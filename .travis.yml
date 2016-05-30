@@ -8,5 +8,6 @@ rvm:
   - ruby-head
 matrix:
   allow_failures:
+    - rvm: 1.9.3
     - rvm: ruby-head
 sudo: false

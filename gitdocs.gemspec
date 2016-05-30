@@ -22,19 +22,16 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.9'
 
+  # FIXME: celluloid v0.17 is not compatible with reel-rack/reel. It can only
+  # be upgraded once that is resolved.
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
+  # FIXME: listen cannot be upgraded until we drop support for Ruby <v2.1
   s.add_dependency 'listen',          '~> 3.0.5'
-  # HACK: reel is still waiting for its dependencies on
-  # HTTP::Response::STATUS_CODES to be fixed, so for the moment it will only
-  # work with a <1.0.0 version of HTTP. This can be removed and the gems
-  # updated once reel 0.6.0 is released.
-  # https://github.com/celluloid/reel/issues/213
-  s.add_dependency 'http',            '= 0.9.8'
 
   s.add_dependency 'sinatra',         '~> 1.4.5'
   s.add_dependency 'redcarpet',       '~> 3.3.0'
-  s.add_dependency 'thor',            '~> 0.14.6'
+  s.add_dependency 'thor',            '~> 0.19.1'
   s.add_dependency 'coderay',         '~> 1.1.0'
   s.add_dependency 'dante',           '~> 0.2.0'
   s.add_dependency 'growl',           '~> 1.0.3'
