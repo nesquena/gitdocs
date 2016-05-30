@@ -25,12 +25,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
   s.add_dependency 'listen',          '~> 3.0.5'
-  # HACK: reel is still waiting for its dependencies on
-  # HTTP::Response::STATUS_CODES to be fixed, so for the moment it will only
-  # work with a <1.0.0 version of HTTP. This can be removed and the gems
-  # updated once reel 0.6.0 is released.
-  # https://github.com/celluloid/reel/issues/213
-  s.add_dependency 'http',            '= 0.9.8'
 
   s.add_dependency 'sinatra',         '~> 1.4.5'
   s.add_dependency 'redcarpet',       '~> 3.3.0'
