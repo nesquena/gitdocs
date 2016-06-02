@@ -1,0 +1,5 @@
+exclude_paths:
+  - lib/gitdocs/public/js/ace/**/*
+  - lib/gitdocs/public/js/bootstrap-alerts.js
+  - lib/gitdocs/public/js/jquery.js
+  - lib/gitdocs/public/js/jquery.tablesorter.js
