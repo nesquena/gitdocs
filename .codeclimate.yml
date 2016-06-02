@@ -1,5 +1,26 @@
+engines:
+  rubocop:
+    enabled: true
+  golint:
+    enabled: true
+  eslint:
+    enabled: true
+  csslint:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - ruby
+        - javascript
+ratings:
+  paths:
+    - app/**
+    - lib/**
+    - "**.rb"
+    - "**.go"
 exclude_paths:
   - lib/gitdocs/public/js/ace/**/*
-  - lib/gitdocs/public/js/bootstrap-alerts.js
-  - lib/gitdocs/public/js/jquery.js
-  - lib/gitdocs/public/js/jquery.tablesorter.js
+  - "lib/gitdocs/public/js/bootstrap-alerts.js"
+  - "lib/gitdocs/public/js/jquery.js"
+  - "lib/gitdocs/public/js/jquery.tablesorter.js"
