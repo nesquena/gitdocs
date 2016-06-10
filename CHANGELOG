@@ -1,4 +1,4 @@
-0.6.0.pre2
+0.6.0
  * convert notification to use the Notiffany gem (@acant)
  * upgrade rugged gem (@acant)
  * fix missing dependency for the 'gitdocs open' command (@acant)
