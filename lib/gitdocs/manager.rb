@@ -85,7 +85,7 @@ module Gitdocs
       # ... and wait ###########################################################
       sleep
 
-    rescue Interrupt
+    rescue Interrupt, SystemExit
       Gitdocs.log_info('Interrupt received...')
     rescue Exception => e # rubocop:disable RescueException
       Gitdocs.log_error(
