@@ -1,4 +1,9 @@
-0.6.0
+0.6.1
+
+ * fix stop command from hanging the daemon instead of stopping (@acant)
+
+0.6.0 (June 10th 2016)
+
  * convert notification to use the Notiffany gem (@acant)
  * upgrade rugged gem (@acant)
  * fix missing dependency for the 'gitdocs open' command (@acant)
@@ -6,12 +11,14 @@
    event-machine dependencies (@acant)
 
 0.6.0.pre1
+
  * upgrade gems redcarpet, poltergeist (@acant)
  * add 'rake debug' task for development and debugging (@acant)
  * add a --verbose flag for starting gitdocs with more logging (@acant)
  * change the -D flag to --foreground for running gitdocs in the foreground (acant)
 
 0.5.0 (May 2nd 2015)
+
  * upgrade gems activerecord, minitest, haml-lint, redcarpet (@acant)
  * convert web interface to use Sinatra instead of renee (@acant)
  * add rake task to run the web interface standalone using the shotgun gem (@acant)
