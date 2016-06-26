@@ -26,6 +26,10 @@ Gem::Specification.new do |s|
   # be upgraded once that is resolved.
   s.add_dependency 'celluloid',       '~> 0.16.0'
   s.add_dependency 'reel-rack',       '~> 0.2.2'
+  # NOTE: celluloid-io needs and explicit dependency because the dependency
+  # from reel does not limit it to v0.16. Potentially this could be removed
+  # once upgrade to the latest celluloid.
+  s.add_dependency 'celluloid-io',    '~> 0.16.0'
   # FIXME: listen cannot be upgraded until we drop support for Ruby <v2.1
   s.add_dependency 'listen',          '~> 3.0.5'
 
@@ -36,6 +40,11 @@ Gem::Specification.new do |s|
   s.add_dependency 'dante',           '~> 0.2.0'
   s.add_dependency 'growl',           '~> 1.0.3'
   s.add_dependency 'haml',            '~> 4.0.5'
+  # NOTE: Using tilt/redcarpet requires tilt v2, but the dependency from
+  # sinatra only request 1.5. This is fine if tilt is being installed fresh,
+  # but gitdocs will fail if you already have tilt between v1.5 and v2.0
+  # installed.
+  s.add_dependency 'tilt',            '>= 2.0.0'
   s.add_dependency 'sqlite3',         '~> 1.3.4'
   s.add_dependency 'activerecord',    '~> 4.2.0'
   s.add_dependency 'grit',            '~> 2.5.0'
