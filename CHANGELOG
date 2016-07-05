@@ -1,4 +1,8 @@
-0.6.1
+0.6.2
+
+ * add dependencies on tilt and celluloid-io to ensure correct install (@acant)
+
+0.6.1 (June 11th 2016)
 
  * fix stop command from hanging the daemon instead of stopping (@acant)
 
