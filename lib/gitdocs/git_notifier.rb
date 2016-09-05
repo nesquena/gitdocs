@@ -88,6 +88,7 @@ module Gitdocs
     private
 
     # @param [Hash<String => Integer>] changes
+    #
     # @return [String]
     def author_list(changes)
       changes
@@ -96,6 +97,7 @@ module Gitdocs
     end
 
     # @param [Integer, Hash<String => Integer>] count_or_hash
+    #
     # @return [String]
     def change_to_s(count_or_hash)
       count =

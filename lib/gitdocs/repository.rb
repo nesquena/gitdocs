@@ -300,6 +300,7 @@ module Gitdocs
 
     # @param [Rugged::Commit] commit
     # @param [String] relative_path
+    #
     # @return [Boolean]
     def changes?(commit, relative_path)
       commit.diff(paths: [relative_path]).size > 0 # rubocop:disable ZeroLengthPredicate
@@ -318,6 +319,7 @@ module Gitdocs
       branch.target_id
     end
 
+    # @return [Rugged::Walker]
     def head_walker
       walker = Rugged::Walker.new(@rugged)
       walker.sorting(Rugged::SORT_DATE)
@@ -325,6 +327,7 @@ module Gitdocs
       walker
     end
 
+    # @return [String]
     def read_and_delete_commit_message_file
       return 'Auto-commit from gitdocs' unless File.exist?(@commit_message_path)
 
@@ -333,6 +336,7 @@ module Gitdocs
       message
     end
 
+    # @return [void]
     def mark_empty_directories
       Find.find(root).each do |path|
         Find.prune if File.basename(path) == '.git'
@@ -342,6 +346,7 @@ module Gitdocs
       end
     end
 
+    # @return [Array<String>]
     def mark_conflicts
       # assert(@rugged.index.conflicts?)
 
@@ -377,6 +382,9 @@ module Gitdocs
       conflicted_path_entries.keys
     end
 
+    # @param [Array<String>] *path
+    #
+    # @return [String]
     def abs_path(*path)
       File.join(root, *path)
     end

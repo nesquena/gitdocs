@@ -2,18 +2,6 @@
 
 require 'active_record'
 
-# @!attribute path
-#   @return [String]
-# @!attribute polling_interval
-#   @return [Double] defaults to 15.0
-# @!attribute notification
-#   @return [Boolean] default to true
-# @!attribute remote_name
-#   @return [String] default to 'origin'
-# @!attribute remote_branch
-#   @return [String] default to 'master'
-# @attribute sync_type
-#   @return ['full','fetch']
 module Gitdocs
   class Configuration
     # @return [Boolean]
