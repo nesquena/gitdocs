@@ -11,10 +11,10 @@ module Gitdocs
   #   @return [Boolean] default to true
   # @!attribute remote_name
   #   @return [String] default to 'origin'
-  # @!attribute remote_branch
+  # @!attribute branch_name
   #   @return [String] default to 'master'
   # @attribute sync_type
-  #   @return ['full','fetch']
+  #   @return ['full','fetch'] default to 'full'
   class Share < ActiveRecord::Base
     # @return [Array<String>]
     def self.paths
@@ -35,11 +35,16 @@ module Gitdocs
       where(path: File.expand_path(path)).first
     end
 
-    # @param [String] path
+    # @overload create_by_path!(path)
+    #   @param [String] path
+    #
+    # @overload create_by_path(path, attributes)
+    #   @param [String] path
+    #   @param [Hash] attributes
     #
     # @return [Share]
-    def self.create_by_path!(path)
-      new(path: File.expand_path(path)).save!
+    def self.create_by_path!(path, attributes = {})
+      create!(attributes.merge(path: File.expand_path(path)))
     end
 
     # @param [Hash] updated_shares

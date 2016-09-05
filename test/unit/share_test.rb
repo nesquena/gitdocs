@@ -7,36 +7,6 @@ describe Gitdocs::Share do
     ShellTools.capture { Gitdocs::Initializer.initialize_database }
   end
 
-  it 'can retrieve empty shares' do
-    assert_equal [], Gitdocs::Share.all.to_a
-  end
-
-  it 'can have a path added' do
-    Gitdocs::Share.create_by_path!('/my/../my/path') # normalized test
-    assert_equal '/my/path', Gitdocs::Share.at(0).path
-    assert_equal 15.0, Gitdocs::Share.at(0).polling_interval
-  end
-
-  it 'can have a path removed' do
-    Gitdocs::Share.create_by_path!('/my/path')
-    Gitdocs::Share.create_by_path!('/my/path/2')
-    Gitdocs::Share.remove_by_path('/my/../my/path/2') # normalized test
-    assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
-  end
-
-  it 'can have a share removed by id' do
-    Gitdocs::Share.create_by_path!('/my/path')
-    Gitdocs::Share.create_by_path!('/my/path/2')
-
-    # Delete an index which exists
-    Gitdocs::Share.remove_by_id(2).must_equal(true) # normalized test
-    assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
-
-    # Try to delete an index which does not exist
-    Gitdocs::Share.remove_by_id(5).must_equal(false) # normalized test
-    assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
-  end
-
   describe '.paths' do
     before do
       Gitdocs::Share.create_by_path!('/my/path')
@@ -45,6 +15,17 @@ describe Gitdocs::Share do
     end
 
     it { Gitdocs::Share.paths.must_equal(%w(/my/path /my/path/2 /my/path/3)) }
+  end
+
+  describe '.at' do
+    subject { Gitdocs::Share.at(id) }
+    before do
+      Gitdocs::Share.create_by_path!('/my/path')
+      Gitdocs::Share.create_by_path!('/my/path/2')
+      Gitdocs::Share.create_by_path!('/my/path/3')
+    end
+    describe('present') { let(:id) { 1 } ; it { subject.path.must_equal('/my/path/2') } }
+    describe('missing') { let(:id) { 3 } ; it { subject.must_equal(nil) } }
   end
 
   describe '.find_by_path' do
@@ -66,7 +47,38 @@ describe Gitdocs::Share do
     end
   end
 
-  describe '#update_all' do
+  describe '.create_by_path!' do
+    describe 'defaults' do
+      subject { Gitdocs::Share.create_by_path!('/my/../my/path') }
+      before { subject }
+
+      it { subject.persisted?.must_equal(true) }
+      it { subject.path.must_equal('/my/path') }
+      it { subject.polling_interval.must_equal(15.0) }
+      it { subject.notification.must_equal(true) }
+      it { subject.remote_name.must_equal('origin') }
+      it { subject.branch_name.must_equal('master') }
+      it { subject.sync_type.must_equal('full') }
+    end
+
+    describe 'override attributes' do
+      subject do
+        Gitdocs::Share.create_by_path!(
+          '/my/../my/path', polling_interval: 5, notification: false
+        )
+      end
+
+      it { subject.persisted?.must_equal(true) }
+      it { subject.path.must_equal('/my/path') }
+      it { subject.polling_interval.must_equal(5.0) }
+      it { subject.notification.must_equal(false) }
+      it { subject.remote_name.must_equal('origin') }
+      it { subject.branch_name.must_equal('master') }
+      it { subject.sync_type.must_equal('full') }
+    end
+  end
+
+  describe '.update_all' do
     before do
       Gitdocs::Share.create_by_path!('/my/path')
       Gitdocs::Share.create_by_path!('/my/path/2')
@@ -92,6 +104,30 @@ describe Gitdocs::Share do
       Gitdocs::Share.all.map(&:polling_interval).must_equal(
         [42, 66, 77, 15, 15]
       )
+    end
+  end
+
+  describe '.remove_by_path' do
+    it do
+      Gitdocs::Share.create_by_path!('/my/path')
+      Gitdocs::Share.create_by_path!('/my/path/2')
+      Gitdocs::Share.remove_by_path('/my/../my/path/2')
+      assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
+    end
+  end
+
+  describe '.remove_by_id' do
+    it do
+      Gitdocs::Share.create_by_path!('/my/path')
+      Gitdocs::Share.create_by_path!('/my/path/2')
+
+      # Delete an index which exists
+      Gitdocs::Share.remove_by_id(2).must_equal(true) # normalized test
+      assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
+
+      # Try to delete an index which does not exist
+      Gitdocs::Share.remove_by_id(5).must_equal(false) # normalized test
+      assert_equal ['/my/path'], Gitdocs::Share.all.map(&:path)
     end
   end
 end

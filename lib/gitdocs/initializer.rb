@@ -20,6 +20,8 @@ module Gitdocs
       ActiveRecord::Migrator.migrate(
         File.expand_path('../migration', __FILE__)
       )
+      Gitdocs::Share.reset_column_information
+      Gitdocs::Configuration::Config.reset_column_information
     end
 
     # @return [nil]

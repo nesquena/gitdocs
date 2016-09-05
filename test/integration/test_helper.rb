@@ -166,6 +166,7 @@ module Helper
     # should be removed. [ASC 2015-10-26]
     require 'gitdocs/initializer'
     require 'gitdocs/share'
+    require 'gitdocs/configuration'
     Gitdocs::Initializer.initialize_database
     Gitdocs::Share.all.each do |share|
       share.update_attributes(polling_interval: 0.1, notification: false)
