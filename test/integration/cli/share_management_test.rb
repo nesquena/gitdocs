@@ -23,7 +23,7 @@ describe 'Manage which shares are being watched' do
   it 'should clear all existing shares' do
     %w(local1 local2 local3).each { |x| gitdocs_add(x) }
 
-    gitdocs_command('clear', '', 'Cleared paths from gitdocs')
+    gitdocs_command('clear', 'Cleared paths from gitdocs')
     gitdocs_assert_status_not_contain('local1', 'local2', 'local3')
   end
 end

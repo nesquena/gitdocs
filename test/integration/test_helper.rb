@@ -143,12 +143,20 @@ module Helper
     puts "----------------------------------\n\n"
   end
 
-  # @param [String] method pass to the CLI
-  # @param [String] arguments which will be passed to the CLI in addition
-  # @param [String] expected_output that the CLI should return
+  # @overload gitdocs_command(method, expected_output)
+  #   @param [String] method pass to the CLI
+  #   @param [String] expected_output that the CLI should return
+  #
+  # @overload gitdocs_command(method, *arguments, expected_output)
+  #   @param [String] method pass to the CLI
+  #   @param [Array<String>] *arguments which will be passed to the CLI in addition
+  #   @param [String] expected_output that the CLI should return
   #
   # @return [String] full text of the command being executed
-  def gitdocs_command(method, arguments, expected_output)
+  def gitdocs_command(method, *args)
+    expected_output = args.pop
+    arguments       = args.flatten.join(' ')
+
     binary_path  = File.expand_path('../../../bin/gitdocs', __FILE__)
     full_command = "#{binary_path} #{method} #{arguments} --pid=#{PID_FILE}"
 
@@ -162,7 +170,7 @@ module Helper
   # @return [void]
   def gitdocs_start
     FileUtils.rm_rf(PID_FILE)
-    gitdocs_command('start', '--verbose --port=7777', 'Started gitdocs')
+    gitdocs_command('start', '--verbose', '--port=7777', 'Started gitdocs')
   end
 
   # @overload abs_current_dir
@@ -182,7 +190,7 @@ module Helper
     GitFactory.init(path)
     gitdocs_command(
       'add',
-      "#{path} --interval=0.1 --notification=false",
+      path, '--interval=0.1', '--notification=false',
       "Added path #{path} to doc list"
     )
   end
@@ -197,7 +205,7 @@ module Helper
     full_destination_paths.each do |destination_path|
       gitdocs_command(
         'create',
-        "#{destination_path} #{remote_repository_path}  --interval=0.1 --notification=false",
+        destination_path, remote_repository_path, '--interval=0.1', '--notification=false',
         "Cloned and added path #{destination_path} to doc list"
       )
     end
@@ -207,7 +215,7 @@ module Helper
   #
   # @return [void]
   def gitdocs_assert_status_contains(*expected_outputs)
-    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    command = gitdocs_command('status', Gitdocs::VERSION)
     expected_outputs.each do |expected_output|
       assert_partial_output(expected_output, output_from(command))
     end
@@ -217,7 +225,7 @@ module Helper
   #
   # @return [void]
   def gitdocs_assert_status_not_contain(*not_expected_outputs)
-    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    command = gitdocs_command('status', Gitdocs::VERSION)
     not_expected_outputs.each do |not_expected_output|
       assert_no_partial_output(not_expected_output, output_from(command))
     end
