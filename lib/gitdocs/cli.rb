@@ -63,10 +63,35 @@ module Gitdocs
     end
 
     desc 'add PATH', 'Adds a path to gitdocs'
-    method_option :pid, type: :string, aliases: '-P'
+    method_option :pid,          type: :string,  aliases: '-P'
+    method_option :interval,     type: :numeric, aliases: '-i', default: 15
+    method_option :notification, type: :boolean, aliases: '-n', default: true
+    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
     def add(path)
-      Share.create_by_path!(normalize_path(path))
+      Share.create_by_path!(
+        normalize_path(path),
+        polling_interval: options[:interval],
+        notification:     options[:notification],
+        sync_type:        options[:sync]
+      )
       say "Added path #{path} to doc list"
+      restart if running?
+    end
+
+    desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
+    method_option :pid,          type: :string,  aliases: '-P'
+    method_option :interval,     type: :numeric, aliases: '-i', default: 15
+    method_option :notification, type: :boolean, aliases: '-n', default: true
+    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
+    def create(path, remote)
+      Repository.clone(path, remote)
+      Share.create_by_path!(
+        normalize_path(path),
+        polling_interval: options[:interval],
+        notification:     options[:notification],
+        sync_type:        options[:sync]
+      )
+      say "Cloned and added path #{path} to doc list"
       restart if running?
     end
 
@@ -84,14 +109,6 @@ module Gitdocs
       Share.destroy_all
       say 'Cleared paths from gitdocs'
       restart if running?
-    end
-
-    desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
-    method_option :pid, type: :string, aliases: '-P'
-    def create(path, remote)
-      Repository.clone(path, remote)
-      add(path)
-      say "Created #{path} path for gitdoc"
     end
 
     desc 'status', 'Retrieve gitdocs status'

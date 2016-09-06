@@ -161,17 +161,6 @@ module Helper
 
   # @return [void]
   def gitdocs_start
-    # FIXME: Calling internal funcations directly because we cannot currently
-    # set polling or notification on the CLI. After that has been added this
-    # should be removed. [ASC 2015-10-26]
-    require 'gitdocs/initializer'
-    require 'gitdocs/share'
-    require 'gitdocs/configuration'
-    Gitdocs::Initializer.initialize_database
-    Gitdocs::Share.all.each do |share|
-      share.update_attributes(polling_interval: 0.1, notification: false)
-    end
-
     FileUtils.rm_rf(PID_FILE)
     gitdocs_command('start', '--verbose --port=7777', 'Started gitdocs')
   end
@@ -191,7 +180,11 @@ module Helper
   # @return [#gitdocs_command]
   def gitdocs_add(path)
     GitFactory.init(path)
-    gitdocs_command('add', path, "Added path #{path} to doc list")
+    gitdocs_command(
+      'add',
+      "#{path} --interval=0.1 --notification=false",
+      "Added path #{path} to doc list"
+    )
   end
 
   # @param [Array<String>] destination_paths
@@ -204,8 +197,8 @@ module Helper
     full_destination_paths.each do |destination_path|
       gitdocs_command(
         'create',
-        "#{destination_path} #{remote_repository_path}",
-        "Added path #{destination_path} to doc list"
+        "#{destination_path} #{remote_repository_path}  --interval=0.1 --notification=false",
+        "Cloned and added path #{destination_path} to doc list"
       )
     end
   end
