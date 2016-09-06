@@ -3,6 +3,18 @@
 require 'active_record'
 
 module Gitdocs
+  # @!attribute path
+  #   @return [String]
+  # @!attribute polling_interval
+  #   @return [Double] defaults to 15.0
+  # @!attribute notification
+  #   @return [Boolean] default to true
+  # @!attribute remote_name
+  #   @return [String] default to 'origin'
+  # @!attribute branch_name
+  #   @return [String] default to 'master'
+  # @attribute sync_type
+  #   @return ['full','fetch'] default to 'full'
   class Share < ActiveRecord::Base
     # @return [Array<String>]
     def self.paths
@@ -23,12 +35,20 @@ module Gitdocs
       where(path: File.expand_path(path)).first
     end
 
-    # @param [String] path
-    def self.create_by_path!(path)
-      new(path: File.expand_path(path)).save!
+    # @overload create_by_path!(path)
+    #   @param [String] path
+    #
+    # @overload create_by_path(path, attributes)
+    #   @param [String] path
+    #   @param [Hash] attributes
+    #
+    # @return [Share]
+    def self.create_by_path!(path, attributes = {})
+      create!(attributes.merge(path: File.expand_path(path)))
     end
 
     # @param [Hash] updated_shares
+    #
     # @return [void]
     def self.update_all(updated_shares)
       updated_shares.each do |index, share_config|
@@ -46,8 +66,7 @@ module Gitdocs
 
     # @param [Integer] id of the share to remove
     #
-    # @return [true] share was deleted
-    # @return [false] share does not exist
+    # @return [Boolean] whether the share was deleted
     def self.remove_by_id(id)
       find(id).destroy
       true
@@ -56,6 +75,7 @@ module Gitdocs
     end
 
     # @param [String] path of the share to remove
+    #
     # @return [void]
     def self.remove_by_path(path)
       where(path: File.expand_path(path)).destroy_all

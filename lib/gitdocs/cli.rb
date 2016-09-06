@@ -43,8 +43,8 @@ module Gitdocs
       end
     end
 
-    method_option :pid, type: :string, aliases: '-P'
     desc 'stop', 'Stops the gitdocs process'
+    method_option :pid, type: :string, aliases: '-P'
     def stop
       unless running?
         say 'Gitdocs is not running', :red
@@ -55,47 +55,64 @@ module Gitdocs
       say 'Stopped gitdocs', :red
     end
 
-    method_option :pid, type: :string, aliases: '-P'
     desc 'restart', 'Restarts the gitdocs process'
+    method_option :pid, type: :string, aliases: '-P'
     def restart
       stop
       start
     end
 
-    method_option :pid, type: :string, aliases: '-P'
     desc 'add PATH', 'Adds a path to gitdocs'
+    method_option :pid,          type: :string,  aliases: '-P'
+    method_option :interval,     type: :numeric, aliases: '-i', default: 15
+    method_option :notification, type: :boolean, aliases: '-n', default: true
+    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
     def add(path)
-      Share.create_by_path!(normalize_path(path))
+      Share.create_by_path!(
+        normalize_path(path),
+        polling_interval: options[:interval],
+        notification:     options[:notification],
+        sync_type:        options[:sync]
+      )
       say "Added path #{path} to doc list"
       restart if running?
     end
 
-    method_option :pid, type: :string, aliases: '-P'
+    desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
+    method_option :pid,          type: :string,  aliases: '-P'
+    method_option :interval,     type: :numeric, aliases: '-i', default: 15
+    method_option :notification, type: :boolean, aliases: '-n', default: true
+    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
+    def create(path, remote)
+      Repository.clone(path, remote)
+      Share.create_by_path!(
+        normalize_path(path),
+        polling_interval: options[:interval],
+        notification:     options[:notification],
+        sync_type:        options[:sync]
+      )
+      say "Cloned and added path #{path} to doc list"
+      restart if running?
+    end
+
     desc 'rm PATH', 'Removes a path from gitdocs'
+    method_option :pid, type: :string, aliases: '-P'
     def rm(path)
       Share.remove_by_path(path)
       say "Removed path #{path} from doc list"
       restart if running?
     end
 
-    method_option :pid, type: :string, aliases: '-P'
     desc 'clear', 'Clears all paths from gitdocs'
+    method_option :pid, type: :string, aliases: '-P'
     def clear
       Share.destroy_all
       say 'Cleared paths from gitdocs'
       restart if running?
     end
 
-    method_option :pid, type: :string, aliases: '-P'
-    desc 'create PATH REMOTE', 'Creates a new gitdoc root based on an existing remote'
-    def create(path, remote)
-      Repository.clone(path, remote)
-      add(path)
-      say "Created #{path} path for gitdoc"
-    end
-
-    method_option :pid, type: :string, aliases: '-P'
     desc 'status', 'Retrieve gitdocs status'
+    method_option :pid, type: :string, aliases: '-P'
     def status
       say "GitDoc v#{VERSION}"
       say "Running: #{running?}"

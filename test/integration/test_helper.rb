@@ -143,12 +143,20 @@ module Helper
     puts "----------------------------------\n\n"
   end
 
-  # @param [String] method pass to the CLI
-  # @param [String] arguments which will be passed to the CLI in addition
-  # @param [String] expected_output that the CLI should return
+  # @overload gitdocs_command(method, expected_output)
+  #   @param [String] method pass to the CLI
+  #   @param [String] expected_output that the CLI should return
+  #
+  # @overload gitdocs_command(method, *arguments, expected_output)
+  #   @param [String] method pass to the CLI
+  #   @param [Array<String>] *arguments which will be passed to the CLI in addition
+  #   @param [String] expected_output that the CLI should return
   #
   # @return [String] full text of the command being executed
-  def gitdocs_command(method, arguments, expected_output)
+  def gitdocs_command(method, *args)
+    expected_output = args.pop
+    arguments       = args.flatten.join(' ')
+
     binary_path  = File.expand_path('../../../bin/gitdocs', __FILE__)
     full_command = "#{binary_path} #{method} #{arguments} --pid=#{PID_FILE}"
 
@@ -161,18 +169,8 @@ module Helper
 
   # @return [void]
   def gitdocs_start
-    # FIXME: Calling internal funcations directly because we cannot currently
-    # set polling or notification on the CLI. After that has been added this
-    # should be removed. [ASC 2015-10-26]
-    require 'gitdocs/initializer'
-    require 'gitdocs/share'
-    Gitdocs::Initializer.initialize_database
-    Gitdocs::Share.all.each do |share|
-      share.update_attributes(polling_interval: 0.1, notification: false)
-    end
-
     FileUtils.rm_rf(PID_FILE)
-    gitdocs_command('start', '--verbose --port=7777', 'Started gitdocs')
+    gitdocs_command('start', '--verbose', '--port=7777', 'Started gitdocs')
   end
 
   # @overload abs_current_dir
@@ -190,7 +188,11 @@ module Helper
   # @return [#gitdocs_command]
   def gitdocs_add(path)
     GitFactory.init(path)
-    gitdocs_command('add', path, "Added path #{path} to doc list")
+    gitdocs_command(
+      'add',
+      path, '--interval=0.1', '--notification=false',
+      "Added path #{path} to doc list"
+    )
   end
 
   # @param [Array<String>] destination_paths
@@ -203,8 +205,8 @@ module Helper
     full_destination_paths.each do |destination_path|
       gitdocs_command(
         'create',
-        "#{destination_path} #{remote_repository_path}",
-        "Added path #{destination_path} to doc list"
+        destination_path, remote_repository_path, '--interval=0.1', '--notification=false',
+        "Cloned and added path #{destination_path} to doc list"
       )
     end
   end
@@ -213,7 +215,7 @@ module Helper
   #
   # @return [void]
   def gitdocs_assert_status_contains(*expected_outputs)
-    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    command = gitdocs_command('status', Gitdocs::VERSION)
     expected_outputs.each do |expected_output|
       assert_partial_output(expected_output, output_from(command))
     end
@@ -223,7 +225,7 @@ module Helper
   #
   # @return [void]
   def gitdocs_assert_status_not_contain(*not_expected_outputs)
-    command = gitdocs_command('status', '', Gitdocs::VERSION)
+    command = gitdocs_command('status', Gitdocs::VERSION)
     not_expected_outputs.each do |not_expected_output|
       assert_no_partial_output(not_expected_output, output_from(command))
     end
