@@ -6,8 +6,8 @@ module Gitdocs
   class Manager
     # @param (see #start)
     # @return (see #start)
-    def self.start(web_port)
-      Manager.new.start(web_port)
+    def self.start(*args)
+      Manager.new.start(*args)
     end
 
     # @return [void]
