@@ -5,6 +5,9 @@
   %h2 Gitdocs
   .field.config#config
     %dl
+      %dt Web Frontend Host
+      %dd
+        %input{ type: 'input', name: 'config[web_frontend_host]', value: Gitdocs::Configuration.web_frontend_host }
       %dt Web Frontend Port
       %dd
         %input{ type: 'input', name: 'config[web_frontend_port]', value: Gitdocs::Configuration.web_frontend_port }

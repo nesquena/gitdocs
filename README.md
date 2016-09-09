@@ -142,7 +142,7 @@ This browser front-end supports the following features:
  * Upload and create new files within your shares
  * Manage share settings and other configuration options
 
-To check out the front-end, simply visit `http://localhost:8888` whenever gitdocs is running.
+To check out the front-end, simply visit `http://127.0.0.1:8888` whenever gitdocs is running.
 
 ### Conflict Resolution
 

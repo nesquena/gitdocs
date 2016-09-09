@@ -21,9 +21,10 @@ module Gitdocs
       :notification
     end
 
-    # @param [Integer] web_port
+    # @param [String] host
+    # @param [Integer] port
     # @return [void]
-    def start(web_port)
+    def start(host, port)
       Gitdocs.log_info("Starting Gitdocs v#{VERSION}...")
       Gitdocs.log_info(
         "Using configuration root: '#{Initializer.root_dirname}'"
@@ -48,8 +49,8 @@ module Gitdocs
         args: [
           app,
           {
-            Host:  '127.0.0.1',
-            Port:  web_port,
+            Host:  host,
+            Port:  port,
             quiet: true
           }
         ]

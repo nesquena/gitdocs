@@ -15,10 +15,10 @@ Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |filename|
   require_relative filename
 end
 
-Capybara.app_host              = 'http://localhost:7777/'
+Capybara.app_host              = 'http://127.0.0.1:7777/'
 Capybara.default_driver        = :poltergeist
 Capybara.run_server            = false
-Capybara.default_max_wait_time = ENV['TRAVIS'] ? 120 : 30
+Capybara.default_max_wait_time = ENV['TRAVIS'] ? 120 : 120
 
 Capybara.register_driver :poltergeist do |app|
   Capybara::Poltergeist::Driver.new(
@@ -170,7 +170,11 @@ module Helper
   # @return [void]
   def gitdocs_start
     FileUtils.rm_rf(PID_FILE)
-    gitdocs_command('start', '--verbose', '--port=7777', 'Started gitdocs')
+    gitdocs_command(
+      'start',
+      '--verbose', '--host=127.0.0.1', '--port=7777',
+      'Started gitdocs'
+    )
   end
 
   # @overload abs_current_dir
@@ -261,7 +265,7 @@ module Helper
   # @return [void]
   def visit_and_click_link(locator)
     wait_for_assert(1) do
-      visit('http://localhost:7777/')
+      visit('http://127.0.0.1:7777/')
       click_link(locator)
     end
   end
