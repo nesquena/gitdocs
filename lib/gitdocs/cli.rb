@@ -15,6 +15,7 @@ module Gitdocs
     desc 'start', 'Starts a daemonized gitdocs process'
     method_option :foreground, type: :boolean, aliases: '-fg'
     method_option :verbose,    type: :boolean, aliases: '-v'
+    method_option :host,       type: :string,  aliases: '-h'
     method_option :port,       type: :string,  aliases: '-p'
     method_option :pid,        type: :string,  aliases: '-P'
     def start
@@ -28,12 +29,12 @@ module Gitdocs
       if options[:foreground]
         say 'Run in the foreground', :yellow
         Gitdocs::Initializer.foreground = true
-        Manager.start(web_port)
+        Manager.start(web_host, web_port)
       else
         # Clear the arguments so that they will not be processed by the
         # Dante execution.
         ARGV.clear
-        runner.execute { Manager.start(web_port) }
+        runner.execute { Manager.start(web_host, web_port) }
 
         if running?
           say 'Started gitdocs', :green
@@ -139,6 +140,7 @@ module Gitdocs
     end
 
     desc 'open', 'Open the Web UI'
+    method_option :host, type: :string, aliases: '-h'
     method_option :port, type: :string, aliases: '-p'
     def open
       unless running?
@@ -146,7 +148,7 @@ module Gitdocs
         return
       end
 
-      Launchy.open("http://localhost:#{web_port}/")
+      Launchy.open("http://#{web_host}:#{web_port}/")
     end
 
     # TODO: make this work
@@ -193,6 +195,13 @@ module Gitdocs
         result = options[:port]
         result ||= Configuration.web_frontend_port
         result.to_i
+      end
+
+      # @return [String]
+      def web_host
+        result = options[:host]
+        result ||= Configuration.web_frontend_host
+        result
       end
 
       # @param [String] path

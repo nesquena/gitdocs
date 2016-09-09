@@ -4,11 +4,11 @@ require File.expand_path('../test_helper', __FILE__)
 
 describe 'Gitdocs::Manager' do
   describe '.start' do
-    subject { Gitdocs::Manager.start(:web_port) }
+    subject { Gitdocs::Manager.start(:arg1, :arg2, :arg3) }
 
     before do
       Gitdocs::Manager.stubs(:new).returns(manager = stub)
-      manager.expects(:start).with(:web_port)
+      manager.expects(:start).with(:arg1, :arg2, :arg3)
     end
 
     it { subject }

@@ -14,6 +14,11 @@ module Gitdocs
       Config.global.web_frontend_port
     end
 
+    # @return [String]
+    def self.web_frontend_host
+      Config.global.web_frontend_host
+    end
+
     # @param [Hash] new_config
     def self.update(new_config)
       Config.global.update_attributes(new_config)
@@ -23,10 +28,12 @@ module Gitdocs
     # database table. There are other ways to achieve this, but this seemed most
     # clear for now. [2015-06-26 -- acant]
     #
-    # @!attribute start_frontend_port
+    # @!attribute start_web_frontend
     #   @return [Boolean] defaults to true
     # @!attribute web_frontend_port
     #   @return [Integer] defaults to 8888
+    # @!attribute web_frontend_host
+    #   @return [String] defaults to '127.0.0.1'
     class Config < ActiveRecord::Base
       # @return [Gitdocs::Configuration::Config]
       def self.global
