@@ -46,6 +46,9 @@ Gem::Specification.new do |s|
   # installed.
   s.add_dependency 'tilt',            '>= 2.0.0'
   s.add_dependency 'sqlite3',         '~> 1.3.4'
+  # NOTE: activerecord is not being updated to v5.x because this version drops
+  # support for Ruby2.0. Ruby2.0 is EOLed but is still the default ruby version
+  # installed on OSX.
   s.add_dependency 'activerecord',    '~> 4.2.0'
   s.add_dependency 'grit',            '~> 2.5.0'
   s.add_dependency 'mimetype-fu',     '~> 0.1.2'
