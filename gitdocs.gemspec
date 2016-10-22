@@ -63,7 +63,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'poltergeist',            '~> 1.7.0'
   s.add_development_dependency 'rake',                   '~> 11.3.0'
   s.add_development_dependency 'mocha',                  '~> 1.1.0'
-  s.add_development_dependency 'aruba',                  '~> 0.6.1'
+  s.add_development_dependency 'aruba',                  '~> 0.7.0'
   s.add_development_dependency 'rubocop',                '~> 0.44.0'
   s.add_development_dependency 'haml_lint',              '~> 0.18.2'
   s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
