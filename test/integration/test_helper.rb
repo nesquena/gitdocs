@@ -18,7 +18,7 @@ end
 Capybara.app_host              = 'http://127.0.0.1:7777/'
 Capybara.default_driver        = :poltergeist
 Capybara.run_server            = false
-Capybara.default_max_wait_time = ENV['TRAVIS'] ? 120 : 120
+Capybara.default_max_wait_time = 120
 
 Capybara.register_driver :poltergeist do |app|
   Capybara::Poltergeist::Driver.new(
