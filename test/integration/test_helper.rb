@@ -18,7 +18,7 @@ end
 Capybara.app_host              = 'http://127.0.0.1:7777/'
 Capybara.default_driver        = :poltergeist
 Capybara.run_server            = false
-Capybara.default_max_wait_time = ENV['TRAVIS'] ? 120 : 120
+Capybara.default_max_wait_time = 120
 
 Capybara.register_driver :poltergeist do |app|
   Capybara::Poltergeist::Driver.new(
@@ -62,7 +62,7 @@ module Helper
   include Capybara::RSpecMatchers
 
   def before_setup
-    clean_current_dir
+    clean_current_directory
 
     # HACK: In order to ensure that rugged/libgit2 see the expected HOME
     # directory we must set it before requiring rugged. This seems to occur
@@ -97,10 +97,7 @@ module Helper
     restore_env
     processes.clear
 
-    terminate_processes!
-    prep_for_fs_check do
-      next unless File.exist?(PID_FILE)
-
+    if File.exist?(PID_FILE)
       pid = IO.read(PID_FILE).to_i
       begin
         Process.kill('KILL', pid)
@@ -183,8 +180,8 @@ module Helper
   #   @param [String] relative_path to the current directory
   #   @return [String] the absolute path
   def abs_current_dir(relative_path = nil)
-    return File.absolute_path(File.join(current_dir)) unless relative_path
-    File.absolute_path(File.join(current_dir, relative_path))
+    return File.absolute_path(File.join(current_directory)) unless relative_path
+    File.absolute_path(File.join(current_directory, relative_path))
   end
 
   # @param [String] path

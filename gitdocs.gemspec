@@ -46,6 +46,9 @@ Gem::Specification.new do |s|
   # installed.
   s.add_dependency 'tilt',            '>= 2.0.0'
   s.add_dependency 'sqlite3',         '~> 1.3.4'
+  # NOTE: activerecord is not being updated to v5.x because this version drops
+  # support for Ruby2.0. Ruby2.0 is EOLed but is still the default ruby version
+  # installed on OSX.
   s.add_dependency 'activerecord',    '~> 4.2.0'
   s.add_dependency 'grit',            '~> 2.5.0'
   s.add_dependency 'mimetype-fu',     '~> 0.1.2'
@@ -58,11 +61,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'capybara_minitest_spec', '~> 1.0.2'
   s.add_development_dependency 'shell_tools',            '~> 0.1.0'
   s.add_development_dependency 'poltergeist',            '~> 1.7.0'
-  s.add_development_dependency 'rake',                   '~> 11.1.2'
+  s.add_development_dependency 'rake',                   '~> 11.3.0'
   s.add_development_dependency 'mocha',                  '~> 1.1.0'
-  s.add_development_dependency 'aruba',                  '~> 0.6.1'
-  s.add_development_dependency 'rubocop',                '~> 0.40.0'
-  s.add_development_dependency 'haml_lint',              '~> 0.17.1'
+  s.add_development_dependency 'aruba',                  '~> 0.7.0'
+  s.add_development_dependency 'rubocop',                '~> 0.44.0'
+  s.add_development_dependency 'haml_lint',              '~> 0.18.2'
   s.add_development_dependency 'jslint_on_rails',        '~> 1.1.1'
   s.add_development_dependency 'shotgun',                '~> 0.9.1'
   s.add_development_dependency 'codeclimate-test-reporter'

@@ -164,7 +164,7 @@ module GitFactory
       index.add(
         path: filename,
         oid:  repo.write(content, :blob),
-        mode: 0100644
+        mode: 0o100644
       )
 
       author_hash = {

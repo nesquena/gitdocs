@@ -64,14 +64,14 @@ describe Gitdocs::BrowserApp do
 
     describe 'not empty' do
       let(:results) do
-        descriptor1    = stub(name: 'repo1', index: 'index1')
-        search_result1 = stub(file: 'filename1', context: 'context1')
-        descriptor2    = stub(name: 'repo2', index: 'index2')
-        search_result2 = stub(file: 'filename2', context: 'context2')
+        descriptor1 = stub(name: 'repo1', index: 'index1')
+        result1     = stub(file: 'filename1', context: 'context1')
+        descriptor2 = stub(name: 'repo2', index: 'index2')
+        result2     = stub(file: 'filename2', context: 'context2')
 
         {
-          descriptor1 => [search_result1],
-          descriptor2 => [search_result2]
+          descriptor1 => [result1],
+          descriptor2 => [result2]
         }
       end
       specify do
