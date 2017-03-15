@@ -14,3 +14,5 @@ sudo: false
 addons:
   code_climate:
     repo_token: "18995229639977d370a4adf13644223c53baa31b9c7fc302a7ce263aa5bc6dbf"
+after_success:
+  - bundle exec codeclimate-test-reporter
