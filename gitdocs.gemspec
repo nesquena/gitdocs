@@ -32,8 +32,15 @@ Gem::Specification.new do |s|
   s.add_dependency 'celluloid-io',    '~> 0.16.0'
   # FIXME: listen cannot be upgraded until we drop support for Ruby <v2.1
   s.add_dependency 'listen',          '~> 3.0.5'
+  # FIXME: nior4 cannot be upgraded until we drop support for Ruby <v2.2.2
+  s.add_dependency 'nio4r',           '~> 1.2.1'
+  # FIXME: nokoiri cannot be upgrade until we drop support for Ruby <v2.0.0
+  s.add_dependency 'nokogiri',        '~> 1.6.8'
 
   s.add_dependency 'sinatra',         '~> 1.4.5'
+  # FIXME: Sinatra v1.4 appears to be incompatible with Rack >2, so it needs to
+  # be explicitly limited. This will likely be resolved with Sinatra v2.
+  s.add_dependency 'rack',            '< 2.0'
   s.add_dependency 'redcarpet',       '~> 3.3.0'
   s.add_dependency 'thor',            '~> 0.19.1'
   s.add_dependency 'coderay',         '~> 1.1.0'

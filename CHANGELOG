@@ -1,4 +1,9 @@
-0.6.2
+0.6.3
+
+ * fix gem dependencies to preserve Ruby v2.0.0 compatibility (@acant)
+ * add --host flag for setting the address for the web interface (@acant)
+
+0.6.2 (July 5th 2016)
 
  * add dependencies on tilt and celluloid-io to ensure correct install (@acant)
 

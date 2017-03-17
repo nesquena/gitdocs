@@ -13,7 +13,6 @@ end
 require 'codeclimate-test-reporter'
 SimpleCov.add_filter 'test'
 SimpleCov.start
-CodeClimate::TestReporter.start
 
 # Load and configure the real code #############################################
 require 'gitdocs'
