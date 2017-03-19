@@ -2,6 +2,7 @@
 
  * fix gem dependencies to preserve Ruby v2.0.0 compatibility (@acant)
  * add --host flag for setting the address for the web interface (@acant)
+ * fix unexpected exit when changing settings through web UI (@acant)
 
 0.6.2 (July 5th 2016)
 

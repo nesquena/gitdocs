@@ -89,6 +89,12 @@ module Helper
   end
 
   def teardown
+    # Verify that there are not errors in the log file.
+    log_filename = File.join(abs_current_dir, '.gitdocs', 'log')
+    refute(
+      File.read(log_filename).include?('ERROR'), 'Unexpected ERROR in log'
+    ) if File.exist?(log_filename)
+
     Capybara.reset_sessions!
     Capybara.use_default_driver
   end
