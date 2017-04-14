@@ -84,7 +84,10 @@ describe Gitdocs::Notifier do
       subject { notifier.disconnect }
 
       describe 'not connected' do
-        before { subject }
+        before do
+          notifier.instance_variable_set(:@notifier, nil)
+          subject
+        end
         it { notifier.instance_variable_get(:@notifier).must_equal(nil) }
       end
 

@@ -67,7 +67,7 @@ module Gitdocs
     method_option :pid,          type: :string,  aliases: '-P'
     method_option :interval,     type: :numeric, aliases: '-i', default: 15
     method_option :notification, type: :boolean, aliases: '-n', default: true
-    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
+    method_option :sync,         type: :string,  aliases: '-s', default: 'full', enum: %w(full fetch)
     def add(path)
       Share.create_by_path!(
         normalize_path(path),
@@ -83,7 +83,7 @@ module Gitdocs
     method_option :pid,          type: :string,  aliases: '-P'
     method_option :interval,     type: :numeric, aliases: '-i', default: 15
     method_option :notification, type: :boolean, aliases: '-n', default: true
-    method_option :sync,         type: :boolean, aliases: '-s', default: 'full'
+    method_option :sync,         type: :string,  aliases: '-s', default: 'full', enum: %w(full fetch)
     def create(path, remote)
       Repository.clone(path, remote)
       Share.create_by_path!(

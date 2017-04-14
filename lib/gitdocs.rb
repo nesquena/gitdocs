@@ -18,6 +18,7 @@ require 'gitdocs/share'
 require 'gitdocs/configuration'
 require 'gitdocs/cli'
 require 'gitdocs/manager'
+require 'gitdocs/celluloid_facade'
 require 'gitdocs/synchronizer'
 require 'gitdocs/notifier'
 require 'gitdocs/git_notifier'
@@ -64,8 +65,6 @@ module Gitdocs
 
   ##############################################################################
 
-  private_class_method
-
   # @return [void]
   def self.init_log
     return if @initialized
@@ -76,4 +75,5 @@ module Gitdocs
     Celluloid.logger.level = Initializer.verbose ? Logger::DEBUG : Logger::INFO
     @initialized = true
   end
+  private_class_method :init_log
 end
