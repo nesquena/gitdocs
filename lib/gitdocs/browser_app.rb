@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
 
 require 'sinatra/base'
-require 'uri'
+require 'cgi'
 require 'haml'
 require 'mimetype_fu'
 require 'gitdocs/rendering_helper'
@@ -27,7 +27,7 @@ module Gitdocs
       def path
         halt(404) unless repository
         @path ||= Repository::Path.new(
-          repository, URI.decode(params[:splat].first)
+          repository, CGI.unescape(params[:splat].first)
         )
       end
     end
